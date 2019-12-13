@@ -1,4 +1,4 @@
-# Local Add-on Notes • [![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg)](https://github.com/getflywheel/local-addon-volumes/pulls/)
+# Local Add-on Broken Link Checker
 
 ## Installation
 
@@ -6,16 +6,22 @@
 
 Clone the repository into the following directory depending on your platform:
 
-- macOS: `~/Library/Application Support/Local by Flywheel/addons`
+-   macOS: `~/Library/Application Support/Local Beta/addons`
 
 ### Install Dependencies
+
 1. `yarn install`
+
+### Add to Local
+
+1. `npm pack`
+2. Install the newly generated tarball from disk within Local
 
 ## Development
 
 ### Folder Structure
-All files in `/src` will be transpiled to `/lib` using [Babel](https://github.com/babel/babel/). Anything in `/lib` will be overwritten.
 
+All files in `/src` will be transpiled to `/lib` using [Babel](https://github.com/babel/babel/). Anything in `/lib` will be overwritten.
 
 ## License
 
