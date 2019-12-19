@@ -7,7 +7,7 @@ export default function(context) {
 	hooks.addContent("stylesheets", () => (
 		<link
 			rel="stylesheet"
-			key="brokenlinkcheck-addon-styleesheet"
+			key="brokenlinkcheck-addon-stylesheet"
 			href={stylesheetPath}
 		/>
 	));

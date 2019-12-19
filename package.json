@@ -8,7 +8,6 @@
 	],
 	"bgColor": "#51bb7b",
 	"icon": "icon.svg",
-	"slug": "brokenlinkcheck",
 	"description": "Find any broken links in your WordPress site!",
 	"renderer": "lib/renderer.js",
 	"main": "lib/main.js",
