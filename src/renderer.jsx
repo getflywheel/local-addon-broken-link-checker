@@ -16,7 +16,7 @@ export default function (context) {
 	));
 
 	// Create the route/page of content that will be displayed when the menu option is clicked
-	hooks.addContent('routesSiteInfo', () => <Route key="broken-link-checker" path="/site-info/:siteID/brokenlinkchecker"
+	hooks.addContent('routesSiteInfo', () => <Route key="broken-link-checker" path="/main/site-info/:siteID/brokenlinkchecker"
 		render={(props) => <BrokenLinkChecker {...props} />} />);
 
 
@@ -26,7 +26,7 @@ export default function (context) {
 			label: "Broken Link Checker",
 			enabled: true,
 			click: () => {
-				context.events.send('goToRoute', `/site-info/${site.id}/brokenlinkchecker`);
+				context.events.send('goToRoute', `/main/site-info/${site.id}/brokenlinkchecker`);
 			}
 		});
 		// TODO: replace 'true' for enabled with something else like this that works:
