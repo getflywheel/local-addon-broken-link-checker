@@ -6,8 +6,18 @@ import path from 'path';
 
 export default class BrokenLinkChecker extends Component {
 
+
+
     render() {
-        console.log('Trying to return Hello World');
+
+        //console.log(this.props.routeChildrenProps);
+
+        let site = this.props.routeChildrenProps.routeChildrenProps.site;
+        let siteDomain = site.domain;
+
+
+        console.log(siteDomain);
+
 
         return (
             <div style={{ flex: '1', overflowY: 'auto' }}>
