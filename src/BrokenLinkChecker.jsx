@@ -10,12 +10,18 @@ export default class BrokenLinkChecker extends Component {
 
     render() {
 
-        //console.log(this.props.routeChildrenProps);
-
-        let site = this.props.routeChildrenProps.routeChildrenProps.site;
+        let routeChildrenProps = this.props.routeChildrenProps.routeChildrenProps;
+        let site = routeChildrenProps.site;
         let siteDomain = site.domain;
+        let siteStatus = routeChildrenProps.siteStatus;
 
+        // TODO: Ask Jack and Clay if HTTPS vs HTTP should be determined for assembling the URL of the site for crawling
+        let possibleSecureHttpStatus = site.services.nginx.ports.HTTP;
+        let otherPossibleSecureHttpStatus = site.services.nginx.role;
 
+        console.log(routeChildrenProps);
+        console.log(siteStatus);
+        console.log(site);
         console.log(siteDomain);
 
 
