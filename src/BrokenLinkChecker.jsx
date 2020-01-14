@@ -15,19 +15,16 @@ export default class BrokenLinkChecker extends Component {
         let siteDomain = site.domain;
         let siteStatus = routeChildrenProps.siteStatus;
 
-        // TODO: Ask Jack and Clay if HTTPS vs HTTP should be determined for assembling the URL of the site for crawling
-        let possibleSecureHttpStatus = site.services.nginx.ports.HTTP;
-        let otherPossibleSecureHttpStatus = site.services.nginx.role;
+        let siteUrl = 'http://' + siteDomain;
 
-        console.log(routeChildrenProps);
-        console.log(siteStatus);
-        console.log(site);
-        console.log(siteDomain);
+        // TODO: Add checking to see if site is running with HTTP or HTTPS. Right now HTTP is assumed
+        //let possibleSecureHttpStatus = site.services.nginx.ports.HTTP;
+        //let otherPossibleSecureHttpStatus = site.services.nginx.role;
 
 
         return (
             <div style={{ flex: '1', overflowY: 'auto' }}>
-                <h2>Hello World!</h2>
+                <h2>{siteUrl}</h2>
             </div>
         )
     }
