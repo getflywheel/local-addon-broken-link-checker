@@ -22,13 +22,12 @@ export default class BrokenLinkChecker extends Component {
 
     checkLinks(siteURL) {
         let siteChecker = new SiteChecker(null, {
-            robots: function (robots, customData) { },
-            html: function (tree, robots, response, pageUrl, customData) { },
-            junk: function (result, customData) { },
-            link: function (result, customData) { console.log(result) },
-            page: function (error, pageUrl, customData) { },
-            site: function (error, siteUrl, customData) { },
-            end: function () { }
+            link: function (result, customData) {
+                if (result.broken) {
+                    console.log("Origin:" + String(result.base.original));
+                    console.log(String(result.url.original) + ": " + String(result.broken));
+                }
+            }
         });
         siteChecker.enqueue(siteURL);
     }
