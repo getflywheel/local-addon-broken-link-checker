@@ -3,6 +3,23 @@ const { SiteChecker } = require('broken-link-checker');
 
 export default class BrokenLinkChecker extends Component {
 
+    constructor(props) {
+
+        super(props);
+
+        this.state = {
+            brokenLinks: [],
+        };
+
+        this.checkLinks = this.checkLinks.bind(this);
+    }
+
+    addBrokenLink(brokenLinkArray) {
+        this.setState(prevState => ({
+            brokenLinks: [...prevState.brokenLinks, brokenLinkArray]
+        }));
+    }
+
     componentDidMount() {
 
         let routeChildrenProps = this.props.routeChildrenProps.routeChildrenProps;
@@ -22,22 +39,28 @@ export default class BrokenLinkChecker extends Component {
 
     checkLinks(siteURL) {
         let siteChecker = new SiteChecker(null, {
-            link: function (result, customData) {
+            link: (result, customData) => {
                 if (result.broken) {
-                    console.log("Origin:" + String(result.base.original));
+                    console.log("Origin Page:" + String(result.base.original));
                     console.log(String(result.url.original) + ": " + String(result.broken));
+
+                    this.addBrokenLink("Origin Page:" + String(result.base.original) + " | Broken Link: " + String(result.url.original));
                 }
             }
         });
         siteChecker.enqueue(siteURL);
     }
 
-
     render() {
 
         return (
             <div style={{ flex: '1', overflowY: 'auto' }}>
-                <h2>Hello World</h2>
+                <h2>Behold the links:</h2>
+                <ul>
+                    {this.state.brokenLinks.map(item => (
+                        <li key={item}>{item}</li>
+                    ))}
+                </ul>
             </div>
         )
     }
