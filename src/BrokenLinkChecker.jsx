@@ -47,6 +47,10 @@ export default class BrokenLinkChecker extends Component {
 
     checkLinks(siteURL) {
         let siteChecker = new SiteChecker(null, {
+            html: function (tree, robots, response, pageUrl, customData) {
+                console.log(tree);
+                console.log(tree.childNodes[1].childNodes[2].attrMap.class);
+            },
             link: (result, customData) => {
                 if (result.broken) {
 
