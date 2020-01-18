@@ -14,9 +14,17 @@ export default class BrokenLinkChecker extends Component {
         this.checkLinks = this.checkLinks.bind(this);
     }
 
-    addBrokenLink(brokenLinkArray) {
+    addBrokenLink(statusCode, linkURL, linkText, originURL, wpPostId) {
+        let newBrokenLink = {
+            "statusCode": statusCode,
+            "linkURL": linkURL,
+            "linkText": linkText,
+            "originURL": originURL,
+            "wpPostId": wpPostId
+        };
+
         this.setState(prevState => ({
-            brokenLinks: [...prevState.brokenLinks, brokenLinkArray]
+            brokenLinks: [...prevState.brokenLinks, newBrokenLink]
         }));
     }
 
@@ -41,10 +49,20 @@ export default class BrokenLinkChecker extends Component {
         let siteChecker = new SiteChecker(null, {
             link: (result, customData) => {
                 if (result.broken) {
-                    console.log("Origin Page:" + String(result.base.original));
-                    console.log(String(result.url.original) + ": " + String(result.broken));
 
-                    this.addBrokenLink("Origin Page:" + String(result.base.original) + " | Broken Link: " + String(result.url.original));
+                    // console.log("statusCode: " + String(result.http.response.statusCode));
+                    // console.log("linkURL: " + String(result.url.original));
+                    // console.log("linkText: " + String(result.html.text));
+                    // console.log("originURL: " + String(result.base.original));
+                    // console.log("wpPostId:");
+
+                    let statusCode = String(result.http.response.statusCode);
+                    let linkURL = String(result.url.original);
+                    let linkText = String(result.html.text);
+                    let originURL = String(result.base.original);
+                    let wpPostId = null;
+
+                    this.addBrokenLink(statusCode, linkURL, linkText, originURL, wpPostId);
                 }
             }
         });
@@ -58,7 +76,7 @@ export default class BrokenLinkChecker extends Component {
                 <h2>Behold the links:</h2>
                 <ul>
                     {this.state.brokenLinks.map(item => (
-                        <li key={item}>{item}</li>
+                        <li key={item["linkURL"]}>{item["linkURL"]}</li>
                     ))}
                 </ul>
             </div>
