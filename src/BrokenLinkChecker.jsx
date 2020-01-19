@@ -1,5 +1,5 @@
 import React, { Component, Fragment } from 'react';
-const { SiteChecker } = require('broken-link-checker');
+const { SiteChecker, HtmlUrlChecker } = require('broken-link-checker');
 
 export default class BrokenLinkChecker extends Component {
 
@@ -47,26 +47,33 @@ export default class BrokenLinkChecker extends Component {
 
     checkLinks(siteURL) {
         let siteChecker = new SiteChecker(null, {
-            html: function (tree, robots, response, pageUrl, customData) {
-                console.log(tree);
-                console.log(tree.childNodes[1].childNodes[2].attrMap.class);
-            },
             link: (result, customData) => {
                 if (result.broken) {
 
-                    // console.log("statusCode: " + String(result.http.response.statusCode));
-                    // console.log("linkURL: " + String(result.url.original));
-                    // console.log("linkText: " + String(result.html.text));
-                    // console.log("originURL: " + String(result.base.original));
-                    // console.log("wpPostId:");
+                    let brokenLinkScanResults = {
+                        "statusCode": String(result.http.response.statusCode),
+                        "linkURL": String(result.url.original),
+                        "linkText": String(result.html.text),
+                        "originURL": String(result.base.original)
+                    }
 
-                    let statusCode = String(result.http.response.statusCode);
-                    let linkURL = String(result.url.original);
-                    let linkText = String(result.html.text);
-                    let originURL = String(result.base.original);
-                    let wpPostId = null;
+                    let singlePageChecker = new HtmlUrlChecker(null, {
+                        html: (tree, robots, response, pageUrl, customData) => {
+                            // TODO: Make this code continue to drill down until an exact match for the 'body' tag is found, just in case a custom template has modified the usual page structure
+                            let stringOfBodyClasses = tree.childNodes[1].childNodes[2].attrMap.class;
 
-                    this.addBrokenLink(statusCode, linkURL, linkText, originURL, wpPostId);
+                            // TODO: Also make note of special classes like .home
+                            let findPostId = stringOfBodyClasses.match(/(^|\s)postid-(\d+)(\s|$)/);
+
+                            let wpPostId = null;
+                            if (findPostId) {
+                                wpPostId = findPostId[2];
+                            }
+
+                            this.addBrokenLink(customData["statusCode"], customData["linkURL"], customData["linkText"], customData["originURL"], wpPostId);
+                        }
+                    });
+                    singlePageChecker.enqueue(brokenLinkScanResults["originURL"], brokenLinkScanResults);
                 }
             }
         });
