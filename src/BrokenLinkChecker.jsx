@@ -28,8 +28,9 @@ export default class BrokenLinkChecker extends Component {
         }));
     }
 
-    componentDidMount() {
+    componentDidMount() { }
 
+    startScan = () => {
         let routeChildrenProps = this.props.routeChildrenProps.routeChildrenProps;
         let site = routeChildrenProps.site;
         let siteDomain = site.domain;
@@ -42,7 +43,6 @@ export default class BrokenLinkChecker extends Component {
         let siteUrl = 'http://' + siteDomain;
 
         this.checkLinks(siteUrl);
-
     }
 
     checkLinks(siteURL) {
@@ -90,6 +90,9 @@ export default class BrokenLinkChecker extends Component {
                         <li key={item["linkURL"]}>{item["linkURL"]}</li>
                     ))}
                 </ul>
+                <p onClick={this.startScan}>
+                    Start Scan
+                </p>
             </div>
         )
     }
