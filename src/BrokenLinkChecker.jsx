@@ -124,6 +124,12 @@ export default class BrokenLinkChecker extends Component {
 		if (this.state.siteStatus === "halted") {
 			message = "Please start the site before running a link scan.";
 		}
+		// else if (
+		// 	this.state.brokenLinks.length < 1 &&
+		// 	this.state.resultsOnScreen == true
+		// ) {
+		// 	message = "No broken links found.";
+		// }
 
 		let startButtonText = "Start Scan";
 		if (this.state.resultsOnScreen) {
