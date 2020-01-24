@@ -8,14 +8,13 @@ export default class BrokenLinkChecker extends Component {
 
 		this.state = {
 			brokenLinks: [],
+			resultsOnScreen: false,
 			siteStatus: null
 		};
 
 		this.checkLinks = this.checkLinks.bind(this);
 		this.updateSiteState = this.updateSiteState.bind(this);
 	}
-
-	componentDidMount() {}
 
 	addBrokenLink(statusCode, linkURL, linkText, originURL, wpPostId) {
 		let newBrokenLink = {
@@ -26,42 +25,28 @@ export default class BrokenLinkChecker extends Component {
 			wpPostId: wpPostId
 		};
 
+		this.updateResultsOnScreen(true);
+
 		this.setState(prevState => ({
 			brokenLinks: [...prevState.brokenLinks, newBrokenLink]
 		}));
-		// ,this.syncBrokenLinksToSite
 	}
+
+	clearBrokenLinks() {
+		this.setState({ brokenLinks: [] });
+	}
+
 	updateSiteState(newStatus) {
-		console.log("received state: " + newStatus);
 		this.setState(prevState => ({
 			siteStatus: newStatus
 		}));
 	}
 
-	syncBrokenLinksToSite() {
-		// TODO: get access to the 'site' object
-		//ipcRenderer.send('store-broken-links', this.props.site.id, this.state.brokenLinks);
+	updateResultsOnScreen(boolean) {
+		this.setState(prevState => ({
+			resultsOnScreen: boolean
+		}));
 	}
-
-	// TODO get access to 'site' so that I can pull down the broken links and confirm that they are being saved properly
-	// fetchBrokenLinks() {
-
-	// 	const notes = this.props.site.notes;
-
-	// 	if (!notes) {
-	// 		return [];
-	// 	}
-
-	// 	for (const [noteIndex, note] of notes.entries()) {
-	// 		if (note.date instanceof Date || !note.date) {
-	// 			continue;
-	// 		}
-
-	// 		notes[noteIndex].date = new Date(note.date);
-	// 	}
-
-	// 	return notes;
-	// }
 
 	startScan = () => {
 		let routeChildrenProps = this.props.routeChildrenProps
@@ -75,6 +60,11 @@ export default class BrokenLinkChecker extends Component {
 		//let otherPossibleSecureHttpStatus = site.services.nginx.role;
 
 		let siteUrl = "http://" + siteDomain;
+
+		// Clear the existing broken links on screen if some have been rendered already
+		if (this.state.resultsOnScreen) {
+			this.clearBrokenLinks();
+		}
 
 		this.updateSiteState(siteStatus);
 
@@ -130,10 +120,14 @@ export default class BrokenLinkChecker extends Component {
 	}
 
 	render() {
-		console.log(this.state.siteStatus);
 		let message = "";
 		if (this.state.siteStatus === "halted") {
 			message = "Please start the site before running a link scan.";
+		}
+
+		let startButtonText = "Start Scan";
+		if (this.state.resultsOnScreen) {
+			startButtonText = "Re-Run Scan";
 		}
 
 		return (
@@ -152,7 +146,7 @@ export default class BrokenLinkChecker extends Component {
 				</ul>
 
 				<a href="javascript:void(0);" onClick={this.startScan}>
-					Start Scan
+					{startButtonText}
 				</a>
 			</div>
 		);
