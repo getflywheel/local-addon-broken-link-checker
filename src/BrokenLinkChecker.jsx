@@ -7,10 +7,12 @@ export default class BrokenLinkChecker extends Component {
 		super(props);
 
 		this.state = {
-			brokenLinks: []
+			brokenLinks: [],
+			siteStatus: null
 		};
 
 		this.checkLinks = this.checkLinks.bind(this);
+		this.updateSiteState = this.updateSiteState.bind(this);
 	}
 
 	componentDidMount() {}
@@ -28,6 +30,12 @@ export default class BrokenLinkChecker extends Component {
 			brokenLinks: [...prevState.brokenLinks, newBrokenLink]
 		}));
 		// ,this.syncBrokenLinksToSite
+	}
+	updateSiteState(newStatus) {
+		console.log("received state: " + newStatus);
+		this.setState(prevState => ({
+			siteStatus: newStatus
+		}));
 	}
 
 	syncBrokenLinksToSite() {
@@ -68,7 +76,11 @@ export default class BrokenLinkChecker extends Component {
 
 		let siteUrl = "http://" + siteDomain;
 
-		this.checkLinks(siteUrl);
+		this.updateSiteState(siteStatus);
+
+		if (String(siteStatus) !== "halted" && siteStatus != null) {
+			this.checkLinks(siteUrl);
+		}
 	};
 
 	checkLinks(siteURL) {
@@ -118,11 +130,16 @@ export default class BrokenLinkChecker extends Component {
 	}
 
 	render() {
-		console.log(this.state.brokenLinks);
+		console.log(this.state.siteStatus);
+		let message = "";
+		if (this.state.siteStatus === "halted") {
+			message = "Please start the site before running a link scan.";
+		}
 
 		return (
 			<div style={{ flex: "1", overflowY: "auto" }}>
 				<h2>Behold the links:</h2>
+				<p>{message}</p>
 				<ul>
 					{this.state.brokenLinks.map(item => (
 						<li key={item["linkURL"]}>
