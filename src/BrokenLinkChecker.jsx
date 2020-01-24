@@ -125,10 +125,18 @@ export default class BrokenLinkChecker extends Component {
 				<h2>Behold the links:</h2>
 				<ul>
 					{this.state.brokenLinks.map(item => (
-						<li key={item["linkURL"]}>{item["linkURL"]}</li>
+						<li key={item["linkURL"]}>
+							Status: {item["statusCode"]} | Origin URL:{" "}
+							{item["originURL"]}| Link URL: {item["linkURL"]} |
+							Link Text: {item["linkText"]} | | Post ID:{" "}
+							{item["wpPostId"]}
+						</li>
 					))}
 				</ul>
-				<p onClick={this.startScan}>Start Scan</p>
+
+				<a href="javascript:void(0);" onClick={this.startScan}>
+					Start Scan
+				</a>
 			</div>
 		);
 	}
