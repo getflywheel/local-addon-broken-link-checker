@@ -132,7 +132,7 @@ export default class BrokenLinkChecker extends Component {
                 }
             },
             end: (result, customData) => {
-                console.log("Deciding that first run is complete");
+                // At last the first run is done, so we update the state
                 this.updateFirstRunComplete(true);
             }
         });
@@ -150,12 +150,6 @@ export default class BrokenLinkChecker extends Component {
         ) {
             message = "No broken links found.";
         }
-        // else if (
-        //     this.state.brokenLinks.length < 1 &&
-        //     this.state.resultsOnScreen == true
-        // ) {
-        //     message = "No broken links found.";
-        // }
 
         let startButtonText = "Start Scan";
         if (this.state.resultsOnScreen) {
@@ -164,20 +158,33 @@ export default class BrokenLinkChecker extends Component {
 
         return (
             <div style={{ flex: "1", overflowY: "auto" }}>
-                <h2>Behold the links:</h2>
-                <p>{message}</p>
-                <ul>
-                    {this.state.brokenLinks.map(item => (
-                        <li key={item["linkURL"]}>
-                            Status: {item["statusCode"]} | Origin URL:{" "}
-                            {item["originURL"]}| Link URL: {item["linkURL"]} |
-							Link Text: {item["linkText"]} | | Post ID:{" "}
-                            {item["wpPostId"]}
-                        </li>
-                    ))}
-                </ul>
+                <table class="brokenLinksTable">
+                    <thead>
+                        <tr>
+                            <th>Status</th>
+                            <th>Origin URL</th>
+                            <th>Link URL</th>
+                            <th>Link Text</th>
+                            <th>Post ID</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {this.state.brokenLinks.map(item => (
+                            <tr key={item["linkURL"]}>
+                                <td>{item["statusCode"]}</td>
+                                <td> <a href={item["originURL"]}>{item["originURL"]}</a> </td>
+                                <td> <a href={item["linkURL"]}>{item["linkURL"]}</a> </td>
+                                <td>{item["linkText"]}</td>
+                                <td>{item["wpPostId"]}</td>
+                            </tr>
+                        ))}
 
-                <a href="javascript:void(0);" onClick={this.startScan}>
+                    </tbody>
+                </table>
+
+                <p>{message}</p>
+
+                <a href="javascript:void(0);" onClick={this.startScan} style={{ marginTop: 15, marginLeft: 2, display: 'block' }}>
                     {startButtonText}
                 </a>
             </div>
