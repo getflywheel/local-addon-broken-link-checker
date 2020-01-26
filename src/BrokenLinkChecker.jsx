@@ -98,6 +98,7 @@ export default class BrokenLinkChecker extends Component {
     checkLinks(siteURL) {
         let siteChecker = new SiteChecker(null, {
             link: (result, customData) => {
+                console.log(result);
                 if (result.broken) {
                     let brokenLinkScanResults = {
                         statusCode: String(result.http.response.statusCode),
@@ -117,9 +118,15 @@ export default class BrokenLinkChecker extends Component {
                                 /(^|\s)postid-(\d+)(\s|$)/
                             );
 
+                            let findPageId = stringOfBodyClasses.match(
+                                /(^|\s)page-id-(\d+)(\s|$)/
+                            );
+
                             let wpPostId = null;
                             if (findPostId) {
                                 wpPostId = findPostId[2];
+                            } else if (findPageId) {
+                                wpPostId = findPageId[2];
                             }
 
                             this.addBrokenLink(
