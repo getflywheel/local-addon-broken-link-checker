@@ -3,158 +3,184 @@ import { ipcRenderer } from "electron";
 const { SiteChecker, HtmlUrlChecker } = require("broken-link-checker");
 
 export default class BrokenLinkChecker extends Component {
-	constructor(props) {
-		super(props);
+    constructor(props) {
+        super(props);
 
-		this.state = {
-			brokenLinks: [],
-			resultsOnScreen: false,
-			siteStatus: null
-		};
+        this.state = {
+            brokenLinks: [],
+            resultsOnScreen: false,
+            firstRunComplete: false,
+            brokenLinksFound: false,
+            siteStatus: null
+        };
 
-		this.checkLinks = this.checkLinks.bind(this);
-		this.updateSiteState = this.updateSiteState.bind(this);
-	}
+        this.checkLinks = this.checkLinks.bind(this);
+        this.updateSiteState = this.updateSiteState.bind(this);
+    }
 
-	addBrokenLink(statusCode, linkURL, linkText, originURL, wpPostId) {
-		let newBrokenLink = {
-			statusCode: statusCode,
-			linkURL: linkURL,
-			linkText: linkText,
-			originURL: originURL,
-			wpPostId: wpPostId
-		};
+    addBrokenLink(statusCode, linkURL, linkText, originURL, wpPostId) {
+        let newBrokenLink = {
+            statusCode: statusCode,
+            linkURL: linkURL,
+            linkText: linkText,
+            originURL: originURL,
+            wpPostId: wpPostId
+        };
 
-		this.updateResultsOnScreen(true);
+        this.updateResultsOnScreen(true);
 
-		this.setState(prevState => ({
-			brokenLinks: [...prevState.brokenLinks, newBrokenLink]
-		}));
-	}
+        this.setState(prevState => ({
+            brokenLinks: [...prevState.brokenLinks, newBrokenLink]
+        }));
+    }
 
-	clearBrokenLinks() {
-		this.setState({ brokenLinks: [] });
-	}
+    clearBrokenLinks() {
+        this.setState({ brokenLinks: [] });
+    }
 
-	updateSiteState(newStatus) {
-		this.setState(prevState => ({
-			siteStatus: newStatus
-		}));
-	}
+    updateSiteState(newStatus) {
+        this.setState(prevState => ({
+            siteStatus: newStatus
+        }));
+    }
 
-	updateResultsOnScreen(boolean) {
-		this.setState(prevState => ({
-			resultsOnScreen: boolean
-		}));
-	}
+    updateResultsOnScreen(boolean) {
+        this.setState(prevState => ({
+            resultsOnScreen: boolean
+        }));
+    }
 
-	startScan = () => {
-		let routeChildrenProps = this.props.routeChildrenProps
-			.routeChildrenProps;
-		let site = routeChildrenProps.site;
-		let siteDomain = site.domain;
-		let siteStatus = routeChildrenProps.siteStatus;
+    updateBrokenLinksFound(boolean) {
+        this.setState(prevState => ({
+            brokenLinksFound: boolean
+        }));
+    }
 
-		// TODO: Add checking to see if site is running with HTTP or HTTPS. Right now HTTP is assumed
-		//let possibleSecureHttpStatus = site.services.nginx.ports.HTTP;
-		//let otherPossibleSecureHttpStatus = site.services.nginx.role;
+    updateFirstRunComplete(boolean) {
+        this.setState(prevState => ({
+            firstRunComplete: boolean
+        }));
+    }
 
-		let siteUrl = "http://" + siteDomain;
+    startScan = () => {
+        let routeChildrenProps = this.props.routeChildrenProps
+            .routeChildrenProps;
+        let site = routeChildrenProps.site;
+        let siteDomain = site.domain;
+        let siteStatus = routeChildrenProps.siteStatus;
 
-		// Clear the existing broken links on screen if some have been rendered already
-		if (this.state.resultsOnScreen) {
-			this.clearBrokenLinks();
-		}
+        // TODO: Add checking to see if site is running with HTTP or HTTPS. Right now HTTP is assumed
+        //let possibleSecureHttpStatus = site.services.nginx.ports.HTTP;
+        //let otherPossibleSecureHttpStatus = site.services.nginx.role;
 
-		this.updateSiteState(siteStatus);
+        let siteUrl = "http://" + siteDomain;
 
-		if (String(siteStatus) !== "halted" && siteStatus != null) {
-			this.checkLinks(siteUrl);
-		}
-	};
+        // Clear the existing broken links on screen if some have been rendered already
+        if (this.state.resultsOnScreen) {
+            this.clearBrokenLinks();
+        }
 
-	checkLinks(siteURL) {
-		let siteChecker = new SiteChecker(null, {
-			link: (result, customData) => {
-				if (result.broken) {
-					let brokenLinkScanResults = {
-						statusCode: String(result.http.response.statusCode),
-						linkURL: String(result.url.original),
-						linkText: String(result.html.text),
-						originURL: String(result.base.original)
-					};
+        this.updateSiteState(siteStatus);
 
-					let singlePageChecker = new HtmlUrlChecker(null, {
-						html: (tree, robots, response, pageUrl, customData) => {
-							// TODO: Make this code continue to drill down until an exact match for the 'body' tag is found, just in case a custom template has modified the usual page structure
-							let stringOfBodyClasses =
-								tree.childNodes[1].childNodes[2].attrMap.class;
+        if (String(siteStatus) !== "halted" && siteStatus != null) {
+            this.checkLinks(siteUrl);
+        }
+    };
 
-							// TODO: Also make note of special classes like .home
-							let findPostId = stringOfBodyClasses.match(
-								/(^|\s)postid-(\d+)(\s|$)/
-							);
+    checkLinks(siteURL) {
+        let siteChecker = new SiteChecker(null, {
+            link: (result, customData) => {
+                if (result.broken) {
+                    let brokenLinkScanResults = {
+                        statusCode: String(result.http.response.statusCode),
+                        linkURL: String(result.url.original),
+                        linkText: String(result.html.text),
+                        originURL: String(result.base.original)
+                    };
 
-							let wpPostId = null;
-							if (findPostId) {
-								wpPostId = findPostId[2];
-							}
+                    let singlePageChecker = new HtmlUrlChecker(null, {
+                        html: (tree, robots, response, pageUrl, customData) => {
+                            // TODO: Make this code continue to drill down until an exact match for the 'body' tag is found, just in case a custom template has modified the usual page structure
+                            let stringOfBodyClasses =
+                                tree.childNodes[1].childNodes[2].attrMap.class;
 
-							this.addBrokenLink(
-								customData["statusCode"],
-								customData["linkURL"],
-								customData["linkText"],
-								customData["originURL"],
-								wpPostId
-							);
-						}
-					});
-					singlePageChecker.enqueue(
-						brokenLinkScanResults["originURL"],
-						brokenLinkScanResults
-					);
-				}
-			}
-		});
-		siteChecker.enqueue(siteURL);
-	}
+                            // TODO: Also make note of special classes like .home
+                            let findPostId = stringOfBodyClasses.match(
+                                /(^|\s)postid-(\d+)(\s|$)/
+                            );
 
-	render() {
-		let message = "";
-		if (this.state.siteStatus === "halted") {
-			message = "Please start the site before running a link scan.";
-		}
-		// else if (
-		// 	this.state.brokenLinks.length < 1 &&
-		// 	this.state.resultsOnScreen == true
-		// ) {
-		// 	message = "No broken links found.";
-		// }
+                            let wpPostId = null;
+                            if (findPostId) {
+                                wpPostId = findPostId[2];
+                            }
 
-		let startButtonText = "Start Scan";
-		if (this.state.resultsOnScreen) {
-			startButtonText = "Re-Run Scan";
-		}
+                            this.addBrokenLink(
+                                customData["statusCode"],
+                                customData["linkURL"],
+                                customData["linkText"],
+                                customData["originURL"],
+                                wpPostId
+                            );
+                        }
+                    });
+                    singlePageChecker.enqueue(
+                        brokenLinkScanResults["originURL"],
+                        brokenLinkScanResults
+                    );
 
-		return (
-			<div style={{ flex: "1", overflowY: "auto" }}>
-				<h2>Behold the links:</h2>
-				<p>{message}</p>
-				<ul>
-					{this.state.brokenLinks.map(item => (
-						<li key={item["linkURL"]}>
-							Status: {item["statusCode"]} | Origin URL:{" "}
-							{item["originURL"]}| Link URL: {item["linkURL"]} |
+                    this.updateBrokenLinksFound(true);
+                }
+            },
+            end: (result, customData) => {
+                console.log("Deciding that first run is complete");
+                this.updateFirstRunComplete(true);
+            }
+        });
+        siteChecker.enqueue(siteURL);
+    }
+
+    render() {
+        let message = "";
+        if (this.state.siteStatus === "halted") {
+            message = "Please start the site before running a link scan.";
+        }
+        else if (
+            this.state.firstRunComplete &&
+            !this.state.brokenLinksFound
+        ) {
+            message = "No broken links found.";
+        }
+        // else if (
+        //     this.state.brokenLinks.length < 1 &&
+        //     this.state.resultsOnScreen == true
+        // ) {
+        //     message = "No broken links found.";
+        // }
+
+        let startButtonText = "Start Scan";
+        if (this.state.resultsOnScreen) {
+            startButtonText = "Re-Run Scan";
+        }
+
+        return (
+            <div style={{ flex: "1", overflowY: "auto" }}>
+                <h2>Behold the links:</h2>
+                <p>{message}</p>
+                <ul>
+                    {this.state.brokenLinks.map(item => (
+                        <li key={item["linkURL"]}>
+                            Status: {item["statusCode"]} | Origin URL:{" "}
+                            {item["originURL"]}| Link URL: {item["linkURL"]} |
 							Link Text: {item["linkText"]} | | Post ID:{" "}
-							{item["wpPostId"]}
-						</li>
-					))}
-				</ul>
+                            {item["wpPostId"]}
+                        </li>
+                    ))}
+                </ul>
 
-				<a href="javascript:void(0);" onClick={this.startScan}>
-					{startButtonText}
-				</a>
-			</div>
-		);
-	}
+                <a href="javascript:void(0);" onClick={this.startScan}>
+                    {startButtonText}
+                </a>
+            </div>
+        );
+    }
 }
