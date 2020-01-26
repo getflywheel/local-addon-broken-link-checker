@@ -11,7 +11,8 @@ export default class BrokenLinkChecker extends Component {
             resultsOnScreen: false,
             firstRunComplete: false,
             brokenLinksFound: false,
-            siteStatus: null
+            siteStatus: null,
+            siteRootUrl: null,
         };
 
         this.checkLinks = this.checkLinks.bind(this);
@@ -41,6 +42,12 @@ export default class BrokenLinkChecker extends Component {
     updateSiteState(newStatus) {
         this.setState(prevState => ({
             siteStatus: newStatus
+        }));
+    }
+
+    updateSiteRootUrl(siteUrl) {
+        this.setState(prevState => ({
+            siteRootUrl: siteUrl
         }));
     }
 
@@ -81,6 +88,7 @@ export default class BrokenLinkChecker extends Component {
         }
 
         this.updateSiteState(siteStatus);
+        this.updateSiteRootUrl(siteUrl);
 
         if (String(siteStatus) !== "halted" && siteStatus != null) {
             this.checkLinks(siteUrl);
@@ -156,7 +164,10 @@ export default class BrokenLinkChecker extends Component {
             startButtonText = "Re-Run Scan";
         }
 
+
+
         return (
+
             <div style={{ flex: "1", overflowY: "auto" }}>
                 <table class="brokenLinksTable">
                     <thead>
@@ -175,10 +186,9 @@ export default class BrokenLinkChecker extends Component {
                                 <td> <a href={item["originURL"]}>{item["originURL"]}</a> </td>
                                 <td> <a href={item["linkURL"]}>{item["linkURL"]}</a> </td>
                                 <td>{item["linkText"]}</td>
-                                <td>{item["wpPostId"]}</td>
+                                <td>{item["wpPostId"]} {item["wpPostId"] != null ? '(' : ''}<a href={this.state.siteRootUrl + '/wp-admin/post.php?post=' + item["wpPostId"] + '&action=edit'}>{item["wpPostId"] != null ? 'Edit' : ''}</a>{item["wpPostId"] != null ? ')' : ''}</td>
                             </tr>
                         ))}
-
                     </tbody>
                 </table>
 
