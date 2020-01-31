@@ -98,11 +98,12 @@ export default class BrokenLinkChecker extends Component {
 	}
 
 	startScan = () => {
-		let routeChildrenProps = this.props.routeChildrenProps
-			.routeChildrenProps;
+		let routeChildrenProps = this.props.routeChildrenProps;
 		let site = routeChildrenProps.site;
 		let siteDomain = site.domain;
 		let siteStatus = routeChildrenProps.siteStatus;
+
+		console.log(this.props);
 
 		// TODO: Add checking to see if site is running with HTTP or HTTPS. Right now HTTP is assumed
 		//let possibleSecureHttpStatus = site.services.nginx.ports.HTTP;
