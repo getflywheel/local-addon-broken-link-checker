@@ -61,6 +61,7 @@ export default class BrokenLinkChecker extends Component {
 	}
 
 	clearBrokenLinks() {
+		console.log("Clear broken links called");
 		this.setState({ brokenLinks: [] }, this.syncBrokenLinks);
 	}
 
@@ -74,7 +75,7 @@ export default class BrokenLinkChecker extends Component {
 	}
 
 	fetchBrokenLinks() {
-		const brokenLinks = this.props.routeChildrenProps.brokenLinks;
+		const brokenLinks = this.props.routeChildrenProps.site.brokenLinks;
 
 		if (!brokenLinks) {
 			return [];
@@ -212,7 +213,7 @@ export default class BrokenLinkChecker extends Component {
 			startButtonText = "Re-Run Scan";
 		}
 
-		console.log(this.state.brokenLinks);
+		console.log(this.state);
 
 		return (
 			<div style={{ flex: "1", overflowY: "auto" }}>
