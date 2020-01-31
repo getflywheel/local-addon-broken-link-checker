@@ -30,14 +30,42 @@ export default class BrokenLinkChecker extends Component {
 
 		this.updateResultsOnScreen(true);
 
-		this.setState(prevState => ({
-			brokenLinks: [...prevState.brokenLinks, newBrokenLink]
-		}));
+		this.setState(
+			prevState => ({
+				brokenLinks: [...prevState.brokenLinks, newBrokenLink]
+			}),
+			this.syncBrokenLinks
+		);
 	}
 
 	clearBrokenLinks() {
-		this.setState({ brokenLinks: [] });
+		this.setState({ brokenLinks: [] }, this.syncBrokenLinks);
 	}
+
+	syncBrokenLinks() {
+		console.log("Sync Broken Links called");
+		//ipcRenderer.send('store-broken-links', this.props.site.id, this.state.brokenLinks);
+	}
+
+	// fetchBrokenLinks() {
+
+	// 	const notes = this.props.site.notes;
+
+	// 	if (!notes) {
+	// 		return [];
+	// 	}
+
+	// 	for (const [noteIndex, note] of notes.entries()) {
+	// 		if (note.date instanceof Date || !note.date) {
+	// 			continue;
+	// 		}
+
+	// 		notes[noteIndex].date = new Date(note.date);
+	// 	}
+
+	// 	return notes;
+
+	// }
 
 	updateSiteState(newStatus) {
 		this.setState(prevState => ({
