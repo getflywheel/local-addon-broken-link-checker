@@ -12,7 +12,8 @@ export default class BrokenLinkChecker extends Component {
 			firstRunComplete: false,
 			brokenLinksFound: false,
 			siteStatus: null,
-			siteRootUrl: null
+			siteRootUrl: null,
+			siteId: null
 		};
 
 		this.checkLinks = this.checkLinks.bind(this);
@@ -79,6 +80,12 @@ export default class BrokenLinkChecker extends Component {
 		}));
 	}
 
+	updateSiteId(siteId) {
+		this.setState(prevState => ({
+			siteId: siteId
+		}));
+	}
+
 	updateResultsOnScreen(boolean) {
 		this.setState(prevState => ({
 			resultsOnScreen: boolean
@@ -102,6 +109,7 @@ export default class BrokenLinkChecker extends Component {
 		let site = routeChildrenProps.site;
 		let siteDomain = site.domain;
 		let siteStatus = routeChildrenProps.siteStatus;
+		let siteId = routeChildrenProps.site.id;
 
 		console.log(this.props);
 
@@ -118,6 +126,7 @@ export default class BrokenLinkChecker extends Component {
 
 		this.updateSiteState(siteStatus);
 		this.updateSiteRootUrl(siteUrl);
+		this.updateSiteId(siteId);
 
 		if (String(siteStatus) !== "halted" && siteStatus != null) {
 			this.checkLinks(siteUrl);
@@ -197,6 +206,8 @@ export default class BrokenLinkChecker extends Component {
 		if (this.state.resultsOnScreen) {
 			startButtonText = "Re-Run Scan";
 		}
+
+		console.log(this.state);
 
 		return (
 			<div style={{ flex: "1", overflowY: "auto" }}>
