@@ -20,6 +20,25 @@ export default class BrokenLinkChecker extends Component {
 		this.updateSiteState = this.updateSiteState.bind(this);
 	}
 
+	componentDidMount() {
+		let routeChildrenProps = this.props.routeChildrenProps;
+		let siteStatus = routeChildrenProps.siteStatus;
+		let site = routeChildrenProps.site;
+		let siteDomain = site.domain;
+
+		let siteId = routeChildrenProps.site.id;
+
+		// TODO: Add checking to see if site is running with HTTP or HTTPS. Right now HTTP is assumed
+		//let possibleSecureHttpStatus = site.services.nginx.ports.HTTP;
+		//let otherPossibleSecureHttpStatus = site.services.nginx.role;
+
+		let siteUrl = "http://" + siteDomain;
+
+		this.updateSiteRootUrl(siteUrl);
+		this.updateSiteId(siteId);
+		this.updateSiteState(siteStatus);
+	}
+
 	addBrokenLink(statusCode, linkURL, linkText, originURL, wpPostId) {
 		let newBrokenLink = {
 			statusCode: statusCode,
@@ -106,30 +125,20 @@ export default class BrokenLinkChecker extends Component {
 
 	startScan = () => {
 		let routeChildrenProps = this.props.routeChildrenProps;
-		let site = routeChildrenProps.site;
-		let siteDomain = site.domain;
 		let siteStatus = routeChildrenProps.siteStatus;
-		let siteId = routeChildrenProps.site.id;
-
-		console.log(this.props);
-
-		// TODO: Add checking to see if site is running with HTTP or HTTPS. Right now HTTP is assumed
-		//let possibleSecureHttpStatus = site.services.nginx.ports.HTTP;
-		//let otherPossibleSecureHttpStatus = site.services.nginx.role;
-
-		let siteUrl = "http://" + siteDomain;
 
 		// Clear the existing broken links on screen if some have been rendered already
 		if (this.state.resultsOnScreen) {
 			this.clearBrokenLinks();
 		}
 
-		this.updateSiteState(siteStatus);
-		this.updateSiteRootUrl(siteUrl);
-		this.updateSiteId(siteId);
-
-		if (String(siteStatus) !== "halted" && siteStatus != null) {
-			this.checkLinks(siteUrl);
+		if (
+			String(this.state.siteStatus) !== "halted" &&
+			this.state.siteStatus != null
+		) {
+			this.checkLinks(this.state.siteRootUrl);
+		} else {
+			this.updateSiteState(siteStatus);
 		}
 	};
 
@@ -206,8 +215,6 @@ export default class BrokenLinkChecker extends Component {
 		if (this.state.resultsOnScreen) {
 			startButtonText = "Re-Run Scan";
 		}
-
-		console.log(this.state);
 
 		return (
 			<div style={{ flex: "1", overflowY: "auto" }}>
