@@ -7,16 +7,36 @@ export default class BrokenLinkChecker extends Component {
 		super(props);
 
 		this.state = {
-			brokenLinks: [],
-			resultsOnScreen: false,
+			brokenLinks: this.fetchBrokenLinks(),
+			resultsOnScreen: this.ifBrokenLinksFetched(),
 			firstRunComplete: false,
 			brokenLinksFound: false,
 			siteStatus: null,
-			siteRootUrl: null
+			siteRootUrl: null,
+			siteId: null
 		};
 
 		this.checkLinks = this.checkLinks.bind(this);
 		this.updateSiteState = this.updateSiteState.bind(this);
+	}
+
+	componentDidMount() {
+		let routeChildrenProps = this.props.routeChildrenProps;
+		let siteStatus = routeChildrenProps.siteStatus;
+		let site = routeChildrenProps.site;
+		let siteDomain = site.domain;
+
+		let siteId = routeChildrenProps.site.id;
+
+		// TODO: Add checking to see if site is running with HTTP or HTTPS. Right now HTTP is assumed
+		//let possibleSecureHttpStatus = site.services.nginx.ports.HTTP;
+		//let otherPossibleSecureHttpStatus = site.services.nginx.role;
+
+		let siteUrl = "http://" + siteDomain;
+
+		this.updateSiteRootUrl(siteUrl);
+		this.updateSiteId(siteId);
+		this.updateSiteState(siteStatus);
 	}
 
 	addBrokenLink(statusCode, linkURL, linkText, originURL, wpPostId) {
@@ -30,13 +50,44 @@ export default class BrokenLinkChecker extends Component {
 
 		this.updateResultsOnScreen(true);
 
-		this.setState(prevState => ({
-			brokenLinks: [...prevState.brokenLinks, newBrokenLink]
-		}));
+		this.setState(
+			prevState => ({
+				brokenLinks: [...prevState.brokenLinks, newBrokenLink]
+			}),
+			this.syncBrokenLinks
+		);
 	}
 
 	clearBrokenLinks() {
-		this.setState({ brokenLinks: [] });
+		this.setState({ brokenLinks: [] }, this.syncBrokenLinks);
+	}
+
+	syncBrokenLinks() {
+		ipcRenderer.send(
+			"store-broken-links",
+			this.state.siteId,
+			this.state.brokenLinks
+		);
+	}
+
+	fetchBrokenLinks() {
+		const brokenLinks = this.props.routeChildrenProps.site.brokenLinks;
+
+		if (!brokenLinks) {
+			return [];
+		}
+
+		return brokenLinks;
+	}
+
+	ifBrokenLinksFetched() {
+		const brokenLinks = this.props.routeChildrenProps.site.brokenLinks;
+
+		if (!brokenLinks) {
+			return false;
+		}
+
+		return true;
 	}
 
 	updateSiteState(newStatus) {
@@ -48,6 +99,12 @@ export default class BrokenLinkChecker extends Component {
 	updateSiteRootUrl(siteUrl) {
 		this.setState(prevState => ({
 			siteRootUrl: siteUrl
+		}));
+	}
+
+	updateSiteId(siteId) {
+		this.setState(prevState => ({
+			siteId: siteId
 		}));
 	}
 
@@ -70,28 +127,21 @@ export default class BrokenLinkChecker extends Component {
 	}
 
 	startScan = () => {
-		let routeChildrenProps = this.props.routeChildrenProps
-			.routeChildrenProps;
-		let site = routeChildrenProps.site;
-		let siteDomain = site.domain;
+		let routeChildrenProps = this.props.routeChildrenProps;
 		let siteStatus = routeChildrenProps.siteStatus;
-
-		// TODO: Add checking to see if site is running with HTTP or HTTPS. Right now HTTP is assumed
-		//let possibleSecureHttpStatus = site.services.nginx.ports.HTTP;
-		//let otherPossibleSecureHttpStatus = site.services.nginx.role;
-
-		let siteUrl = "http://" + siteDomain;
 
 		// Clear the existing broken links on screen if some have been rendered already
 		if (this.state.resultsOnScreen) {
 			this.clearBrokenLinks();
 		}
 
-		this.updateSiteState(siteStatus);
-		this.updateSiteRootUrl(siteUrl);
-
-		if (String(siteStatus) !== "halted" && siteStatus != null) {
-			this.checkLinks(siteUrl);
+		if (
+			String(this.state.siteStatus) !== "halted" &&
+			this.state.siteStatus != null
+		) {
+			this.checkLinks(this.state.siteRootUrl);
+		} else {
+			this.updateSiteState(siteStatus);
 		}
 	};
 
