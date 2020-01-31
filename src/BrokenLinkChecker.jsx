@@ -8,7 +8,7 @@ export default class BrokenLinkChecker extends Component {
 
 		this.state = {
 			brokenLinks: this.fetchBrokenLinks(),
-			resultsOnScreen: false,
+			resultsOnScreen: this.ifBrokenLinksFetched(),
 			firstRunComplete: false,
 			brokenLinksFound: false,
 			siteStatus: null,
@@ -27,8 +27,6 @@ export default class BrokenLinkChecker extends Component {
 		let siteDomain = site.domain;
 
 		let siteId = routeChildrenProps.site.id;
-
-		console.log(routeChildrenProps);
 
 		// TODO: Add checking to see if site is running with HTTP or HTTPS. Right now HTTP is assumed
 		//let possibleSecureHttpStatus = site.services.nginx.ports.HTTP;
@@ -61,12 +59,10 @@ export default class BrokenLinkChecker extends Component {
 	}
 
 	clearBrokenLinks() {
-		console.log("Clear broken links called");
 		this.setState({ brokenLinks: [] }, this.syncBrokenLinks);
 	}
 
 	syncBrokenLinks() {
-		console.log("Sync Broken Links called");
 		ipcRenderer.send(
 			"store-broken-links",
 			this.state.siteId,
@@ -82,6 +78,16 @@ export default class BrokenLinkChecker extends Component {
 		}
 
 		return brokenLinks;
+	}
+
+	ifBrokenLinksFetched() {
+		const brokenLinks = this.props.routeChildrenProps.site.brokenLinks;
+
+		if (!brokenLinks) {
+			return false;
+		}
+
+		return true;
 	}
 
 	updateSiteState(newStatus) {
@@ -212,8 +218,6 @@ export default class BrokenLinkChecker extends Component {
 		if (this.state.resultsOnScreen) {
 			startButtonText = "Re-Run Scan";
 		}
-
-		console.log(this.state);
 
 		return (
 			<div style={{ flex: "1", overflowY: "auto" }}>
