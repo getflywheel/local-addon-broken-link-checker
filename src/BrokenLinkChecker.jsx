@@ -1,6 +1,7 @@
 import React, { Component, Fragment } from "react";
 import { ipcRenderer } from "electron";
 const { SiteChecker, HtmlUrlChecker } = require("broken-link-checker");
+import { TableListRepeater } from "@getflywheel/local-components";
 
 export default class BrokenLinkChecker extends Component {
 	constructor(props) {
@@ -277,6 +278,45 @@ export default class BrokenLinkChecker extends Component {
 				>
 					{startButtonText}
 				</a>
+
+				<TableListRepeater
+					header={
+						<>
+							<strong
+								className="TableListRowHeader__SeparatorRight"
+								style={{ width: "33%" }}
+							>
+								Column 1
+          </strong>
+							<strong style={{ width: "33%" }}>Column 2</strong>
+							<strong style={{ width: "33%" }}>Column 3</strong>
+						</>
+					}
+					repeatingContent={(item, index, updateItem) => (
+						<>
+							<div className="TableListRowHeader__SeparatorRight">
+								{item.column1}
+							</div>
+
+							<div>{item.column2}</div>
+
+							<div>{item.column3}</div>
+						</>
+					)}
+					itemTemplate={{}}
+					data={[
+						{
+							column1: "Row 1 Column 1",
+							column2: "Row 1 Column 2",
+							column3: "Row 1 Column 3"
+						},
+						{
+							column1: "Row 2 Column 1",
+							column2: "Row 2 Column 2",
+							column3: "Row 2 Column 3"
+						}
+					]}
+				/>
 			</div>
 		);
 	}
