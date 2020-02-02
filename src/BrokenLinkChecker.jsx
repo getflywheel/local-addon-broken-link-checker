@@ -220,8 +220,10 @@ export default class BrokenLinkChecker extends Component {
 			startButtonText = "Re-Run Scan";
 		}
 
+		console.log(this.state.brokenLinks);
+
 		return (
-			<div style={{ flex: "1", overflowY: "auto" }}>
+			<div style={{ flex: "1", overflowY: "auto" }} className="brokenLinkCheckWrap">
 				<table class="brokenLinksTable">
 					<thead>
 						<tr>
@@ -284,38 +286,35 @@ export default class BrokenLinkChecker extends Component {
 						<>
 							<strong
 								className="TableListRowHeader__SeparatorRight"
-								style={{ width: "33%" }}
+								style={{ width: "10%" }}
 							>
-								Column 1
+								Status
           </strong>
-							<strong style={{ width: "33%" }}>Column 2</strong>
-							<strong style={{ width: "33%" }}>Column 3</strong>
+							<strong style={{ width: "30%" }}>Origin URL</strong>
+							<strong style={{ width: "30%" }}>Link URL</strong>
+							<strong style={{ width: "15%" }}>Link Text</strong>
+							<strong style={{ width: "15%" }}>Post ID</strong>
 						</>
 					}
 					repeatingContent={(item, index, updateItem) => (
 						<>
 							<div className="TableListRowHeader__SeparatorRight">
-								{item.column1}
+								{item.statusCode}
 							</div>
 
-							<div>{item.column2}</div>
+							<div>{item.originURL}</div>
 
-							<div>{item.column3}</div>
+							<div>{item.linkURL}</div>
+
+							<div>{item.linkText}</div>
+
+							<div>{item.wpPostId}</div>
 						</>
 					)}
+					onSubmit={() => console.log('onSubmit')}
+					submitLabel={startButtonText}
 					itemTemplate={{}}
-					data={[
-						{
-							column1: "Row 1 Column 1",
-							column2: "Row 1 Column 2",
-							column3: "Row 1 Column 3"
-						},
-						{
-							column1: "Row 2 Column 1",
-							column2: "Row 2 Column 2",
-							column3: "Row 2 Column 3"
-						}
-					]}
+					data={this.state.brokenLinks}
 				/>
 			</div>
 		);
