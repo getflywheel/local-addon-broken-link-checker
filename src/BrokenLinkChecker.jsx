@@ -220,66 +220,9 @@ export default class BrokenLinkChecker extends Component {
 			startButtonText = "Re-Run Scan";
 		}
 
-		console.log(this.state.brokenLinks);
-
 		return (
 			<div style={{ flex: "1", overflowY: "auto" }} className="brokenLinkCheckWrap">
-				<table class="brokenLinksTable">
-					<thead>
-						<tr>
-							<th>Status</th>
-							<th>Origin URL</th>
-							<th>Link URL</th>
-							<th>Link Text</th>
-							<th>Post ID</th>
-						</tr>
-					</thead>
-					<tbody>
-						{this.state.brokenLinks.map(item => (
-							<tr key={item["linkURL"]}>
-								<td>{item["statusCode"]}</td>
-								<td>
-									{" "}
-									<a href={item["originURL"]}>
-										{item["originURL"]}
-									</a>{" "}
-								</td>
-								<td>
-									{" "}
-									<a href={item["linkURL"]}>
-										{item["linkURL"]}
-									</a>{" "}
-								</td>
-								<td>{item["linkText"]}</td>
-								<td>
-									{item["wpPostId"]}{" "}
-									{item["wpPostId"] != null ? "(" : ""}
-									<a
-										href={
-											this.state.siteRootUrl +
-											"/wp-admin/post.php?post=" +
-											item["wpPostId"] +
-											"&action=edit"
-										}
-									>
-										{item["wpPostId"] != null ? "Edit" : ""}
-									</a>
-									{item["wpPostId"] != null ? ")" : ""}
-								</td>
-							</tr>
-						))}
-					</tbody>
-				</table>
-
 				<p>{message}</p>
-
-				<a
-					href="javascript:void(0);"
-					onClick={this.startScan}
-					style={{ marginTop: 15, marginLeft: 2, display: "block" }}
-				>
-					{startButtonText}
-				</a>
 
 				<TableListRepeater
 					header={
@@ -290,10 +233,10 @@ export default class BrokenLinkChecker extends Component {
 							>
 								Status
           </strong>
-							<strong style={{ width: "30%" }}>Origin URL</strong>
+							<strong style={{ width: "35%" }}>Origin URL</strong>
 							<strong style={{ width: "30%" }}>Link URL</strong>
 							<strong style={{ width: "15%" }}>Link Text</strong>
-							<strong style={{ width: "15%" }}>Post ID</strong>
+							<strong style={{ width: "10%" }}>Post ID</strong>
 						</>
 					}
 					repeatingContent={(item, index, updateItem) => (
@@ -302,13 +245,29 @@ export default class BrokenLinkChecker extends Component {
 								{item.statusCode}
 							</div>
 
-							<div>{item.originURL}</div>
+							<div><a href={item.originURL}>
+								{item.originURL}
+							</a></div>
 
-							<div>{item.linkURL}</div>
+							<div><a href={item.linkURL}>
+								{item.linkURL}
+							</a></div>
 
-							<div>{item.linkText}</div>
+							<div><p>{item.linkText}</p></div>
 
-							<div>{item.wpPostId}</div>
+							<div>{item.wpPostId}{" "}
+								{item.wpPostId != null ? "(" : ""}
+								<a
+									href={
+										this.state.siteRootUrl +
+										"/wp-admin/post.php?post=" +
+										item.wpPostId +
+										"&action=edit"
+									}
+								>
+									{item.wpPostId != null ? "Edit" : ""}
+								</a>
+								{item.wpPostId != null ? ")" : ""}</div>
 						</>
 					)}
 					onSubmit={() => console.log('onSubmit')}
@@ -316,6 +275,13 @@ export default class BrokenLinkChecker extends Component {
 					itemTemplate={{}}
 					data={this.state.brokenLinks}
 				/>
+				<a
+					href="javascript:void(0);"
+					onClick={this.startScan}
+					style={{ marginTop: 15, marginLeft: 2, display: "block" }}
+				>
+					{startButtonText}
+				</a>
 			</div>
 		);
 	}
