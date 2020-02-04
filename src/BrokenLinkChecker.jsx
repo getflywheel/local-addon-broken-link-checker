@@ -14,7 +14,8 @@ export default class BrokenLinkChecker extends Component {
 			brokenLinksFound: false,
 			siteStatus: null,
 			siteRootUrl: null,
-			siteId: null
+			siteId: null,
+			scanInProgress: false
 		};
 
 		this.checkLinks = this.checkLinks.bind(this);
@@ -84,7 +85,7 @@ export default class BrokenLinkChecker extends Component {
 	ifBrokenLinksFetched() {
 		const brokenLinks = this.props.routeChildrenProps.site.brokenLinks;
 
-		if (!brokenLinks) {
+		if (!brokenLinks || brokenLinks.length < 1) {
 			return false;
 		}
 
@@ -127,21 +128,37 @@ export default class BrokenLinkChecker extends Component {
 		}));
 	}
 
+	updateScanInProgress(boolean) {
+		this.setState(prevState => ({
+			scanInProgress: boolean
+		}));
+	}
+
 	startScan = () => {
 		let routeChildrenProps = this.props.routeChildrenProps;
 		let siteStatus = routeChildrenProps.siteStatus;
 
-		// Clear the existing broken links on screen if some have been rendered already
-		if (this.state.resultsOnScreen) {
-			this.clearBrokenLinks();
-		}
-
 		if (
+			this.state.resultsOnScreen &&
 			String(this.state.siteStatus) !== "halted" &&
 			this.state.siteStatus != null
 		) {
+			// Clear the existing broken links on screen if some have been rendered already
+			console.log("Clearing broken links and starting the scan");
+			this.clearBrokenLinks();
 			this.checkLinks(this.state.siteRootUrl);
+			this.updateScanInProgress(true);
+		} else if (
+			String(this.state.siteStatus) !== "halted" &&
+			this.state.siteStatus != null
+		) {
+			console.log(
+				"No links need to be cleared so just starting the scan"
+			);
+			this.checkLinks(this.state.siteRootUrl);
+			this.updateScanInProgress(true);
 		} else {
+			console.log("Site status not ready so just updating site state");
 			this.updateSiteState(siteStatus);
 		}
 	};
@@ -199,6 +216,7 @@ export default class BrokenLinkChecker extends Component {
 			end: (result, customData) => {
 				// At last the first run is done, so we update the state
 				this.updateFirstRunComplete(true);
+				this.updateScanInProgress(false);
 			}
 		});
 		siteChecker.enqueue(siteURL);
@@ -220,9 +238,20 @@ export default class BrokenLinkChecker extends Component {
 			startButtonText = "Re-Run Scan";
 		}
 
+		let scanProgressMessage = this.state.scanInProgress
+			? "Scan is in progress."
+			: "Scan is not running.";
+
+		console.log(this.state);
+
 		return (
-			<div style={{ flex: "1", overflowY: "auto" }} className="brokenLinkCheckWrap">
+			<div
+				style={{ flex: "1", overflowY: "auto" }}
+				className="brokenLinkCheckWrap"
+			>
 				<p>{message}</p>
+
+				<p>{scanProgressMessage}</p>
 
 				<TableListRepeater
 					header={
@@ -232,7 +261,7 @@ export default class BrokenLinkChecker extends Component {
 								style={{ width: "10%" }}
 							>
 								Status
-          </strong>
+							</strong>
 							<strong style={{ width: "35%" }}>Origin URL</strong>
 							<strong style={{ width: "30%" }}>Link URL</strong>
 							<strong style={{ width: "15%" }}>Link Text</strong>
@@ -245,17 +274,20 @@ export default class BrokenLinkChecker extends Component {
 								{item.statusCode}
 							</div>
 
-							<div><a href={item.originURL}>
-								{item.originURL}
-							</a></div>
+							<div>
+								<a href={item.originURL}>{item.originURL}</a>
+							</div>
 
-							<div><a href={item.linkURL}>
-								{item.linkURL}
-							</a></div>
+							<div>
+								<a href={item.linkURL}>{item.linkURL}</a>
+							</div>
 
-							<div><p>{item.linkText}</p></div>
+							<div>
+								<p>{item.linkText}</p>
+							</div>
 
-							<div>{item.wpPostId}{" "}
+							<div>
+								{item.wpPostId}{" "}
 								{item.wpPostId != null ? "(" : ""}
 								<a
 									href={
@@ -267,10 +299,11 @@ export default class BrokenLinkChecker extends Component {
 								>
 									{item.wpPostId != null ? "Edit" : ""}
 								</a>
-								{item.wpPostId != null ? ")" : ""}</div>
+								{item.wpPostId != null ? ")" : ""}
+							</div>
 						</>
 					)}
-					onSubmit={() => console.log('onSubmit')}
+					onSubmit={() => console.log("onSubmit")}
 					submitLabel={startButtonText}
 					itemTemplate={{}}
 					data={this.state.brokenLinks}
