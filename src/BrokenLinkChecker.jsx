@@ -36,7 +36,6 @@ export default class BrokenLinkChecker extends Component {
 		//let siteUrl = "http://" + siteDomain;
 
 		this.testSiteRootUrlVariantsAndUpdate(siteDomain);
-		//this.updateSiteRootUrl(siteUrl);
 		this.updateSiteId(siteId);
 		this.updateSiteState(siteStatus);
 	}
@@ -94,6 +93,8 @@ export default class BrokenLinkChecker extends Component {
 
 	testSiteRootUrlVariantsAndUpdate(siteDomain) {
 
+		let workingUrlFound = false;
+
 		// TODO: Handle self-signed certificates more securely, like https://stackoverflow.com/questions/20433287/node-js-request-cert-has-expired#answer-29397100
 		process.env["NODE_TLS_REJECT_UNAUTHORIZED"] = 0;
 
@@ -108,7 +109,18 @@ export default class BrokenLinkChecker extends Component {
 						siteRootUrl: workingUrl
 					}));
 
-					isUrlBrokenChecker.pause();
+					// In case the first root URL variant is the winner, dequeue the later options
+					isUrlBrokenChecker.dequeue(1);
+
+					workingUrlFound = true;
+				}
+			},
+			end: () => {
+				// If a proper working root URL is not found, make sure it's null so we can render a warning notice
+				if (!workingUrlFound) {
+					this.setState(prevState => ({
+						siteRootUrl: null
+					}));
 				}
 			}
 		});
@@ -119,12 +131,6 @@ export default class BrokenLinkChecker extends Component {
 	updateSiteState(newStatus) {
 		this.setState(prevState => ({
 			siteStatus: newStatus
-		}));
-	}
-
-	updateSiteRootUrl(siteUrl) {
-		this.setState(prevState => ({
-			siteRootUrl: siteUrl
 		}));
 	}
 
@@ -238,6 +244,10 @@ export default class BrokenLinkChecker extends Component {
 			!this.state.brokenLinksFound
 		) {
 			message = "No broken links found.";
+		}
+
+		if (this.state.siteStatus !== "halted" && this.state.siteRootUrl == null) {
+			message += " There was a problem checking the website's homepage.";
 		}
 
 		let startButtonText = "Start Scan";
