@@ -94,34 +94,26 @@ export default class BrokenLinkChecker extends Component {
 
 	testSiteRootUrlVariantsAndUpdate(siteDomain) {
 
-		let options = {
-			'cacheResponses': false,
-			'rateLimit': 500
-		};
+		// TODO: Handle self-signed certificates more securely, like https://stackoverflow.com/questions/20433287/node-js-request-cert-has-expired#answer-29397100
+		process.env["NODE_TLS_REJECT_UNAUTHORIZED"] = 0;
 
-		let isUrlBrokenChecker = new UrlChecker(options, {
-			link: function (result, customData) {
+		let isUrlBrokenChecker = new UrlChecker(null, {
+			link: (result, customData) => {
+
+				// If we get a 200 success on the URL, we use it and stop checking variants of the root URL
 				if (!result.broken) {
 					let workingUrl = result.url.original;
 
-					console.log('Not Broken:');
-					console.log(result);
-					return;
-				} else {
-					console.log('Broken:');
-					console.log(result);
+					this.setState(prevState => ({
+						siteRootUrl: workingUrl
+					}));
+
+					isUrlBrokenChecker.pause();
 				}
-			},
-			end: function () { console.log('This is the end'); }
+			}
 		});
 		isUrlBrokenChecker.enqueue('http://' + siteDomain + '/');
 		isUrlBrokenChecker.enqueue('https://' + siteDomain + '/');
-		isUrlBrokenChecker.enqueue('http://' + siteDomain + '/');
-		isUrlBrokenChecker.enqueue('https://' + siteDomain + '/');
-
-		this.setState(prevState => ({
-			siteRootUrl: 'http://' + siteDomain
-		}));
 	}
 
 	updateSiteState(newStatus) {
