@@ -1,6 +1,6 @@
 import React, { Component, Fragment } from "react";
 import { ipcRenderer } from "electron";
-const { SiteChecker, HtmlUrlChecker } = require("broken-link-checker");
+const { SiteChecker, HtmlUrlChecker, UrlChecker } = require("broken-link-checker");
 import { TableListRepeater } from "@getflywheel/local-components";
 
 export default class BrokenLinkChecker extends Component {
@@ -33,9 +33,10 @@ export default class BrokenLinkChecker extends Component {
 		//let possibleSecureHttpStatus = site.services.nginx.ports.HTTP;
 		//let otherPossibleSecureHttpStatus = site.services.nginx.role;
 
-		let siteUrl = "http://" + siteDomain;
+		//let siteUrl = "http://" + siteDomain;
 
-		this.updateSiteRootUrl(siteUrl);
+		this.testSiteRootUrlVariantsAndUpdate(siteDomain);
+		//this.updateSiteRootUrl(siteUrl);
 		this.updateSiteId(siteId);
 		this.updateSiteState(siteStatus);
 	}
@@ -89,6 +90,38 @@ export default class BrokenLinkChecker extends Component {
 		}
 
 		return true;
+	}
+
+	testSiteRootUrlVariantsAndUpdate(siteDomain) {
+
+		let options = {
+			'cacheResponses': false,
+			'rateLimit': 500
+		};
+
+		let isUrlBrokenChecker = new UrlChecker(options, {
+			link: function (result, customData) {
+				if (!result.broken) {
+					let workingUrl = result.url.original;
+
+					console.log('Not Broken:');
+					console.log(result);
+					return;
+				} else {
+					console.log('Broken:');
+					console.log(result);
+				}
+			},
+			end: function () { console.log('This is the end'); }
+		});
+		isUrlBrokenChecker.enqueue('http://' + siteDomain + '/');
+		isUrlBrokenChecker.enqueue('https://' + siteDomain + '/');
+		isUrlBrokenChecker.enqueue('http://' + siteDomain + '/');
+		isUrlBrokenChecker.enqueue('https://' + siteDomain + '/');
+
+		this.setState(prevState => ({
+			siteRootUrl: 'http://' + siteDomain
+		}));
 	}
 
 	updateSiteState(newStatus) {
