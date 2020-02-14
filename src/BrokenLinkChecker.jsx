@@ -1,6 +1,10 @@
 import React, { Component, Fragment } from "react";
 import { ipcRenderer } from "electron";
-const { SiteChecker, HtmlUrlChecker, UrlChecker } = require("broken-link-checker");
+const {
+	SiteChecker,
+	HtmlUrlChecker,
+	UrlChecker
+} = require("broken-link-checker");
 import { TableListRepeater } from "@getflywheel/local-components";
 
 export default class BrokenLinkChecker extends Component {
@@ -39,6 +43,18 @@ export default class BrokenLinkChecker extends Component {
 		this.testSiteRootUrlVariantsAndUpdate(siteDomain);
 		this.updateSiteId(siteId);
 		this.updateSiteState(siteStatus);
+	}
+
+	componentDidUpdate() {
+		let routeChildrenProps = this.props.routeChildrenProps;
+		let siteStatus = routeChildrenProps.siteStatus;
+		let site = routeChildrenProps.site;
+		let siteDomain = site.domain;
+
+		if (siteStatus !== this.state.siteStatus) {
+			this.testSiteRootUrlVariantsAndUpdate(siteDomain);
+			this.updateSiteState(siteStatus);
+		}
 	}
 
 	addBrokenLink(statusCode, linkURL, linkText, originURL, wpPostId) {
@@ -93,15 +109,17 @@ export default class BrokenLinkChecker extends Component {
 	}
 
 	testSiteRootUrlVariantsAndUpdate(siteDomain) {
-
 		let workingUrlFound = false;
 
 		// TODO: Handle self-signed certificates more securely, like https://stackoverflow.com/questions/20433287/node-js-request-cert-has-expired#answer-29397100
 		process.env["NODE_TLS_REJECT_UNAUTHORIZED"] = 0;
 
-		let isUrlBrokenChecker = new UrlChecker(null, {
-			link: (result, customData) => {
+		let options = new Object();
+		options.cacheResponses = false;
+		options.rateLimit = 500; // Give the local website time to start, so we avoid the 500 errors
 
+		let isUrlBrokenChecker = new UrlChecker(options, {
+			link: (result, customData) => {
 				// If we get a 200 success on the URL, we use it and stop checking variants of the root URL
 				if (!result.broken) {
 					let workingUrl = result.url.original;
@@ -112,6 +130,7 @@ export default class BrokenLinkChecker extends Component {
 
 					// In case the first root URL variant is the winner, dequeue the later options
 					isUrlBrokenChecker.dequeue(1);
+					isUrlBrokenChecker.dequeue(2);
 
 					workingUrlFound = true;
 				}
@@ -125,8 +144,8 @@ export default class BrokenLinkChecker extends Component {
 				}
 			}
 		});
-		isUrlBrokenChecker.enqueue('http://' + siteDomain + '/');
-		isUrlBrokenChecker.enqueue('https://' + siteDomain + '/');
+		isUrlBrokenChecker.enqueue("http://" + siteDomain + "/");
+		isUrlBrokenChecker.enqueue("https://" + siteDomain + "/");
 	}
 
 	updateSiteState(newStatus) {
@@ -175,7 +194,6 @@ export default class BrokenLinkChecker extends Component {
 			this.state.siteStatus != null
 		) {
 			// Clear the existing broken links on screen if some have been rendered already
-			console.log("Clearing broken links and starting the scan");
 			this.clearBrokenLinks();
 			this.checkLinks(this.state.siteRootUrl);
 			this.updateScanInProgress(true);
@@ -183,13 +201,9 @@ export default class BrokenLinkChecker extends Component {
 			String(this.state.siteStatus) !== "halted" &&
 			this.state.siteStatus != null
 		) {
-			console.log(
-				"No links need to be cleared so just starting the scan"
-			);
 			this.checkLinks(this.state.siteRootUrl);
 			this.updateScanInProgress(true);
 		} else {
-			console.log("Site status not ready so just updating site state");
 			this.updateSiteState(siteStatus);
 		}
 	};
@@ -264,7 +278,10 @@ export default class BrokenLinkChecker extends Component {
 			message = "No broken links found.";
 		}
 
-		if (this.state.siteStatus !== "halted" && this.state.siteRootUrl == null) {
+		if (
+			this.state.siteStatus !== "halted" &&
+			this.state.siteRootUrl == null
+		) {
 			message += " There was a problem checking the website's homepage.";
 		}
 
@@ -276,8 +293,6 @@ export default class BrokenLinkChecker extends Component {
 		let scanProgressMessage = this.state.scanInProgress
 			? "Scan is in progress."
 			: "Scan is not running.";
-
-		console.log(this.state);
 
 		return (
 			<div
