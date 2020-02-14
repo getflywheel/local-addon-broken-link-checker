@@ -30,6 +30,10 @@ Clone the repository into the following directory depending on your platform:
 
 All files in `/src` will be transpiled to `/lib` using [Babel](https://github.com/babel/babel/). Anything in `/lib` will be overwritten.
 
+### Debug Logs
+
+- Aside from the developer console, Local logs can be found (on Mac) at /Users/username/Library/Logs/local-beta.log
+
 ## License
 
 MIT
