@@ -4,6 +4,11 @@
 	display: none;
 }
 
+.brokenLinkCheckWrap .TableListRow_VfExz_v11-2-0 div {
+	line-height: 1.4em;
+	word-break: break-word;
+}
+
 /* END BROKEN LINK CHECKER STYLES */
 
 /* START STYLES FROM NOTES ADDON */
