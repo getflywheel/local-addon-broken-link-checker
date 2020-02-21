@@ -1,6 +1,10 @@
 import React, { Component, Fragment } from "react";
 import { ipcRenderer } from "electron";
-const { SiteChecker, HtmlUrlChecker, UrlChecker } = require("broken-link-checker");
+const {
+	SiteChecker,
+	HtmlUrlChecker,
+	UrlChecker
+} = require("broken-link-checker");
 import { TableListRepeater } from "@getflywheel/local-components";
 
 export default class BrokenLinkChecker extends Component {
@@ -14,7 +18,8 @@ export default class BrokenLinkChecker extends Component {
 			brokenLinksFound: false,
 			siteStatus: null,
 			siteRootUrl: null,
-			siteId: null
+			siteId: null,
+			scanInProgress: false
 		};
 
 		this.checkLinks = this.checkLinks.bind(this);
@@ -38,6 +43,18 @@ export default class BrokenLinkChecker extends Component {
 		this.testSiteRootUrlVariantsAndUpdate(siteDomain);
 		this.updateSiteId(siteId);
 		this.updateSiteState(siteStatus);
+	}
+
+	componentDidUpdate() {
+		let routeChildrenProps = this.props.routeChildrenProps;
+		let siteStatus = routeChildrenProps.siteStatus;
+		let site = routeChildrenProps.site;
+		let siteDomain = site.domain;
+
+		if (siteStatus !== this.state.siteStatus) {
+			this.testSiteRootUrlVariantsAndUpdate(siteDomain);
+			this.updateSiteState(siteStatus);
+		}
 	}
 
 	addBrokenLink(statusCode, linkURL, linkText, originURL, wpPostId) {
@@ -84,7 +101,7 @@ export default class BrokenLinkChecker extends Component {
 	ifBrokenLinksFetched() {
 		const brokenLinks = this.props.routeChildrenProps.site.brokenLinks;
 
-		if (!brokenLinks) {
+		if (!brokenLinks || brokenLinks.length < 1) {
 			return false;
 		}
 
@@ -92,15 +109,17 @@ export default class BrokenLinkChecker extends Component {
 	}
 
 	testSiteRootUrlVariantsAndUpdate(siteDomain) {
-
 		let workingUrlFound = false;
 
 		// TODO: Handle self-signed certificates more securely, like https://stackoverflow.com/questions/20433287/node-js-request-cert-has-expired#answer-29397100
 		process.env["NODE_TLS_REJECT_UNAUTHORIZED"] = 0;
 
-		let isUrlBrokenChecker = new UrlChecker(null, {
-			link: (result, customData) => {
+		let options = new Object();
+		options.cacheResponses = false;
+		options.rateLimit = 500; // Give the local website time to start, so we avoid the 500 errors
 
+		let isUrlBrokenChecker = new UrlChecker(options, {
+			link: (result, customData) => {
 				// If we get a 200 success on the URL, we use it and stop checking variants of the root URL
 				if (!result.broken) {
 					let workingUrl = result.url.original;
@@ -111,6 +130,7 @@ export default class BrokenLinkChecker extends Component {
 
 					// In case the first root URL variant is the winner, dequeue the later options
 					isUrlBrokenChecker.dequeue(1);
+					isUrlBrokenChecker.dequeue(2);
 
 					workingUrlFound = true;
 				}
@@ -124,8 +144,8 @@ export default class BrokenLinkChecker extends Component {
 				}
 			}
 		});
-		isUrlBrokenChecker.enqueue('http://' + siteDomain + '/');
-		isUrlBrokenChecker.enqueue('https://' + siteDomain + '/');
+		isUrlBrokenChecker.enqueue("http://" + siteDomain + "/");
+		isUrlBrokenChecker.enqueue("https://" + siteDomain + "/");
 	}
 
 	updateSiteState(newStatus) {
@@ -158,20 +178,31 @@ export default class BrokenLinkChecker extends Component {
 		}));
 	}
 
+	updateScanInProgress(boolean) {
+		this.setState(prevState => ({
+			scanInProgress: boolean
+		}));
+	}
+
 	startScan = () => {
 		let routeChildrenProps = this.props.routeChildrenProps;
 		let siteStatus = routeChildrenProps.siteStatus;
 
-		// Clear the existing broken links on screen if some have been rendered already
-		if (this.state.resultsOnScreen) {
-			this.clearBrokenLinks();
-		}
-
 		if (
+			this.state.resultsOnScreen &&
+			String(this.state.siteStatus) !== "halted" &&
+			this.state.siteStatus != null
+		) {
+			// Clear the existing broken links on screen if some have been rendered already
+			this.clearBrokenLinks();
+			this.checkLinks(this.state.siteRootUrl);
+			this.updateScanInProgress(true);
+		} else if (
 			String(this.state.siteStatus) !== "halted" &&
 			this.state.siteStatus != null
 		) {
 			this.checkLinks(this.state.siteRootUrl);
+			this.updateScanInProgress(true);
 		} else {
 			this.updateSiteState(siteStatus);
 		}
@@ -230,6 +261,7 @@ export default class BrokenLinkChecker extends Component {
 			end: (result, customData) => {
 				// At last the first run is done, so we update the state
 				this.updateFirstRunComplete(true);
+				this.updateScanInProgress(false);
 			}
 		});
 		siteChecker.enqueue(siteURL);
@@ -246,7 +278,10 @@ export default class BrokenLinkChecker extends Component {
 			message = "No broken links found.";
 		}
 
-		if (this.state.siteStatus !== "halted" && this.state.siteRootUrl == null) {
+		if (
+			this.state.siteStatus !== "halted" &&
+			this.state.siteRootUrl == null
+		) {
 			message += " There was a problem checking the website's homepage.";
 		}
 
@@ -255,9 +290,18 @@ export default class BrokenLinkChecker extends Component {
 			startButtonText = "Re-Run Scan";
 		}
 
+		let scanProgressMessage = this.state.scanInProgress
+			? "Scan is in progress."
+			: "Scan is not running.";
+
 		return (
-			<div style={{ flex: "1", overflowY: "auto" }} className="brokenLinkCheckWrap">
+			<div
+				style={{ flex: "1", overflowY: "auto" }}
+				className="brokenLinkCheckWrap"
+			>
 				<p>{message}</p>
+
+				<p>{scanProgressMessage}</p>
 
 				<TableListRepeater
 					header={
@@ -267,7 +311,7 @@ export default class BrokenLinkChecker extends Component {
 								style={{ width: "10%" }}
 							>
 								Status
-          </strong>
+							</strong>
 							<strong style={{ width: "35%" }}>Origin URL</strong>
 							<strong style={{ width: "30%" }}>Link URL</strong>
 							<strong style={{ width: "15%" }}>Link Text</strong>
@@ -280,17 +324,20 @@ export default class BrokenLinkChecker extends Component {
 								{item.statusCode}
 							</div>
 
-							<div><a href={item.originURL}>
-								{item.originURL}
-							</a></div>
+							<div>
+								<a href={item.originURL}>{item.originURL}</a>
+							</div>
 
-							<div><a href={item.linkURL}>
-								{item.linkURL}
-							</a></div>
+							<div>
+								<a href={item.linkURL}>{item.linkURL}</a>
+							</div>
 
-							<div><p>{item.linkText}</p></div>
+							<div>
+								<p>{item.linkText}</p>
+							</div>
 
-							<div>{item.wpPostId}{" "}
+							<div>
+								{item.wpPostId}{" "}
 								{item.wpPostId != null ? "(" : ""}
 								<a
 									href={
@@ -302,10 +349,11 @@ export default class BrokenLinkChecker extends Component {
 								>
 									{item.wpPostId != null ? "Edit" : ""}
 								</a>
-								{item.wpPostId != null ? ")" : ""}</div>
+								{item.wpPostId != null ? ")" : ""}
+							</div>
 						</>
 					)}
-					onSubmit={() => console.log('onSubmit')}
+					onSubmit={() => console.log("onSubmit")}
 					submitLabel={startButtonText}
 					itemTemplate={{}}
 					data={this.state.brokenLinks}
