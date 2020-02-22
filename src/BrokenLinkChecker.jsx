@@ -241,13 +241,15 @@ export default class BrokenLinkChecker extends Component {
 								wpPostId = findPageId[2];
 							}
 
-							this.addBrokenLink(
-								customData["statusCode"],
-								customData["linkURL"],
-								customData["linkText"],
-								customData["originURL"],
-								wpPostId
-							);
+							if (wpPostId !== null) {
+								this.addBrokenLink(
+									customData["statusCode"],
+									customData["linkURL"],
+									customData["linkText"],
+									customData["originURL"],
+									wpPostId
+								);
+							}
 						}
 					});
 					singlePageChecker.enqueue(
