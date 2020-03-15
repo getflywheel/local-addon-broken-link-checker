@@ -19,7 +19,8 @@ export default class BrokenLinkChecker extends Component {
 			siteStatus: null,
 			siteRootUrl: null,
 			siteId: null,
-			scanInProgress: false
+			scanInProgress: false,
+			numberPostsFound: 0
 		};
 
 		this.checkLinks = this.checkLinks.bind(this);
@@ -184,6 +185,18 @@ export default class BrokenLinkChecker extends Component {
 		}));
 	}
 
+	incrementNumberPostsFound() {
+		this.setState(prevState => ({
+			numberPostsFound: prevState.numberPostsFound + 1
+		}));
+	}
+
+	clearNumberPostsFound() {
+		this.setState(prevState => ({
+			numberPostsFound: 0
+		}));
+	}
+
 	startScan = () => {
 		let routeChildrenProps = this.props.routeChildrenProps;
 		let siteStatus = routeChildrenProps.siteStatus;
@@ -195,6 +208,7 @@ export default class BrokenLinkChecker extends Component {
 		) {
 			// Clear the existing broken links on screen if some have been rendered already
 			this.clearBrokenLinks();
+			this.clearNumberPostsFound();
 			this.checkLinks(this.state.siteRootUrl);
 			this.updateScanInProgress(true);
 		} else if (
@@ -210,6 +224,12 @@ export default class BrokenLinkChecker extends Component {
 
 	checkLinks(siteURL) {
 		let siteChecker = new SiteChecker(null, {
+			html: (tree, robots, response, pageUrl, customData) => {
+				// This code is used to increment the number of WP posts we traverse in our scan
+				if( this.findWpPostIdInMarkup(tree) ){
+					this.incrementNumberPostsFound();
+				}
+			},
 			link: (result, customData) => {
 				if (result.broken) {
 					let brokenLinkScanResults = {
@@ -267,6 +287,29 @@ export default class BrokenLinkChecker extends Component {
 		siteChecker.enqueue(siteURL);
 	}
 
+	findWpPostIdInMarkup(tree) {
+		// TODO: Make this code continue to drill down until an exact match for the 'body' tag is found, just in case a custom template has modified the usual page structure
+		let stringOfBodyClasses = tree.childNodes[1].childNodes[2].attrMap.class;
+
+		// TODO: Also make note of special classes like .home
+		let findPostId = stringOfBodyClasses.match(
+			/(^|\s)postid-(\d+)(\s|$)/
+		);
+
+		let findPageId = stringOfBodyClasses.match(
+			/(^|\s)page-id-(\d+)(\s|$)/
+		);
+
+		let wpPostId = null;
+		if (findPostId) {
+			wpPostId = findPostId[2];
+		} else if (findPageId) {
+			wpPostId = findPageId[2];
+		}
+
+		return wpPostId;
+	}
+
 	render() {
 		let message = "";
 		if (this.state.siteStatus === "halted") {
@@ -293,6 +336,8 @@ export default class BrokenLinkChecker extends Component {
 		let scanProgressMessage = this.state.scanInProgress
 			? "Scan is in progress."
 			: "Scan is not running.";
+
+		console.log("Number pages found: " + this.state.numberPostsFound);
 
 		return (
 			<div
