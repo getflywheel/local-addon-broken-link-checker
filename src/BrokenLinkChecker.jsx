@@ -202,7 +202,7 @@ export default class BrokenLinkChecker extends Component {
 		let siteStatus = routeChildrenProps.siteStatus;
 
 		if (
-			this.state.resultsOnScreen &&
+			(this.state.resultsOnScreen || !this.state.brokenLinksFound) &&
 			String(this.state.siteStatus) !== "halted" &&
 			this.state.siteStatus != null
 		) {
@@ -282,6 +282,10 @@ export default class BrokenLinkChecker extends Component {
 				// At last the first run is done, so we update the state
 				this.updateFirstRunComplete(true);
 				this.updateScanInProgress(false);
+
+				if(this.state.brokenLinks === null || this.state.brokenLinks.length === 0){
+					this.updateBrokenLinksFound(false);
+				}
 			}
 		});
 		siteChecker.enqueue(siteURL);
