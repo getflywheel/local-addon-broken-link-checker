@@ -2,6 +2,7 @@ import React, { Component, Fragment } from "react";
 import { ipcRenderer, remote } from "electron";
 import path from 'path';
 import os from 'os'; // This will help determine Mac vs Windows
+import mysql from 'mysql';
 const {
 	SiteChecker,
 	HtmlUrlChecker,
@@ -193,11 +194,30 @@ export default class BrokenLinkChecker extends Component {
 		console.log(port);
 		console.log(this.state.socketPath);
 
+		let connection = null;
+
 		if(this.isWindows()){
 			console.log('This is windows');
 		} else {
-			console.log('This is not windows');
+			connection = mysql.createConnection({
+				socketPath : this.state.socketPath,
+				user       : username,
+				password   : pass,
+				database   : dbName
+			});
+
+			//TODO: change the socketPath state variable to use the 'path' functions to make a proper file path that may work better
+			// E.g. const localPath = remote.app.getAppPath(); AND const siteData = remote.require(path.join(localPath, './helpers/site-data'));
 		}
+
+		connection.connect();
+
+		connection.query("SELECT COUNT(ID) FROM wp_posts WHERE post_type IN ( 'post', 'etc' ) and post_status = 'publish'", function (error, results, fields) {
+			if (error) throw error;
+			console.log('The solution is: ', results[0].solution);
+		  });
+
+		connection.end();
 	}
 
 	updateSiteState(newStatus) {
