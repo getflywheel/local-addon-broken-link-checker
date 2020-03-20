@@ -77,14 +77,6 @@ export default class BrokenLinkChecker extends Component {
 				let pass = routeChildrenProps.site.mysql.password;
 				let port = routeChildrenProps.site.services.mysql.ports.MYSQL[0];
 
-				// Example SQL socket: /Users/coulterpeterson/Library/Application Support/Local Beta/run/DqpcVQWhP/mysql/mysqld.sock
-
-
-				console.log(dbName);
-				console.log(username);
-				console.log(pass);
-				console.log(port);
-
 				this.updateTotalSitePosts(dbName, username, pass, port);
 			}
 		}
@@ -141,6 +133,16 @@ export default class BrokenLinkChecker extends Component {
 		return true;
 	}
 
+	isWindows(){
+		/* Possibilities:
+			win32: WINDOWS,
+			darwin: MAC,
+			linux: LINUX
+		*/
+
+		return os.platform === 'win32';
+	}
+
 	testSiteRootUrlVariantsAndUpdate(siteDomain) {
 		let workingUrlFound = false;
 
@@ -188,6 +190,12 @@ export default class BrokenLinkChecker extends Component {
 		console.log(pass);
 		console.log(port);
 		console.log(this.state.socketPath);
+
+		if(this.isWindows()){
+			console.log('This is windows');
+		} else {
+			console.log('This is not windows');
+		}
 	}
 
 	updateSiteState(newStatus) {
