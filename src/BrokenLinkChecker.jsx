@@ -21,6 +21,7 @@ export default class BrokenLinkChecker extends Component {
 			siteStatus: null,
 			siteRootUrl: null,
 			siteId: null,
+			socketPath: null,
 			scanInProgress: false,
 			numberPostsFound: 0
 		};
@@ -55,6 +56,7 @@ export default class BrokenLinkChecker extends Component {
 		this.testSiteRootUrlVariantsAndUpdate(siteDomain);
 		this.updateSiteId(siteId);
 		this.updateSiteState(siteStatus);
+		this.updateSiteDbSocket(socketPath);
 	}
 
 	componentDidUpdate() {
@@ -83,7 +85,7 @@ export default class BrokenLinkChecker extends Component {
 				console.log(pass);
 				console.log(port);
 
-				//this.updateTotalSitePosts();
+				this.updateTotalSitePosts(dbName, username, pass, port);
 			}
 		}
 	}
@@ -179,6 +181,15 @@ export default class BrokenLinkChecker extends Component {
 		isUrlBrokenChecker.enqueue("https://" + siteDomain + "/");
 	}
 
+	updateTotalSitePosts(dbName, username, pass, port) {
+		console.log('Site is started. I have this info:');
+		console.log(dbName);
+		console.log(username);
+		console.log(pass);
+		console.log(port);
+		console.log(this.state.socketPath);
+	}
+
 	updateSiteState(newStatus) {
 		this.setState(prevState => ({
 			siteStatus: newStatus
@@ -188,6 +199,12 @@ export default class BrokenLinkChecker extends Component {
 	updateSiteId(siteId) {
 		this.setState(prevState => ({
 			siteId: siteId
+		}));
+	}
+
+	updateSiteDbSocket(socketPath) {
+		this.setState(prevState => ({
+			socketPath: socketPath
 		}));
 	}
 
@@ -370,8 +387,6 @@ export default class BrokenLinkChecker extends Component {
 		let scanProgressMessage = this.state.scanInProgress
 			? "Scan is in progress."
 			: "Scan is not running.";
-
-		console.log("Number pages found: " + this.state.numberPostsFound);
 
 		return (
 			<div
