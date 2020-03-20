@@ -140,7 +140,9 @@ export default class BrokenLinkChecker extends Component {
 			linux: LINUX
 		*/
 
-		return os.platform === 'win32';
+		let platform = os.platform;
+
+		return String(platform) === 'win32';
 	}
 
 	testSiteRootUrlVariantsAndUpdate(siteDomain) {
