@@ -1,5 +1,7 @@
 import React, { Component, Fragment } from "react";
-import { ipcRenderer } from "electron";
+import { ipcRenderer, remote } from "electron";
+import path from 'path';
+import os from 'os'; // This will help determine Mac vs Windows
 const {
 	SiteChecker,
 	HtmlUrlChecker,
@@ -32,8 +34,17 @@ export default class BrokenLinkChecker extends Component {
 		let siteStatus = routeChildrenProps.siteStatus;
 		let site = routeChildrenProps.site;
 		let siteDomain = site.domain;
+		let localVersionNumber = site.localVersion;
+		let localVersionName = 'Local';
+
+		if(localVersionNumber.includes('beta')){
+			localVersionName = 'Local Beta';
+		}
 
 		let siteId = routeChildrenProps.site.id;
+
+		let appDataPath = remote.app.getPath('appData');
+		let socketPath = appDataPath + '/' + localVersionName + '/run/' + siteId + '/mysql/mysqld.sock';
 
 		// TODO: Add checking to see if site is running with HTTP or HTTPS. Right now HTTP is assumed
 		//let possibleSecureHttpStatus = site.services.nginx.ports.HTTP;
@@ -53,8 +64,27 @@ export default class BrokenLinkChecker extends Component {
 		let siteDomain = site.domain;
 
 		if (siteStatus !== this.state.siteStatus) {
+			// The site status has changed, meaning it was started or halted by the user
 			this.testSiteRootUrlVariantsAndUpdate(siteDomain);
 			this.updateSiteState(siteStatus);
+
+			if(siteStatus === "running"){
+				// The site has just been turned on
+				let dbName = routeChildrenProps.site.mysql.database;
+				let username = routeChildrenProps.site.mysql.user;
+				let pass = routeChildrenProps.site.mysql.password;
+				let port = routeChildrenProps.site.services.mysql.ports.MYSQL[0];
+
+				// Example SQL socket: /Users/coulterpeterson/Library/Application Support/Local Beta/run/DqpcVQWhP/mysql/mysqld.sock
+
+
+				console.log(dbName);
+				console.log(username);
+				console.log(pass);
+				console.log(port);
+
+				//this.updateTotalSitePosts();
+			}
 		}
 	}
 
