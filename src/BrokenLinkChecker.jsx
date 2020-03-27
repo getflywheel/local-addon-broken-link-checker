@@ -211,15 +211,14 @@ export default class BrokenLinkChecker extends Component {
 			// E.g. const localPath = remote.app.getAppPath(); AND const siteData = remote.require(path.join(localPath, './helpers/site-data'));
 		}
 
-		// Temp disable while testing socket outside of addon
-		// connection.connect();
+		connection.connect();
 
-		// connection.query("SELECT COUNT(ID) FROM wp_posts WHERE post_type IN ( 'post', 'etc' ) and post_status = 'publish'", function (error, results, fields) {
-		// 	if (error) throw error;
-		// 	console.log('The solution is: ', results[0].solution);
-		//   });
+		connection.query("SELECT COUNT(ID) FROM wp_posts WHERE post_type IN ( 'post', 'etc' ) and post_status = 'publish'", function (error, results, fields) {
+			if (error) throw error;
+			console.log('The solution is: ', results[0].solution);
+		  });
 
-		// connection.end();
+		connection.end();
 	}
 
 	updateSiteState(newStatus) {
