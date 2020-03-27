@@ -200,24 +200,26 @@ export default class BrokenLinkChecker extends Component {
 			console.log('This is windows');
 		} else {
 			connection = mysql.createConnection({
-				socketPath : this.state.socketPath,
+				socketPath : `${this.state.socketPath}`,
 				user       : username,
 				password   : pass,
 				database   : dbName
 			});
+			//socketPath : this.state.socketPath,
 
 			//TODO: change the socketPath state variable to use the 'path' functions to make a proper file path that may work better
 			// E.g. const localPath = remote.app.getAppPath(); AND const siteData = remote.require(path.join(localPath, './helpers/site-data'));
 		}
 
-		connection.connect();
+		// Temp disable while testing socket outside of addon
+		// connection.connect();
 
-		connection.query("SELECT COUNT(ID) FROM wp_posts WHERE post_type IN ( 'post', 'etc' ) and post_status = 'publish'", function (error, results, fields) {
-			if (error) throw error;
-			console.log('The solution is: ', results[0].solution);
-		  });
+		// connection.query("SELECT COUNT(ID) FROM wp_posts WHERE post_type IN ( 'post', 'etc' ) and post_status = 'publish'", function (error, results, fields) {
+		// 	if (error) throw error;
+		// 	console.log('The solution is: ', results[0].solution);
+		//   });
 
-		connection.end();
+		// connection.end();
 	}
 
 	updateSiteState(newStatus) {
