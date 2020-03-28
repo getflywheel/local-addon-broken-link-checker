@@ -2,6 +2,7 @@ import React, { Component, Fragment } from "react";
 import { ipcRenderer, remote } from "electron";
 import path from 'path';
 import os from 'os'; // This will help determine Mac vs Windows
+import mysqlx from '@mysql/xdevapi';
 const {
 	SiteChecker,
 	HtmlUrlChecker,
