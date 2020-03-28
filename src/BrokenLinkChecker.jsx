@@ -194,13 +194,23 @@ export default class BrokenLinkChecker extends Component {
 		console.log(port);
 		console.log(this.state.socketPath);
 
-		let connection = null;
+		let stringSocketPath = String(this.state.socketPath);
+		let noSpacesSocketPath = stringSocketPath.split(' ').join('%2F');
 
 		if(this.isWindows()){
 			console.log('This is windows');
 		} else {
 			// This is where the connection will take place
 			// This is the query: "SELECT COUNT(ID) FROM wp_posts WHERE post_type IN ( 'post', 'etc' ) and post_status = 'publish'"
+		
+			let sessionConnectionString = 'mysqlx://' + username + ':' + pass + '@' + noSpacesSocketPath;
+
+			mysqlx
+			.getSession(sessionConnectionString)
+			.then(session => {
+				console.log(session.inspect());
+				// { user: 'root', socket: '/path/to/socket' }
+			});
 		}
 	}
 
