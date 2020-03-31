@@ -1,8 +1,8 @@
 import React, { Component, Fragment } from "react";
 import { ipcRenderer, remote } from "electron";
-import path from 'path';
-import os from 'os'; // This will help determine Mac vs Windows
-import mysqlx from '@mysql/xdevapi';
+import path from "path";
+import os from "os"; // This will help determine Mac vs Windows
+import mysqlx from "@mysql/xdevapi";
 const {
 	SiteChecker,
 	HtmlUrlChecker,
@@ -37,16 +37,22 @@ export default class BrokenLinkChecker extends Component {
 		let site = routeChildrenProps.site;
 		let siteDomain = site.domain;
 		let localVersionNumber = site.localVersion;
-		let localVersionName = 'Local';
+		let localVersionName = "Local";
 
-		if(localVersionNumber.includes('beta')){
-			localVersionName = 'Local Beta';
+		if (localVersionNumber.includes("beta")) {
+			localVersionName = "Local Beta";
 		}
 
 		let siteId = routeChildrenProps.site.id;
 
-		let appDataPath = remote.app.getPath('appData');
-		let socketPath = appDataPath + '/' + localVersionName + '/run/' + siteId + '/mysql/mysqld.sock';
+		let appDataPath = remote.app.getPath("appData");
+		let socketPath =
+			appDataPath +
+			"/" +
+			localVersionName +
+			"/run/" +
+			siteId +
+			"/mysql/mysqld.sock";
 
 		// TODO: Add checking to see if site is running with HTTP or HTTPS. Right now HTTP is assumed
 		//let possibleSecureHttpStatus = site.services.nginx.ports.HTTP;
@@ -71,12 +77,13 @@ export default class BrokenLinkChecker extends Component {
 			this.testSiteRootUrlVariantsAndUpdate(siteDomain);
 			this.updateSiteState(siteStatus);
 
-			if(siteStatus === "running"){
+			if (siteStatus === "running") {
 				// The site has just been turned on
 				let dbName = routeChildrenProps.site.mysql.database;
 				let username = routeChildrenProps.site.mysql.user;
 				let pass = routeChildrenProps.site.mysql.password;
-				let port = routeChildrenProps.site.services.mysql.ports.MYSQL[0];
+				let port =
+					routeChildrenProps.site.services.mysql.ports.MYSQL[0];
 
 				this.updateTotalSitePosts(dbName, username, pass, port);
 			}
@@ -134,7 +141,7 @@ export default class BrokenLinkChecker extends Component {
 		return true;
 	}
 
-	isWindows(){
+	isWindows() {
 		/* Possibilities:
 			win32: WINDOWS,
 			darwin: MAC,
@@ -143,7 +150,7 @@ export default class BrokenLinkChecker extends Component {
 
 		let platform = os.platform;
 
-		return String(platform) === 'win32';
+		return String(platform) === "win32";
 	}
 
 	testSiteRootUrlVariantsAndUpdate(siteDomain) {
@@ -187,7 +194,7 @@ export default class BrokenLinkChecker extends Component {
 	}
 
 	updateTotalSitePosts(dbName, username, pass, port) {
-		console.log('Site is started. I have this info:');
+		console.log("Site is started. I have this info:");
 		console.log(dbName);
 		console.log(username);
 		console.log(pass);
@@ -195,19 +202,24 @@ export default class BrokenLinkChecker extends Component {
 		console.log(this.state.socketPath);
 
 		let stringSocketPath = String(this.state.socketPath);
-		let noSpacesSocketPath = stringSocketPath.split(' ').join('%2F');
+		let noSpacesSocketPath = stringSocketPath.split(" ").join("%2F");
 
-		if(this.isWindows()){
-			console.log('This is windows');
+		if (this.isWindows()) {
+			console.log("This is windows");
 		} else {
 			// This is where the connection will take place
 			// This is the query: "SELECT COUNT(ID) FROM wp_posts WHERE post_type IN ( 'post', 'etc' ) and post_status = 'publish'"
-		
-			let sessionConnectionString = 'mysqlx://' + username + ':' + pass + '@' + noSpacesSocketPath;
 
-			mysqlx
-			.getSession(sessionConnectionString)
-			.then(session => {
+			let sessionConnectionString =
+				"mysqlx://" + username + ":" + pass + "@" + noSpacesSocketPath;
+			console.log(
+				"Here is the full socket path in use: " +
+					sessionConnectionString
+			);
+
+			console.log("Now trying to connect...");
+			mysqlx.getSession(sessionConnectionString).then(session => {
+				console.log("Now somewhat connecter!");
 				console.log(session.inspect());
 				// { user: 'root', socket: '/path/to/socket' }
 			});
@@ -297,7 +309,7 @@ export default class BrokenLinkChecker extends Component {
 		let siteChecker = new SiteChecker(null, {
 			html: (tree, robots, response, pageUrl, customData) => {
 				// This code is used to increment the number of WP posts we traverse in our scan
-				if( this.findWpPostIdInMarkup(tree) ){
+				if (this.findWpPostIdInMarkup(tree)) {
 					this.incrementNumberPostsFound();
 				}
 			},
@@ -354,7 +366,10 @@ export default class BrokenLinkChecker extends Component {
 				this.updateFirstRunComplete(true);
 				this.updateScanInProgress(false);
 
-				if(this.state.brokenLinks === null || this.state.brokenLinks.length === 0){
+				if (
+					this.state.brokenLinks === null ||
+					this.state.brokenLinks.length === 0
+				) {
 					this.updateBrokenLinksFound(false);
 				}
 			}
@@ -364,16 +379,13 @@ export default class BrokenLinkChecker extends Component {
 
 	findWpPostIdInMarkup(tree) {
 		// TODO: Make this code continue to drill down until an exact match for the 'body' tag is found, just in case a custom template has modified the usual page structure
-		let stringOfBodyClasses = tree.childNodes[1].childNodes[2].attrMap.class;
+		let stringOfBodyClasses =
+			tree.childNodes[1].childNodes[2].attrMap.class;
 
 		// TODO: Also make note of special classes like .home
-		let findPostId = stringOfBodyClasses.match(
-			/(^|\s)postid-(\d+)(\s|$)/
-		);
+		let findPostId = stringOfBodyClasses.match(/(^|\s)postid-(\d+)(\s|$)/);
 
-		let findPageId = stringOfBodyClasses.match(
-			/(^|\s)page-id-(\d+)(\s|$)/
-		);
+		let findPageId = stringOfBodyClasses.match(/(^|\s)page-id-(\d+)(\s|$)/);
 
 		let wpPostId = null;
 		if (findPostId) {
