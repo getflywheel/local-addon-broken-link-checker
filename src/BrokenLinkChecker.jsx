@@ -2,7 +2,6 @@ import React, { Component, Fragment } from "react";
 import { ipcRenderer, remote } from "electron";
 import path from "path";
 import os from "os"; // This will help determine Mac vs Windows
-import mysqlx from "@mysql/xdevapi";
 const {
 	SiteChecker,
 	HtmlUrlChecker,
@@ -45,14 +44,14 @@ export default class BrokenLinkChecker extends Component {
 
 		let siteId = routeChildrenProps.site.id;
 
-		let appDataPath = remote.app.getPath("appData");
-		let socketPath =
-			appDataPath +
-			"/" +
-			localVersionName +
-			"/run/" +
-			siteId +
-			"/mysql/mysqld.sock";
+		// let appDataPath = remote.app.getPath("appData");
+		// let socketPath =
+		// 	appDataPath +
+		// 	"/" +
+		// 	localVersionName +
+		// 	"/run/" +
+		// 	siteId +
+		// 	"/mysql/mysqld.sock";
 
 		// TODO: Add checking to see if site is running with HTTP or HTTPS. Right now HTTP is assumed
 		//let possibleSecureHttpStatus = site.services.nginx.ports.HTTP;
@@ -63,7 +62,7 @@ export default class BrokenLinkChecker extends Component {
 		this.testSiteRootUrlVariantsAndUpdate(siteDomain);
 		this.updateSiteId(siteId);
 		this.updateSiteState(siteStatus);
-		this.updateSiteDbSocket(socketPath);
+		//this.updateSiteDbSocket(socketPath); Commenting out rn as it should no longer be needed
 	}
 
 	componentDidUpdate() {
@@ -199,30 +198,13 @@ export default class BrokenLinkChecker extends Component {
 		console.log(username);
 		console.log(pass);
 		console.log(port);
-		console.log(this.state.socketPath);
-
-		let stringSocketPath = String(this.state.socketPath);
-		let noSpacesSocketPath = stringSocketPath.split(" ").join("%2F");
 
 		if (this.isWindows()) {
 			console.log("This is windows");
 		} else {
+			console.log("This is Mac or Linux");
 			// This is where the connection will take place
 			// This is the query: "SELECT COUNT(ID) FROM wp_posts WHERE post_type IN ( 'post', 'etc' ) and post_status = 'publish'"
-
-			let sessionConnectionString =
-				"mysqlx://" + username + ":" + pass + "@" + noSpacesSocketPath;
-			console.log(
-				"Here is the full socket path in use: " +
-					sessionConnectionString
-			);
-
-			console.log("Now trying to connect...");
-			mysqlx.getSession(sessionConnectionString).then(session => {
-				console.log("Now somewhat connecter!");
-				console.log(session.inspect());
-				// { user: 'root', socket: '/path/to/socket' }
-			});
 		}
 	}
 
