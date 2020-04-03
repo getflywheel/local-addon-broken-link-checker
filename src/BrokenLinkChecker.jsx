@@ -1,6 +1,6 @@
 import React, { Component, Fragment } from "react";
 import { ipcRenderer, remote } from "electron";
-import path from "path";
+import LocalMain from "@getflywheel/local/main";
 import os from "os"; // This will help determine Mac vs Windows
 const {
 	SiteChecker,
@@ -198,6 +198,14 @@ export default class BrokenLinkChecker extends Component {
 		console.log(username);
 		console.log(pass);
 		console.log(port);
+
+		let numberOfPosts = LocalMain.getServiceContainer.cradle.wpCli.run(site, [
+			'post',
+			'list',
+			'--format=count' 
+		 ]);
+
+		console.log("Number of posts: " + numberOfPosts);
 
 		if (this.isWindows()) {
 			console.log("This is windows");
