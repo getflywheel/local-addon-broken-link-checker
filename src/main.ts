@@ -5,22 +5,24 @@ export default function (context) {
 	const { electron } = context;
 	const { ipcMain } = electron;
 
-	// Demo of new API usage:
-	// let siteId = Local.Site['id'];
-	// const site = LocalMain.SiteData.getSite(siteId);
-
-	// let numberOfPosts = LocalMain.getServiceContainer().cradle.wpCli.run(site, [
-	// 	'post',
-	// 	'list',
-	// 	'--format=count' 
-	//  ]);
-
-	// console.log(numberOfPosts);
-
 	ipcMain.on('store-broken-links', (event, siteId, brokenLinks) => {
 		SiteData.updateSite(siteId, {
 			id: siteId,
 			brokenLinks,
 		});
+	});
+
+	ipcMain.on('get-total-posts', (event, siteId) => {
+		const site = LocalMain.SiteData.getSite(siteId);
+
+		console.log("Received getPosts request");
+
+		let numberOfPostsDbCall = LocalMain.getServiceContainer().cradle.wpCli.run(site, [
+			'post',
+			'list',
+			'--format=count' 
+		 ]);
+
+		 numberOfPostsDbCall.then((numberOfPosts) => event.reply('return-total-posts', parseInt(numberOfPosts)));
 	});
 }

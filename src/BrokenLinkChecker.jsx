@@ -1,4 +1,4 @@
-import React, { Component, Fragment } from "react";
+import React, { Component, Fragment, useEffect } from "react";
 import { ipcRenderer, remote } from "electron";
 import os from "os"; // This will help determine Mac vs Windows
 const {
@@ -139,17 +139,17 @@ export default class BrokenLinkChecker extends Component {
 		return true;
 	}
 
-	isWindows() {
-		/* Possibilities:
-			win32: WINDOWS,
-			darwin: MAC,
-			linux: LINUX
-		*/
+	// isWindows() {
+	// 	/* Possibilities:
+	// 		win32: WINDOWS,
+	// 		darwin: MAC,
+	// 		linux: LINUX
+	// 	*/
 
-		let platform = os.platform;
+	// 	let platform = os.platform;
 
-		return String(platform) === "win32";
-	}
+	// 	return String(platform) === "win32";
+	// }
 
 	testSiteRootUrlVariantsAndUpdate(siteDomain) {
 		let workingUrlFound = false;
@@ -198,13 +198,25 @@ export default class BrokenLinkChecker extends Component {
 		console.log(pass);
 		console.log(port);
 
-		if (this.isWindows()) {
-			console.log("This is windows");
-		} else {
-			console.log("This is Mac or Linux");
-			// This is where the connection will take place
-			// This is the query: "SELECT COUNT(ID) FROM wp_posts WHERE post_type IN ( 'post', 'etc' ) and post_status = 'publish'"
-		}
+		ipcRenderer.send(
+			"get-total-posts",
+			this.state.siteId
+		);
+
+		useEffect(() => {
+			ipcRenderer.on('return-total-posts', (event, arg) => {
+				console.log("Total posts received!");
+				console.log(arg); 
+			});
+		});
+
+		// if (this.isWindows()) {
+		// 	console.log("This is windows");
+		// } else {
+		// 	console.log("This is Mac or Linux");
+		// 	// This is where the connection will take place
+		// 	// This is the query: "SELECT COUNT(ID) FROM wp_posts WHERE post_type IN ( 'post', 'etc' ) and post_status = 'publish'"
+		// }
 	}
 
 	updateSiteState(newStatus) {
