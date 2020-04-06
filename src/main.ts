@@ -12,9 +12,12 @@ export default function (context) {
 		});
 	});
 
-	ipcMain.on("get-total-posts", async (event, replyChannel, siteId) =>
-		event.reply(replyChannel, await getTotalPosts(siteId))
-	);
+	ipcMain.on("get-total-posts", async (event, replyChannel, siteId) => {
+		LocalMain.getServiceContainer().localLogger.log(
+			"Get-total-posts was heard in main.ts"
+		);
+		event.reply(replyChannel, "test reply string");
+	}); //await getTotalPosts(siteId)
 
 	// ipcMain.on('get-total-posts', (event, siteId) => {
 	// 	const site = LocalMain.SiteData.getSite(siteId);
@@ -30,7 +33,9 @@ export default function (context) {
 }
 
 async function getTotalPosts(siteId) {
-	console.log("Async function was called in main.ts");
+	LocalMain.getServiceContainer().localLogger.log(
+		"Async function was called in main.ts"
+	);
 
 	const site = LocalMain.SiteData.getSite(siteId);
 
