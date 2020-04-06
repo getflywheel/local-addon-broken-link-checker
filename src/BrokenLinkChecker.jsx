@@ -1,6 +1,7 @@
 import React, { Component, Fragment, useEffect } from "react";
 import { ipcRenderer, remote } from "electron";
 import os from "os"; // This will help determine Mac vs Windows
+import ipcAsync from "./ipcAsync";
 const {
 	SiteChecker,
 	HtmlUrlChecker,
@@ -58,10 +59,10 @@ export default class BrokenLinkChecker extends Component {
 
 		//let siteUrl = "http://" + siteDomain;
 
-		ipcRenderer.on('return-total-posts', (event, arg) => {
-			console.log("Total posts received!");
-			console.log(arg); 
-		});
+		// ipcRenderer.on('return-total-posts', (event, arg) => {
+		// 	console.log("Total posts received!");
+		// 	console.log(arg); 
+		// });
 
 		this.testSiteRootUrlVariantsAndUpdate(siteDomain);
 		this.updateSiteId(siteId);
@@ -203,10 +204,11 @@ export default class BrokenLinkChecker extends Component {
 		console.log(pass);
 		console.log(port);
 
-		ipcRenderer.send(
-			"get-total-posts",
-			this.state.siteId
-		);
+		// ipcRenderer.send(
+		// 	"get-total-posts",
+		// 	this.state.siteId
+		// );
+		ipcAsync('get-total-posts',this.state.siteId).then((result) => {console.log("received posts: " + result)});
 
 		// if (this.isWindows()) {
 		// 	console.log("This is windows");

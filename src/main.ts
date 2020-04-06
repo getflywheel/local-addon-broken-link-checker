@@ -12,15 +12,32 @@ export default function (context) {
 		});
 	});
 
-	ipcMain.on('get-total-posts', (event, siteId) => {
-		const site = LocalMain.SiteData.getSite(siteId);
+	ipcMain.on('get-total-posts', async (event, replyChannel, siteId) => event.reply(replyChannel, await getTotalPosts(siteId)));
 
-		let numberOfPostsDbCall = LocalMain.getServiceContainer().cradle.wpCli.run(site, [
-			'post',
-			'list',
-			'--format=count' 
-		 ]);
+	// ipcMain.on('get-total-posts', (event, siteId) => {
+	// 	const site = LocalMain.SiteData.getSite(siteId);
 
-		 numberOfPostsDbCall.then((numberOfPosts) => event.reply('return-total-posts', parseInt(numberOfPosts)));
-	});
+	// 	let numberOfPostsDbCall = LocalMain.getServiceContainer().cradle.wpCli.run(site, [
+	// 		'post',
+	// 		'list',
+	// 		'--format=count' 
+	// 	 ]);
+
+	// 	 numberOfPostsDbCall.then((numberOfPosts) => event.reply('return-total-posts', parseInt(numberOfPosts)));
+	// });
+}
+
+function getTotalPosts(siteId){
+	const site = LocalMain.SiteData.getSite(siteId);
+
+	let numberOfPostsDbCall = LocalMain.getServiceContainer().cradle.wpCli.run(site, [
+		'post',
+		'list',
+		'--format=count' 
+	 ]);
+
+	 return "Test return";
+
+	 //numberOfPostsDbCall.then((numberOfPosts) => { return parseInt(numberOfPosts) } );
+
 }
