@@ -15,8 +15,6 @@ export default function (context) {
 	ipcMain.on('get-total-posts', (event, siteId) => {
 		const site = LocalMain.SiteData.getSite(siteId);
 
-		console.log("Received getPosts request");
-
 		let numberOfPostsDbCall = LocalMain.getServiceContainer().cradle.wpCli.run(site, [
 			'post',
 			'list',

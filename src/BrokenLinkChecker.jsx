@@ -58,6 +58,11 @@ export default class BrokenLinkChecker extends Component {
 
 		//let siteUrl = "http://" + siteDomain;
 
+		ipcRenderer.on('return-total-posts', (event, arg) => {
+			console.log("Total posts received!");
+			console.log(arg); 
+		});
+
 		this.testSiteRootUrlVariantsAndUpdate(siteDomain);
 		this.updateSiteId(siteId);
 		this.updateSiteState(siteStatus);
@@ -202,13 +207,6 @@ export default class BrokenLinkChecker extends Component {
 			"get-total-posts",
 			this.state.siteId
 		);
-
-		useEffect(() => {
-			ipcRenderer.on('return-total-posts', (event, arg) => {
-				console.log("Total posts received!");
-				console.log(arg); 
-			});
-		});
 
 		// if (this.isWindows()) {
 		// 	console.log("This is windows");
