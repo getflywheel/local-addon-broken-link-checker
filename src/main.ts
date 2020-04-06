@@ -5,14 +5,16 @@ export default function (context) {
 	const { electron } = context;
 	const { ipcMain } = electron;
 
-	ipcMain.on('store-broken-links', (event, siteId, brokenLinks) => {
+	ipcMain.on("store-broken-links", (event, siteId, brokenLinks) => {
 		SiteData.updateSite(siteId, {
 			id: siteId,
 			brokenLinks,
 		});
 	});
 
-	ipcMain.on('get-total-posts', async (event, replyChannel, siteId) => event.reply(replyChannel, await getTotalPosts(siteId)));
+	ipcMain.on("get-total-posts", async (event, replyChannel, siteId) =>
+		event.reply(replyChannel, await getTotalPosts(siteId))
+	);
 
 	// ipcMain.on('get-total-posts', (event, siteId) => {
 	// 	const site = LocalMain.SiteData.getSite(siteId);
@@ -20,24 +22,24 @@ export default function (context) {
 	// 	let numberOfPostsDbCall = LocalMain.getServiceContainer().cradle.wpCli.run(site, [
 	// 		'post',
 	// 		'list',
-	// 		'--format=count' 
+	// 		'--format=count'
 	// 	 ]);
 
 	// 	 numberOfPostsDbCall.then((numberOfPosts) => event.reply('return-total-posts', parseInt(numberOfPosts)));
 	// });
 }
 
-function getTotalPosts(siteId){
+async function getTotalPosts(siteId) {
+	console.log("Async function was called in main.ts");
+
 	const site = LocalMain.SiteData.getSite(siteId);
 
-	let numberOfPostsDbCall = LocalMain.getServiceContainer().cradle.wpCli.run(site, [
-		'post',
-		'list',
-		'--format=count' 
-	 ]);
+	let numberOfPostsDbCall = await LocalMain.getServiceContainer().cradle.wpCli.run(
+		site,
+		["post", "list", "--format=count"]
+	);
 
-	 return "Test return";
+	return numberOfPostsDbCall;
 
-	 //numberOfPostsDbCall.then((numberOfPosts) => { return parseInt(numberOfPosts) } );
-
+	//numberOfPostsDbCall.then((numberOfPosts) => { return parseInt(numberOfPosts) } );
 }
