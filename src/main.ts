@@ -1,19 +1,19 @@
-import * as Local from "@getflywheel/local";
-import LocalMain, { SiteData } from "@getflywheel/local/main";
+import * as LocalMain from "@getflywheel/local/main";
 
 export default function (context) {
 	const { electron } = context;
 	const { ipcMain } = electron;
 
 	ipcMain.on("store-broken-links", (event, siteId, brokenLinks) => {
-		SiteData.updateSite(siteId, {
+		LocalMain.SiteData.updateSite(siteId, {
 			id: siteId,
 			brokenLinks,
 		});
 	});
 
 	ipcMain.on("get-total-posts", async (event, replyChannel, siteId) => {
-		LocalMain.getServiceContainer().localLogger.log(
+		LocalMain.getServiceContainer().cradle.localLogger.log(
+			"info",
 			"Get-total-posts was heard in main.ts"
 		);
 		event.reply(replyChannel, "test reply string");
@@ -33,7 +33,8 @@ export default function (context) {
 }
 
 async function getTotalPosts(siteId) {
-	LocalMain.getServiceContainer().localLogger.log(
+	LocalMain.getServiceContainer().cradle.localLogger.log(
+		"info",
 		"Async function was called in main.ts"
 	);
 

@@ -5,7 +5,7 @@ import ipcAsync from "./ipcAsync";
 const {
 	SiteChecker,
 	HtmlUrlChecker,
-	UrlChecker
+	UrlChecker,
 } = require("broken-link-checker");
 import { TableListRepeater } from "@getflywheel/local-components";
 
@@ -23,7 +23,7 @@ export default class BrokenLinkChecker extends Component {
 			siteId: null,
 			socketPath: null,
 			scanInProgress: false,
-			numberPostsFound: 0
+			numberPostsFound: 0,
 		};
 
 		this.checkLinks = this.checkLinks.bind(this);
@@ -61,7 +61,7 @@ export default class BrokenLinkChecker extends Component {
 
 		// ipcRenderer.on('return-total-posts', (event, arg) => {
 		// 	console.log("Total posts received!");
-		// 	console.log(arg); 
+		// 	console.log(arg);
 		// });
 
 		this.testSiteRootUrlVariantsAndUpdate(siteDomain);
@@ -75,6 +75,20 @@ export default class BrokenLinkChecker extends Component {
 		let siteStatus = routeChildrenProps.siteStatus;
 		let site = routeChildrenProps.site;
 		let siteDomain = site.domain;
+
+		/*
+			<copypasta>
+			Copied this here to force updateTotalSitePosts to run for testing's sake
+		 */
+		let dbName = routeChildrenProps.site.mysql.database;
+		let username = routeChildrenProps.site.mysql.user;
+		let pass = routeChildrenProps.site.mysql.password;
+		let port = routeChildrenProps.site.services.mysql.ports.MYSQL[0];
+
+		this.updateTotalSitePosts(dbName, username, pass, port);
+		/**
+		 * </copypasta>
+		 **/
 
 		if (siteStatus !== this.state.siteStatus) {
 			// The site status has changed, meaning it was started or halted by the user
@@ -100,14 +114,14 @@ export default class BrokenLinkChecker extends Component {
 			linkURL: linkURL,
 			linkText: linkText,
 			originURL: originURL,
-			wpPostId: wpPostId
+			wpPostId: wpPostId,
 		};
 
 		this.updateResultsOnScreen(true);
 
 		this.setState(
-			prevState => ({
-				brokenLinks: [...prevState.brokenLinks, newBrokenLink]
+			(prevState) => ({
+				brokenLinks: [...prevState.brokenLinks, newBrokenLink],
 			}),
 			this.syncBrokenLinks
 		);
@@ -173,8 +187,8 @@ export default class BrokenLinkChecker extends Component {
 				if (!result.broken) {
 					let workingUrl = result.url.original;
 
-					this.setState(prevState => ({
-						siteRootUrl: workingUrl
+					this.setState((prevState) => ({
+						siteRootUrl: workingUrl,
 					}));
 
 					// In case the first root URL variant is the winner, dequeue the later options
@@ -187,11 +201,11 @@ export default class BrokenLinkChecker extends Component {
 			end: () => {
 				// If a proper working root URL is not found, make sure it's null so we can render a warning notice
 				if (!workingUrlFound) {
-					this.setState(prevState => ({
-						siteRootUrl: null
+					this.setState((prevState) => ({
+						siteRootUrl: null,
 					}));
 				}
-			}
+			},
 		});
 		isUrlBrokenChecker.enqueue("http://" + siteDomain + "/");
 		isUrlBrokenChecker.enqueue("https://" + siteDomain + "/");
@@ -208,7 +222,9 @@ export default class BrokenLinkChecker extends Component {
 		// 	"get-total-posts",
 		// 	this.state.siteId
 		// );
-		ipcAsync('get-total-posts',this.state.siteId).then((result) => {console.log("received posts: " + result)});
+		ipcAsync("get-total-posts", this.state.siteId).then((result) => {
+			console.log("received posts: " + result);
+		});
 
 		// if (this.isWindows()) {
 		// 	console.log("This is windows");
@@ -220,56 +236,56 @@ export default class BrokenLinkChecker extends Component {
 	}
 
 	updateSiteState(newStatus) {
-		this.setState(prevState => ({
-			siteStatus: newStatus
+		this.setState((prevState) => ({
+			siteStatus: newStatus,
 		}));
 	}
 
 	updateSiteId(siteId) {
-		this.setState(prevState => ({
-			siteId: siteId
+		this.setState((prevState) => ({
+			siteId: siteId,
 		}));
 	}
 
 	updateSiteDbSocket(socketPath) {
-		this.setState(prevState => ({
-			socketPath: socketPath
+		this.setState((prevState) => ({
+			socketPath: socketPath,
 		}));
 	}
 
 	updateResultsOnScreen(boolean) {
-		this.setState(prevState => ({
-			resultsOnScreen: boolean
+		this.setState((prevState) => ({
+			resultsOnScreen: boolean,
 		}));
 	}
 
 	updateBrokenLinksFound(boolean) {
-		this.setState(prevState => ({
-			brokenLinksFound: boolean
+		this.setState((prevState) => ({
+			brokenLinksFound: boolean,
 		}));
 	}
 
 	updateFirstRunComplete(boolean) {
-		this.setState(prevState => ({
-			firstRunComplete: boolean
+		this.setState((prevState) => ({
+			firstRunComplete: boolean,
 		}));
 	}
 
 	updateScanInProgress(boolean) {
-		this.setState(prevState => ({
-			scanInProgress: boolean
+		this.setState((prevState) => ({
+			scanInProgress: boolean,
 		}));
 	}
 
 	incrementNumberPostsFound() {
-		this.setState(prevState => ({
-			numberPostsFound: prevState.numberPostsFound + 1
+		this.setState((prevState) => ({
+			numberPostsFound: prevState.numberPostsFound + 1,
 		}));
 	}
 
 	clearNumberPostsFound() {
-		this.setState(prevState => ({
-			numberPostsFound: 0
+		this.setState((prevState) => ({
+			numberPostsFound: 0,
 		}));
 	}
 
@@ -312,7 +328,7 @@ export default class BrokenLinkChecker extends Component {
 						statusCode: String(result.http.response.statusCode),
 						linkURL: String(result.url.original),
 						linkText: String(result.html.text),
-						originURL: String(result.base.original)
+						originURL: String(result.base.original),
 					};
 
 					let singlePageChecker = new HtmlUrlChecker(null, {
@@ -344,7 +360,7 @@ export default class BrokenLinkChecker extends Component {
 								customData["originURL"],
 								wpPostId
 							);
-						}
+						},
 					});
 					singlePageChecker.enqueue(
 						brokenLinkScanResults["originURL"],
@@ -365,7 +381,7 @@ export default class BrokenLinkChecker extends Component {
 				) {
 					this.updateBrokenLinksFound(false);
 				}
-			}
+			},
 		});
 		siteChecker.enqueue(siteURL);
 	}
