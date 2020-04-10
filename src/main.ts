@@ -29,10 +29,40 @@ async function getTotalPosts(siteId) {
 
 	const site = LocalMain.SiteData.getSite(siteId);
 
+	// Temporarily returning a string of post titles for debug purposes
+
 	let numberOfPostsDbCall = await LocalMain.getServiceContainer().cradle.wpCli.run(
 		site,
 		["post", "list", "--format=count"]
 	);
+
+	// This only returns "Hello World" because that's the one post the command finds
+	// let numberOfPostsDbCall = await LocalMain.getServiceContainer().cradle.wpCli.run(
+	// 	site,
+	// 	["post", "list", "--field=post_title", "--format=json"]
+	// );
+
+	// This could not connect
+	// let numberOfPostsDbCall = await LocalMain.getServiceContainer().cradle.siteDatabase.exec(
+	// 	site, 
+	// 	["SELECT COUNT(ID) FROM wp_posts WHERE post_status = 'publish'"]
+	// ).catch((error) => {
+	// 	LocalMain.getServiceContainer().cradle.localLogger.log(
+	// 		"info",
+	// 		"encountered this error when calling DB: " + error
+	// 	);
+	// });
+
+	// This could not connect
+	// let numberOfPostsDbCall = await LocalMain.getServiceContainer().cradle.wpCli.run(
+	// 	site,
+	// 	["db", "query", "'SELECT COUNT(ID) FROM local.wp_posts WHERE post_status = publish'", "--dbuser=root", "--dbpass=root"]
+	// ).catch((error) => {
+	// 	LocalMain.getServiceContainer().cradle.localLogger.log(
+	// 		"info",
+	// 		"encountered this error when calling DB: " + error
+	// 	);
+	// });
 
 	return numberOfPostsDbCall;
 }

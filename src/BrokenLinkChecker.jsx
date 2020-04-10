@@ -206,7 +206,7 @@ export default class BrokenLinkChecker extends Component {
 		}));
 
 		ipcAsync("get-total-posts", this.state.siteId).then((result) => {
-			//console.log("received posts: " + result);
+			console.log("received posts: " + result);
 
 			this.setState((prevState) => ({
 				totalSitePosts: parseInt(result),
