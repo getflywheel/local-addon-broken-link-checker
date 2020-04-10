@@ -24,6 +24,8 @@ export default class BrokenLinkChecker extends Component {
 			socketPath: null,
 			scanInProgress: false,
 			numberPostsFound: 0,
+			totalSitePosts: null,
+			getTotalSitePostsInProgress: false
 		};
 
 		this.checkLinks = this.checkLinks.bind(this);
@@ -76,35 +78,21 @@ export default class BrokenLinkChecker extends Component {
 		let site = routeChildrenProps.site;
 		let siteDomain = site.domain;
 
-		/*
-			<copypasta>
-			Copied this here to force updateTotalSitePosts to run for testing's sake
-		 */
-		let dbName = routeChildrenProps.site.mysql.database;
-		let username = routeChildrenProps.site.mysql.user;
-		let pass = routeChildrenProps.site.mysql.password;
-		let port = routeChildrenProps.site.services.mysql.ports.MYSQL[0];
-
-		this.updateTotalSitePosts(dbName, username, pass, port);
-		/**
-		 * </copypasta>
-		 **/
-
 		if (siteStatus !== this.state.siteStatus) {
 			// The site status has changed, meaning it was started or halted by the user
 			this.testSiteRootUrlVariantsAndUpdate(siteDomain);
 			this.updateSiteState(siteStatus);
+		}
 
-			if (siteStatus === "running") {
-				// The site has just been turned on
-				let dbName = routeChildrenProps.site.mysql.database;
-				let username = routeChildrenProps.site.mysql.user;
-				let pass = routeChildrenProps.site.mysql.password;
-				let port =
-					routeChildrenProps.site.services.mysql.ports.MYSQL[0];
+		if (siteStatus === "running" && this.state.getTotalSitePostsInProgress === false && this.state.totalSitePosts === null) {
+			// The site has just been turned on
+			// let dbName = routeChildrenProps.site.mysql.database;
+			// let username = routeChildrenProps.site.mysql.user;
+			// let pass = routeChildrenProps.site.mysql.password;
+			// let port =
+			// 	routeChildrenProps.site.services.mysql.ports.MYSQL[0];
 
-				this.updateTotalSitePosts(dbName, username, pass, port);
-			}
+			this.updateTotalSitePosts();
 		}
 	}
 
@@ -211,19 +199,19 @@ export default class BrokenLinkChecker extends Component {
 		isUrlBrokenChecker.enqueue("https://" + siteDomain + "/");
 	}
 
-	updateTotalSitePosts(dbName, username, pass, port) {
-		console.log("Site is started. I have this info:");
-		console.log(dbName);
-		console.log(username);
-		console.log(pass);
-		console.log(port);
+	updateTotalSitePosts() {
 
-		// ipcRenderer.send(
-		// 	"get-total-posts",
-		// 	this.state.siteId
-		// );
+		this.setState((prevState) => ({
+			getTotalSitePostsInProgress: true
+		}));
+
 		ipcAsync("get-total-posts", this.state.siteId).then((result) => {
-			console.log("received posts: " + result);
+			//console.log("received posts: " + result);
+
+			this.setState((prevState) => ({
+				totalSitePosts: parseInt(result),
+				getTotalSitePostsInProgress: false
+			}));
 		});
 
 		// if (this.isWindows()) {
@@ -432,6 +420,8 @@ export default class BrokenLinkChecker extends Component {
 		let scanProgressMessage = this.state.scanInProgress
 			? "Scan is in progress."
 			: "Scan is not running.";
+
+		console.log(this.state.totalSitePosts);
 
 		return (
 			<div

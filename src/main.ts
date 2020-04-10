@@ -17,31 +17,15 @@ export default function (context) {
 		// 	"Get-total-posts was heard in main.ts"
 		// );
 
-
-
 		event.reply(replyChannel, await getTotalPosts(siteId));
 	});
-	
-	
-
-	// ipcMain.on('get-total-posts', (event, siteId) => {
-	// 	const site = LocalMain.SiteData.getSite(siteId);
-
-	// 	let numberOfPostsDbCall = LocalMain.getServiceContainer().cradle.wpCli.run(site, [
-	// 		'post',
-	// 		'list',
-	// 		'--format=count'
-	// 	 ]);
-
-	// 	 numberOfPostsDbCall.then((numberOfPosts) => event.reply('return-total-posts', parseInt(numberOfPosts)));
-	// });
 }
 
 async function getTotalPosts(siteId) {
-	LocalMain.getServiceContainer().cradle.localLogger.log(
-		"info",
-		"getTotalPosts Async function was called in main.ts"
-	);
+	// LocalMain.getServiceContainer().cradle.localLogger.log(
+	// 	"info",
+	// 	"getTotalPosts Async function was called in main.ts"
+	// );
 
 	const site = LocalMain.SiteData.getSite(siteId);
 
@@ -51,6 +35,4 @@ async function getTotalPosts(siteId) {
 	);
 
 	return numberOfPostsDbCall;
-
-	//numberOfPostsDbCall.then((numberOfPosts) => { return parseInt(numberOfPosts) } );
 }
