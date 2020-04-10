@@ -167,7 +167,7 @@ export default class BrokenLinkChecker extends Component {
 
 		let options = new Object();
 		options.cacheResponses = false;
-		options.rateLimit = 500; // Give the local website time to start, so we avoid the 500 errors
+		options.rateLimit = 1000; // Give the local website time to start, so we avoid the 500 errors
 
 		let isUrlBrokenChecker = new UrlChecker(options, {
 			link: (result, customData) => {
@@ -421,7 +421,9 @@ export default class BrokenLinkChecker extends Component {
 			? "Scan is in progress."
 			: "Scan is not running.";
 
-		console.log(this.state.totalSitePosts);
+		if(this.state.totalSitePosts !== null && this.state.getTotalSitePostsInProgress !== true){
+			console.log("Found " + this.state.numberPostsFound + " out of " + this.state.totalSitePosts + " total posts");
+		}
 
 		return (
 			<div
