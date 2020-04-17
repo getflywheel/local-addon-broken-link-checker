@@ -31,10 +31,12 @@ async function getTotalPosts(siteId) {
 
 	// Temporarily returning a string of post titles for debug purposes
 
-	let numberOfPostsDbCall = await LocalMain.getServiceContainer().cradle.wpCli.run(
-		site,
-		["post", "list", "--format=count"]
-	);
+	// let numberOfPostsDbCall = await LocalMain.getServiceContainer().cradle.wpCli.run(
+	// 	site,
+	// 	["post", "list", "--format=count"]
+	// );
+
+
 
 	// This only returns "Hello World" because that's the one post the command finds
 	// let numberOfPostsDbCall = await LocalMain.getServiceContainer().cradle.wpCli.run(
@@ -42,16 +44,29 @@ async function getTotalPosts(siteId) {
 	// 	["post", "list", "--field=post_title", "--format=json"]
 	// );
 
-	// This could not connect
-	// let numberOfPostsDbCall = await LocalMain.getServiceContainer().cradle.siteDatabase.exec(
-	// 	site, 
-	// 	["SELECT COUNT(ID) FROM wp_posts WHERE post_status = 'publish'"]
-	// ).catch((error) => {
-	// 	LocalMain.getServiceContainer().cradle.localLogger.log(
-	// 		"info",
-	// 		"encountered this error when calling DB: " + error
-	// 	);
-	// });
+	let numberOfPostsDbCall = await LocalMain.getServiceContainer().cradle.siteDatabase.exec(
+		site,
+		["SELECT COUNT(ID) FROM wp_posts WHERE post_status = 'publish'"]
+	).then((data) => {
+		LocalMain.getServiceContainer().cradle.localLogger.log(
+			"info",
+			"Hey here is some data from the db call: " + data
+		);
+	}).catch((error) => {
+		LocalMain.getServiceContainer().cradle.localLogger.log(
+			"info",
+			"encountered this error when calling DB: " + error
+		);
+	});
+
+	// LocalMain.getServiceContainer().cradle.localLogger.log(
+	// 	"info",
+	// 	`test in getTotalPosts(): ${numberOfPostsDbCall}`,
+	// );
+	LocalMain.getServiceContainer().cradle.localLogger.log(
+		"info",
+		'test in getTotalPosts():' + numberOfPostsDbCall
+	);
 
 	// This could not connect
 	// let numberOfPostsDbCall = await LocalMain.getServiceContainer().cradle.wpCli.run(
