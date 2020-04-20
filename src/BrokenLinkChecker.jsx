@@ -23,6 +23,7 @@ export default class BrokenLinkChecker extends Component {
 			siteId: null,
 			scanInProgress: false,
 			numberPostsFound: 0,
+			numberBrokenLinksFound: 0,
 			totalSitePosts: null,
 			getTotalSitePostsInProgress: false,
 		};
@@ -237,6 +238,12 @@ export default class BrokenLinkChecker extends Component {
 		}));
 	}
 
+	updateNumberBrokenLinksFound() {
+		this.setState((prevState) => ({
+			numberBrokenLinksFound: prevState.numberBrokenLinksFound + 1,
+		}));
+	}
+
 	updateFirstRunComplete(boolean) {
 		this.setState((prevState) => ({
 			firstRunComplete: boolean,
@@ -340,6 +347,7 @@ export default class BrokenLinkChecker extends Component {
 					);
 
 					this.updateBrokenLinksFound(true);
+					this.updateNumberBrokenLinksFound();
 				}
 			},
 			end: (result, customData) => {
@@ -378,7 +386,7 @@ export default class BrokenLinkChecker extends Component {
 		return wpPostId;
 	}
 
-	renderProgressBar() {
+	renderProgressBarElements() {
 		let progressCompletedPercentage = 0;
 
 		if (
@@ -401,7 +409,15 @@ export default class BrokenLinkChecker extends Component {
 		}
 
 		if (this.state.scanInProgress) {
-			return <ProgressBar progress={progressCompletedPercentage} />;
+			return (
+				<div>
+					<p style={{ textAlign: "center" }}>Searching for Links</p>
+					<p style={{ textAlign: "center" }}>
+						Broken Links <b>{this.state.numberBrokenLinksFound}</b>
+					</p>
+					<ProgressBar progress={progressCompletedPercentage} />
+				</div>
+			);
 		} else {
 			return null;
 		}
@@ -498,6 +514,9 @@ export default class BrokenLinkChecker extends Component {
 					itemTemplate={{}}
 					data={this.state.brokenLinks}
 				/>
+
+				{this.renderProgressBarElements()}
+
 				<a
 					href="javascript:void(0);"
 					onClick={this.startScan}
@@ -505,8 +524,6 @@ export default class BrokenLinkChecker extends Component {
 				>
 					{startButtonText}
 				</a>
-
-				{this.renderProgressBar()}
 			</div>
 		);
 	}
