@@ -7,7 +7,7 @@ const {
 	HtmlUrlChecker,
 	UrlChecker,
 } = require("broken-link-checker");
-import { TableListRepeater } from "@getflywheel/local-components";
+import { TableListRepeater, ProgressBar } from "@getflywheel/local-components";
 
 export default class BrokenLinkChecker extends Component {
 	constructor(props) {
@@ -400,6 +400,8 @@ export default class BrokenLinkChecker extends Component {
 			? "Scan is in progress."
 			: "Scan is not running.";
 
+		let progressCompletedPercentage = 0;
+
 		if (
 			this.state.totalSitePosts !== null &&
 			this.state.getTotalSitePostsInProgress !== true
@@ -410,6 +412,12 @@ export default class BrokenLinkChecker extends Component {
 					" out of " +
 					this.state.totalSitePosts +
 					" total posts"
+			);
+
+			progressCompletedPercentage = parseInt(
+				(parseInt(this.state.numberPostsFound) /
+					parseInt(this.state.totalSitePosts)) *
+					100
 			);
 		}
 
@@ -484,6 +492,8 @@ export default class BrokenLinkChecker extends Component {
 				>
 					{startButtonText}
 				</a>
+
+				<ProgressBar progress={progressCompletedPercentage} />
 			</div>
 		);
 	}
