@@ -21,7 +21,6 @@ export default class BrokenLinkChecker extends Component {
 			siteStatus: null,
 			siteRootUrl: null,
 			siteId: null,
-			socketPath: null,
 			scanInProgress: false,
 			numberPostsFound: 0,
 			totalSitePosts: null,
@@ -46,30 +45,15 @@ export default class BrokenLinkChecker extends Component {
 
 		let siteId = routeChildrenProps.site.id;
 
-		// let appDataPath = remote.app.getPath("appData");
-		// let socketPath =
-		// 	appDataPath +
-		// 	"/" +
-		// 	localVersionName +
-		// 	"/run/" +
-		// 	siteId +
-		// 	"/mysql/mysqld.sock";
-
 		// TODO: Add checking to see if site is running with HTTP or HTTPS. Right now HTTP is assumed
 		//let possibleSecureHttpStatus = site.services.nginx.ports.HTTP;
 		//let otherPossibleSecureHttpStatus = site.services.nginx.role;
 
 		//let siteUrl = "http://" + siteDomain;
 
-		// ipcRenderer.on('return-total-posts', (event, arg) => {
-		// 	console.log("Total posts received!");
-		// 	console.log(arg);
-		// });
-
 		this.testSiteRootUrlVariantsAndUpdate(siteDomain);
 		this.updateSiteId(siteId);
 		this.updateSiteState(siteStatus);
-		//this.updateSiteDbSocket(socketPath); Commenting out rn as it should no longer be needed
 	}
 
 	componentDidUpdate() {
@@ -233,12 +217,6 @@ export default class BrokenLinkChecker extends Component {
 	updateSiteId(siteId) {
 		this.setState((prevState) => ({
 			siteId: siteId,
-		}));
-	}
-
-	updateSiteDbSocket(socketPath) {
-		this.setState((prevState) => ({
-			socketPath: socketPath,
 		}));
 	}
 
