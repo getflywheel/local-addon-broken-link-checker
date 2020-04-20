@@ -25,7 +25,7 @@ export default class BrokenLinkChecker extends Component {
 			scanInProgress: false,
 			numberPostsFound: 0,
 			totalSitePosts: null,
-			getTotalSitePostsInProgress: false
+			getTotalSitePostsInProgress: false,
 		};
 
 		this.checkLinks = this.checkLinks.bind(this);
@@ -84,7 +84,11 @@ export default class BrokenLinkChecker extends Component {
 			this.updateSiteState(siteStatus);
 		}
 
-		if (siteStatus === "running" && this.state.getTotalSitePostsInProgress === false && this.state.totalSitePosts === null) {
+		if (
+			siteStatus === "running" &&
+			this.state.getTotalSitePostsInProgress === false &&
+			this.state.totalSitePosts === null
+		) {
 			// The site has just been turned on
 			// let dbName = routeChildrenProps.site.mysql.database;
 			// let username = routeChildrenProps.site.mysql.user;
@@ -200,17 +204,14 @@ export default class BrokenLinkChecker extends Component {
 	}
 
 	updateTotalSitePosts() {
-
 		this.setState((prevState) => ({
-			getTotalSitePostsInProgress: true
+			getTotalSitePostsInProgress: true,
 		}));
 
 		ipcAsync("get-total-posts", this.state.siteId).then((result) => {
-			console.log("received posts: " + result);
-
 			this.setState((prevState) => ({
 				totalSitePosts: parseInt(result),
-				getTotalSitePostsInProgress: false
+				getTotalSitePostsInProgress: false,
 			}));
 		});
 
@@ -421,8 +422,17 @@ export default class BrokenLinkChecker extends Component {
 			? "Scan is in progress."
 			: "Scan is not running.";
 
-		if(this.state.totalSitePosts !== null && this.state.getTotalSitePostsInProgress !== true){
-			console.log("Found " + this.state.numberPostsFound + " out of " + this.state.totalSitePosts + " total posts");
+		if (
+			this.state.totalSitePosts !== null &&
+			this.state.getTotalSitePostsInProgress !== true
+		) {
+			console.log(
+				"Found " +
+					this.state.numberPostsFound +
+					" out of " +
+					this.state.totalSitePosts +
+					" total posts"
+			);
 		}
 
 		return (
