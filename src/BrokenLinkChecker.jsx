@@ -80,6 +80,8 @@ export default class BrokenLinkChecker extends Component {
 			// let port =
 			// 	routeChildrenProps.site.services.mysql.ports.MYSQL[0];
 
+			console.log("Caling updatTotalSitePosts");
+
 			this.updateTotalSitePosts();
 		}
 	}
@@ -192,12 +194,15 @@ export default class BrokenLinkChecker extends Component {
 			getTotalSitePostsInProgress: true,
 		}));
 
-		ipcAsync("get-total-posts", this.state.siteId).then((result) => {
-			this.setState((prevState) => ({
-				totalSitePosts: parseInt(result),
-				getTotalSitePostsInProgress: false,
-			}));
-		});
+		setTimeout(() => {
+			ipcAsync("get-total-posts", this.state.siteId).then((result) => {
+				console.log("Heard back: " + result);
+				this.setState((prevState) => ({
+					totalSitePosts: parseInt(result),
+					getTotalSitePostsInProgress: false,
+				}));
+			});
+		}, 3000);
 
 		// if (this.isWindows()) {
 		// 	console.log("This is windows");
@@ -373,6 +378,35 @@ export default class BrokenLinkChecker extends Component {
 		return wpPostId;
 	}
 
+	renderProgressBar() {
+		let progressCompletedPercentage = 0;
+
+		if (
+			this.state.totalSitePosts !== null &&
+			this.state.getTotalSitePostsInProgress !== true
+		) {
+			console.log(
+				"Found " +
+					this.state.numberPostsFound +
+					" out of " +
+					this.state.totalSitePosts +
+					" total posts"
+			);
+
+			progressCompletedPercentage = parseInt(
+				(parseInt(this.state.numberPostsFound) /
+					parseInt(this.state.totalSitePosts)) *
+					100
+			);
+		}
+
+		if (this.state.scanInProgress) {
+			return <ProgressBar progress={progressCompletedPercentage} />;
+		} else {
+			return null;
+		}
+	}
+
 	render() {
 		let message = "";
 		if (this.state.siteStatus === "halted") {
@@ -399,27 +433,6 @@ export default class BrokenLinkChecker extends Component {
 		let scanProgressMessage = this.state.scanInProgress
 			? "Scan is in progress."
 			: "Scan is not running.";
-
-		let progressCompletedPercentage = 0;
-
-		if (
-			this.state.totalSitePosts !== null &&
-			this.state.getTotalSitePostsInProgress !== true
-		) {
-			console.log(
-				"Found " +
-					this.state.numberPostsFound +
-					" out of " +
-					this.state.totalSitePosts +
-					" total posts"
-			);
-
-			progressCompletedPercentage = parseInt(
-				(parseInt(this.state.numberPostsFound) /
-					parseInt(this.state.totalSitePosts)) *
-					100
-			);
-		}
 
 		return (
 			<div
@@ -493,7 +506,7 @@ export default class BrokenLinkChecker extends Component {
 					{startButtonText}
 				</a>
 
-				<ProgressBar progress={progressCompletedPercentage} />
+				{this.renderProgressBar()}
 			</div>
 		);
 	}
