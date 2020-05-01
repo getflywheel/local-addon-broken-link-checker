@@ -7,7 +7,7 @@ const {
 	HtmlUrlChecker,
 	UrlChecker,
 } = require("broken-link-checker");
-import { TableListRepeater, ProgressBar } from "@getflywheel/local-components";
+import { TableListMultiDisplay, ProgressBar, PrimaryButton } from "@getflywheel/local-components";
 
 export default class BrokenLinkChecker extends Component {
 	constructor(props) {
@@ -386,6 +386,14 @@ export default class BrokenLinkChecker extends Component {
 		return wpPostId;
 	}
 
+	truncate(str, n){
+		if (str.length > n) {
+			return str.substr(0, n-1) + '...';
+		} else {
+			return str;
+		}
+	  };
+
 	renderProgressBarElements() {
 		let progressCompletedPercentage = 0;
 
@@ -459,15 +467,10 @@ export default class BrokenLinkChecker extends Component {
 
 				<p>{scanProgressMessage}</p>
 
-				<TableListRepeater
+				<TableListMultiDisplay
 					header={
 						<>
-							<strong
-								className="TableListRowHeader__SeparatorRight"
-								style={{ width: "10%" }}
-							>
-								Status
-							</strong>
+							<strong style={{ width: "10%" }}>Status</strong>
 							<strong style={{ width: "35%" }}>Origin URL</strong>
 							<strong style={{ width: "30%" }}>Link URL</strong>
 							<strong style={{ width: "15%" }}>Link Text</strong>
@@ -476,16 +479,16 @@ export default class BrokenLinkChecker extends Component {
 					}
 					repeatingContent={(item, index, updateItem) => (
 						<>
-							<div className="TableListRowHeader__SeparatorRight">
+							<div>
 								{item.statusCode}
 							</div>
 
 							<div>
-								<a href={item.originURL}>{item.originURL}</a>
+								<a href={item.originURL}>{this.truncate(item.originURL, 35)}</a>
 							</div>
 
 							<div>
-								<a href={item.linkURL}>{item.linkURL}</a>
+								<a href={item.linkURL}>{this.truncate(item.linkURL, 35)}</a>
 							</div>
 
 							<div>
@@ -509,21 +512,14 @@ export default class BrokenLinkChecker extends Component {
 							</div>
 						</>
 					)}
-					onSubmit={() => console.log("onSubmit")}
-					submitLabel={startButtonText}
 					itemTemplate={{}}
 					data={this.state.brokenLinks}
 				/>
 
 				{this.renderProgressBarElements()}
 
-				<a
-					href="javascript:void(0);"
-					onClick={this.startScan}
-					style={{ marginTop: 15, marginLeft: 2, display: "block" }}
-				>
-					{startButtonText}
-				</a>
+				<PrimaryButton onClick={this.startScan} style={{ marginTop: 15, marginLeft: "auto", marginRight: 10, marginBottom: 10, display: "block" }}>{startButtonText}</PrimaryButton>
+
 			</div>
 		);
 	}
