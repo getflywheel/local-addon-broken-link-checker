@@ -74,14 +74,6 @@ export default class BrokenLinkChecker extends Component {
 			this.state.getTotalSitePostsInProgress === false &&
 			this.state.totalSitePosts === null
 		) {
-			// The site has just been turned on
-			// let dbName = routeChildrenProps.site.mysql.database;
-			// let username = routeChildrenProps.site.mysql.user;
-			// let pass = routeChildrenProps.site.mysql.password;
-			// let port =
-			// 	routeChildrenProps.site.services.mysql.ports.MYSQL[0];
-
-			console.log("Caling updatTotalSitePosts");
 
 			this.updateTotalSitePosts();
 		}
@@ -197,21 +189,12 @@ export default class BrokenLinkChecker extends Component {
 
 		setTimeout(() => {
 			ipcAsync("get-total-posts", this.state.siteId).then((result) => {
-				console.log("Heard back: " + result);
 				this.setState((prevState) => ({
 					totalSitePosts: parseInt(result),
 					getTotalSitePostsInProgress: false,
 				}));
 			});
 		}, 3000);
-
-		// if (this.isWindows()) {
-		// 	console.log("This is windows");
-		// } else {
-		// 	console.log("This is Mac or Linux");
-		// 	// This is where the connection will take place
-		// 	// This is the query: "SELECT COUNT(ID) FROM wp_posts WHERE post_type IN ( 'post', 'etc' ) and post_status = 'publish'"
-		// }
 	}
 
 	updateSiteState(newStatus) {
@@ -401,13 +384,6 @@ export default class BrokenLinkChecker extends Component {
 			this.state.totalSitePosts !== null &&
 			this.state.getTotalSitePostsInProgress !== true
 		) {
-			console.log(
-				"Found " +
-					this.state.numberPostsFound +
-					" out of " +
-					this.state.totalSitePosts +
-					" total posts"
-			);
 
 			progressCompletedPercentage = parseInt(
 				(parseInt(this.state.numberPostsFound) /
