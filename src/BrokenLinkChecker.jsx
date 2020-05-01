@@ -40,7 +40,6 @@ export default class BrokenLinkChecker extends Component {
 
 		//let siteUrl = "http://" + siteDomain;
 
-		this.testSiteRootUrlVariantsAndUpdate(siteDomain);
 		this.updateSiteId(siteId);
 		this.updateSiteState(siteStatus);
 	}
@@ -48,11 +47,8 @@ export default class BrokenLinkChecker extends Component {
 	componentDidUpdate() {
 		let routeChildrenProps = this.props.routeChildrenProps;
 		let siteStatus = routeChildrenProps.siteStatus;
-		let site = routeChildrenProps.site;
-		let siteDomain = site.domain;
 
 		if (siteStatus !== this.state.siteStatus) {
-			this.testSiteRootUrlVariantsAndUpdate(siteDomain);
 			this.updateSiteState(siteStatus);
 		}
 	}
@@ -108,45 +104,51 @@ export default class BrokenLinkChecker extends Component {
 		return true;
 	}
 
-	testSiteRootUrlVariantsAndUpdate(siteDomain) {
-		let workingUrlFound = false;
+	testSiteRootUrlVariantsAndUpdate = (siteDomain) => {
+		return new Promise((resolve, reject) => {
+			let workingUrlFound = false;
 
-		// TODO: Handle self-signed certificates more securely, like https://stackoverflow.com/questions/20433287/node-js-request-cert-has-expired#answer-29397100
-		process.env["NODE_TLS_REJECT_UNAUTHORIZED"] = 0;
-
-		let options = new Object();
-		options.cacheResponses = false;
-		options.rateLimit = 500; // Give the local website time to start, so we avoid the 500 errors
-
-		let isUrlBrokenChecker = new UrlChecker(options, {
-			link: (result, customData) => {
-				// If we get a 200 success on the URL, we use it and stop checking variants of the root URL
-				if (!result.broken) {
-					let workingUrl = result.url.original;
-
-					this.setState(prevState => ({
-						siteRootUrl: workingUrl
-					}));
-
-					// In case the first root URL variant is the winner, dequeue the later options
-					isUrlBrokenChecker.dequeue(1);
-					isUrlBrokenChecker.dequeue(2);
-
-					workingUrlFound = true;
+			// TODO: Handle self-signed certificates more securely, like https://stackoverflow.com/questions/20433287/node-js-request-cert-has-expired#answer-29397100
+			process.env["NODE_TLS_REJECT_UNAUTHORIZED"] = 0;
+	
+			let options = new Object();
+			options.cacheResponses = false;
+			options.rateLimit = 500; // Give the local website time to start, so we avoid the 500 errors
+			let workingUrl = null;
+	
+			let isUrlBrokenChecker = new UrlChecker(options, {
+				link: (result, customData) => {
+					// If we get a 200 success on the URL, we use it and stop checking variants of the root URL
+					if (!result.broken) {
+						workingUrl = result.url.original;
+	
+						this.setState(prevState => ({
+							siteRootUrl: workingUrl
+						}));
+	
+						// In case the first root URL variant is the winner, dequeue the later options
+						isUrlBrokenChecker.dequeue(1);
+						isUrlBrokenChecker.dequeue(2);
+	
+						workingUrlFound = true;
+					}
+				},
+				end: () => {
+					// If a proper working root URL is not found, make sure it's null so we can render a warning notice
+					if (!workingUrlFound) {
+						this.setState(prevState => ({
+							siteRootUrl: null
+						}));
+						reject(Error("Root URL not found"));
+					} else {
+						resolve(workingUrl);
+					}
 				}
-			},
-			end: () => {
-				// If a proper working root URL is not found, make sure it's null so we can render a warning notice
-				if (!workingUrlFound) {
-					this.setState(prevState => ({
-						siteRootUrl: null
-					}));
-				}
-			}
+			});
+			isUrlBrokenChecker.enqueue("http://" + siteDomain + "/");
+			isUrlBrokenChecker.enqueue("https://" + siteDomain + "/");
 		});
-		isUrlBrokenChecker.enqueue("http://" + siteDomain + "/");
-		isUrlBrokenChecker.enqueue("https://" + siteDomain + "/");
-	}
+	  };
 
 	updateSiteState(newStatus) {
 		this.setState(prevState => ({
@@ -185,27 +187,34 @@ export default class BrokenLinkChecker extends Component {
 	}
 
 	startScan = () => {
-		let routeChildrenProps = this.props.routeChildrenProps;
-		let siteStatus = routeChildrenProps.siteStatus;
 
-		if (
-			this.state.resultsOnScreen &&
-			String(this.state.siteStatus) !== "halted" &&
-			this.state.siteStatus != null
-		) {
-			// Clear the existing broken links on screen if some have been rendered already
-			this.clearBrokenLinks();
-			this.checkLinks(this.state.siteRootUrl);
-			this.updateScanInProgress(true);
-		} else if (
-			String(this.state.siteStatus) !== "halted" &&
-			this.state.siteStatus != null
-		) {
-			this.checkLinks(this.state.siteRootUrl);
-			this.updateScanInProgress(true);
-		} else {
-			this.updateSiteState(siteStatus);
-		}
+		let routeChildrenProps = this.props.routeChildrenProps;
+		let site = routeChildrenProps.site;
+		let siteDomain = site.domain;
+
+		this.testSiteRootUrlVariantsAndUpdate(siteDomain).then((rootUrl) => {
+			let routeChildrenProps = this.props.routeChildrenProps;
+			let siteStatus = routeChildrenProps.siteStatus;
+
+			if (
+				this.state.resultsOnScreen &&
+				String(this.state.siteStatus) !== "halted" &&
+				this.state.siteStatus != null
+			) {
+				// Clear the existing broken links on screen if some have been rendered already
+				this.clearBrokenLinks();
+				this.checkLinks(rootUrl);
+				this.updateScanInProgress(true);
+			} else if (
+				String(this.state.siteStatus) !== "halted" &&
+				this.state.siteStatus != null
+			) {
+				this.checkLinks(rootUrl);
+				this.updateScanInProgress(true);
+			} else {
+				this.updateSiteState(siteStatus);
+			}
+		});		
 	};
 
 	checkLinks(siteURL) {
@@ -281,7 +290,7 @@ export default class BrokenLinkChecker extends Component {
 		}
 
 		if (
-			this.state.siteStatus !== "halted" &&
+			this.state.scanInProgress &&
 			this.state.siteRootUrl == null
 		) {
 			message += " There was a problem checking the website's homepage.";
