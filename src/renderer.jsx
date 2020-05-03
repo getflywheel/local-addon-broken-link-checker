@@ -1,5 +1,6 @@
 import BrokenLinkChecker from "./BrokenLinkChecker";
 import path from "path";
+import { ipcRenderer } from "electron";
 import { matchPath } from "react-router";
 
 export default function(context) {
