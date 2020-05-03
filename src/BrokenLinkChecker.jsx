@@ -63,15 +63,6 @@ export default class BrokenLinkChecker extends Component {
 		if (siteStatus !== this.state.siteStatus) {
 			this.updateSiteState(siteStatus);
 		}
-
-		if (
-			siteStatus === "running" &&
-			this.state.getTotalSitePostsInProgress === false &&
-			this.state.totalSitePosts === null
-		) {
-
-			this.updateTotalSitePosts();
-		}
 	}
 
 	addBrokenLink(statusCode, linkURL, linkText, originURL, wpPostId) {
@@ -247,6 +238,17 @@ export default class BrokenLinkChecker extends Component {
 		let siteDomain = site.domain;
 
 		this.testSiteRootUrlVariantsAndUpdate(siteDomain).then((rootUrl) => {
+
+			// Update total site posts count
+			if (
+				this.state.getTotalSitePostsInProgress === false &&
+				this.state.totalSitePosts === null
+			) {
+	
+				this.updateTotalSitePosts();
+			}
+
+			// Start site tasks
 			let routeChildrenProps = this.props.routeChildrenProps;
 			let siteStatus = routeChildrenProps.siteStatus;
 
