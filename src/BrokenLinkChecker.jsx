@@ -409,6 +409,24 @@ export default class BrokenLinkChecker extends Component {
 		}
 	}
 
+	renderActionButton(){
+		let startButtonText = "Start";
+		if (this.state.resultsOnScreen) {
+			startButtonText = "Re-Run";
+		}
+
+		if (this.state.scanInProgress) {
+			return (
+				<PrimaryButton disabled="true" onClick={this.startScan} style={{ marginTop: 15, marginLeft: "auto", marginRight: 10, marginBottom: 10, display: "block" }}>Scanning</PrimaryButton>
+			);
+		} else {
+			return (
+			<PrimaryButton onClick={this.startScan} style={{ marginTop: 15, marginLeft: "auto", marginRight: 10, marginBottom: 10, display: "block" }}>{startButtonText}</PrimaryButton>
+			);
+	
+		}
+	}
+
 	render() {
 		let message = "";
 		if (this.state.siteStatus === "halted") {
@@ -425,11 +443,6 @@ export default class BrokenLinkChecker extends Component {
 			this.state.siteRootUrl == null
 		) {
 			message += " There was a problem checking the website's homepage.";
-		}
-
-		let startButtonText = "Start Scan";
-		if (this.state.resultsOnScreen) {
-			startButtonText = "Re-Run Scan";
 		}
 
 		let scanProgressMessage = this.state.scanInProgress
@@ -496,8 +509,7 @@ export default class BrokenLinkChecker extends Component {
 
 				{this.renderProgressBarElements()}
 
-				<PrimaryButton onClick={this.startScan} style={{ marginTop: 15, marginLeft: "auto", marginRight: 10, marginBottom: 10, display: "block" }}>{startButtonText}</PrimaryButton>
-
+				{this.renderActionButton()}				
 			</div>
 		);
 	}
