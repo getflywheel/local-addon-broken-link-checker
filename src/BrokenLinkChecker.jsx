@@ -298,6 +298,15 @@ export default class BrokenLinkChecker extends Component {
 							// TODO: Make this code continue to drill down until an exact match for the 'body' tag is found, just in case a custom template has modified the usual page structure
 							let stringOfBodyClasses =
 								tree.childNodes[1].childNodes[2].attrMap.class;
+							console.log(tree);
+
+							tree.childNodes.forEach(function(item,key){
+								console.log(key + " " + item);
+							});
+
+							// find childnode with nodeName "html"
+
+							// find childnode of that with nodename "body"
 
 							// TODO: Also make note of special classes like .home
 							let findPostId = stringOfBodyClasses.match(
