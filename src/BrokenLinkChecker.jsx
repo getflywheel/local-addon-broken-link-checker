@@ -336,6 +336,8 @@ export default class BrokenLinkChecker extends Component {
 									customData["originURL"],
 									wpPostId
 								);
+								this.updateBrokenLinksFound(true);
+								this.updateNumberBrokenLinksFound();
 							}
 						}
 					});
@@ -343,9 +345,6 @@ export default class BrokenLinkChecker extends Component {
 						brokenLinkScanResults["originURL"],
 						brokenLinkScanResults
 					);
-
-					this.updateBrokenLinksFound(true);
-					this.updateNumberBrokenLinksFound();
 				}
 			},
 			end: (result, customData) => {
