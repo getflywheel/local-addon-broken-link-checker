@@ -162,20 +162,36 @@ export default class BrokenLinkChecker extends Component {
 		});
 	  };
 
-	updateTotalSitePosts() {
-		this.setState((prevState) => ({
-			getTotalSitePostsInProgress: true,
-		}));
+	// updateTotalSitePosts() {
+	// 	this.setState((prevState) => ({
+	// 		getTotalSitePostsInProgress: true,
+	// 	}));
 
-		setTimeout(() => {
+	// 	setTimeout(() => {
+	// 		ipcAsync("get-total-posts", this.state.siteId).then((result) => {
+	// 			this.setState((prevState) => ({
+	// 				totalSitePosts: parseInt(result),
+	// 				getTotalSitePostsInProgress: false,
+	// 			}));
+	// 		});
+	// 	}, 3000);
+	// }
+
+	updateTotalSitePosts = () => {
+		return new Promise((resolve, reject) => {
+			this.setState((prevState) => ({
+				getTotalSitePostsInProgress: true,
+			}));
+
 			ipcAsync("get-total-posts", this.state.siteId).then((result) => {
 				this.setState((prevState) => ({
 					totalSitePosts: parseInt(result),
 					getTotalSitePostsInProgress: false,
 				}));
+				resolve(true);
 			});
-		}, 3000);
-	}
+		});
+	};
 
 	updateSiteState(newStatus) {
 		this.setState((prevState) => ({
@@ -245,30 +261,30 @@ export default class BrokenLinkChecker extends Component {
 				this.state.totalSitePosts === null
 			) {
 	
-				this.updateTotalSitePosts();
-			}
+				this.updateTotalSitePosts().then(() => {
+					// Start site tasks
+					let routeChildrenProps = this.props.routeChildrenProps;
+					let siteStatus = routeChildrenProps.siteStatus;
 
-			// Start site tasks
-			let routeChildrenProps = this.props.routeChildrenProps;
-			let siteStatus = routeChildrenProps.siteStatus;
-
-			if (
-				this.state.resultsOnScreen &&
-				String(this.state.siteStatus) !== "halted" &&
-				this.state.siteStatus != null
-			) {
-				// Clear the existing broken links on screen if some have been rendered already
-				this.clearBrokenLinks();
-				this.checkLinks(rootUrl);
-				this.updateScanInProgress(true);
-			} else if (
-				String(this.state.siteStatus) !== "halted" &&
-				this.state.siteStatus != null
-			) {
-				this.checkLinks(rootUrl);
-				this.updateScanInProgress(true);
-			} else {
-				this.updateSiteState(siteStatus);
+					if (
+						this.state.resultsOnScreen &&
+						String(this.state.siteStatus) !== "halted" &&
+						this.state.siteStatus != null
+					) {
+						// Clear the existing broken links on screen if some have been rendered already
+						this.clearBrokenLinks();
+						this.checkLinks(rootUrl);
+						this.updateScanInProgress(true);
+					} else if (
+						String(this.state.siteStatus) !== "halted" &&
+						this.state.siteStatus != null
+					) {
+						this.checkLinks(rootUrl);
+						this.updateScanInProgress(true);
+					} else {
+						this.updateSiteState(siteStatus);
+					}
+				});
 			}
 		});		
 	};
