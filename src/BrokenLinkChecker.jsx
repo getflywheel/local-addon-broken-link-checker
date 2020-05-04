@@ -295,34 +295,8 @@ export default class BrokenLinkChecker extends Component {
 
 					let singlePageChecker = new HtmlUrlChecker(null, {
 						html: (tree, robots, response, pageUrl, customData) => {
-							// TODO: Make this code continue to drill down until an exact match for the 'body' tag is found, just in case a custom template has modified the usual page structure
-							let stringOfBodyClasses =
-								tree.childNodes[1].childNodes[2].attrMap.class;
-							console.log(tree);
 
-							tree.childNodes.forEach(function(item,key){
-								console.log(key + " " + item);
-							});
-
-							// find childnode with nodeName "html"
-
-							// find childnode of that with nodename "body"
-
-							// TODO: Also make note of special classes like .home
-							let findPostId = stringOfBodyClasses.match(
-								/(^|\s)postid-(\d+)(\s|$)/
-							);
-
-							let findPageId = stringOfBodyClasses.match(
-								/(^|\s)page-id-(\d+)(\s|$)/
-							);
-
-							let wpPostId = null;
-							if (findPostId) {
-								wpPostId = findPostId[2];
-							} else if (findPageId) {
-								wpPostId = findPageId[2];
-							}
+							let wpPostId = this.findWpPostIdInMarkup(tree);
 
 							if (wpPostId !== null) {
 								this.addBrokenLink(
@@ -361,14 +335,26 @@ export default class BrokenLinkChecker extends Component {
 	}
 
 	findWpPostIdInMarkup(tree) {
-		// TODO: Make this code continue to drill down until an exact match for the 'body' tag is found, just in case a custom template has modified the usual page structure
-		let stringOfBodyClasses =
-			tree.childNodes[1].childNodes[2].attrMap.class;
+		let stringOfBodyClasses = '';
+
+		tree.childNodes.forEach(function(item,key){
+			if(item.nodeName === "html"){
+				item.childNodes.forEach(function(item,key){
+					if(item.nodeName === "body"){
+						stringOfBodyClasses = item.attrMap.class;
+					}
+				})
+			}
+		});
 
 		// TODO: Also make note of special classes like .home
-		let findPostId = stringOfBodyClasses.match(/(^|\s)postid-(\d+)(\s|$)/);
+		let findPostId = stringOfBodyClasses.match(
+			/(^|\s)postid-(\d+)(\s|$)/
+		);
 
-		let findPageId = stringOfBodyClasses.match(/(^|\s)page-id-(\d+)(\s|$)/);
+		let findPageId = stringOfBodyClasses.match(
+			/(^|\s)page-id-(\d+)(\s|$)/
+		);
 
 		let wpPostId = null;
 		if (findPostId) {
