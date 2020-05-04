@@ -221,9 +221,15 @@ export default class BrokenLinkChecker extends Component {
 		}));
 	}
 
-	updateNumberBrokenLinksFound() {
+	incrementNumberBrokenLinksFound() {
 		this.setState((prevState) => ({
 			numberBrokenLinksFound: prevState.numberBrokenLinksFound + 1,
+		}));
+	}
+
+	clearNumberBrokenLinksFound() {
+		this.setState((prevState) => ({
+			numberBrokenLinksFound: 0,
 		}));
 	}
 
@@ -263,6 +269,7 @@ export default class BrokenLinkChecker extends Component {
 			// Clear the existing broken links on screen if some have been rendered already
 			this.clearBrokenLinks();
 			this.clearNumberPostsFound();
+			this.clearNumberBrokenLinksFound();
 			this.checkLinks(this.state.siteRootUrl);
 			this.updateScanInProgress(true);
 		} else if (
@@ -315,7 +322,7 @@ export default class BrokenLinkChecker extends Component {
 					);
 
 					this.updateBrokenLinksFound(true);
-					this.updateNumberBrokenLinksFound();
+					this.incrementNumberBrokenLinksFound();
 				}
 			},
 			end: (result, customData) => {
@@ -399,6 +406,15 @@ export default class BrokenLinkChecker extends Component {
 					<ProgressBar progress={progressCompletedPercentage} />
 				</div>
 			);
+		} else if (this.state.firstRunComplete && this.state.resultsOnScreen) {
+			return (
+				<div>
+					<p style={{ textAlign: "center" }}>
+						Broken Links <b>{this.state.numberBrokenLinksFound}</b>
+					</p>
+					<ProgressBar progress={progressCompletedPercentage} />
+				</div>
+			);
 		} else {
 			return null;
 		}
@@ -407,7 +423,7 @@ export default class BrokenLinkChecker extends Component {
 	renderActionButton(){
 		let startButtonText = "Start";
 		if (this.state.resultsOnScreen) {
-			startButtonText = "Re-Run";
+			startButtonText = "Start";
 		}
 
 		if (this.state.scanInProgress) {
