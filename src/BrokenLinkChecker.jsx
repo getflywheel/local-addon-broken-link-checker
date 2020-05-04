@@ -217,9 +217,15 @@ export default class BrokenLinkChecker extends Component {
 		}));
 	}
 
-	updateNumberBrokenLinksFound() {
+	incrementNumberBrokenLinksFound() {
 		this.setState((prevState) => ({
 			numberBrokenLinksFound: prevState.numberBrokenLinksFound + 1,
+		}));
+	}
+
+	clearNumberBrokenLinksFound() {
+		this.setState((prevState) => ({
+			numberBrokenLinksFound: 0,
 		}));
 	}
 
@@ -267,19 +273,21 @@ export default class BrokenLinkChecker extends Component {
 					let siteStatus = routeChildrenProps.siteStatus;
 
 					if (
-						this.state.resultsOnScreen &&
+						(this.state.resultsOnScreen || !this.state.brokenLinksFound) &&
 						String(this.state.siteStatus) !== "halted" &&
 						this.state.siteStatus != null
 					) {
 						// Clear the existing broken links on screen if some have been rendered already
 						this.clearBrokenLinks();
-						this.checkLinks(rootUrl);
+						this.clearNumberPostsFound();
+						this.clearNumberBrokenLinksFound();
+						this.checkLinks(this.state.siteRootUrl);
 						this.updateScanInProgress(true);
 					} else if (
 						String(this.state.siteStatus) !== "halted" &&
 						this.state.siteStatus != null
 					) {
-						this.checkLinks(rootUrl);
+						this.checkLinks(this.state.siteRootUrl);
 						this.updateScanInProgress(true);
 					} else {
 						this.updateSiteState(siteStatus);
@@ -308,25 +316,8 @@ export default class BrokenLinkChecker extends Component {
 
 					let singlePageChecker = new HtmlUrlChecker(null, {
 						html: (tree, robots, response, pageUrl, customData) => {
-							// TODO: Make this code continue to drill down until an exact match for the 'body' tag is found, just in case a custom template has modified the usual page structure
-							let stringOfBodyClasses =
-								tree.childNodes[1].childNodes[2].attrMap.class;
 
-							// TODO: Also make note of special classes like .home
-							let findPostId = stringOfBodyClasses.match(
-								/(^|\s)postid-(\d+)(\s|$)/
-							);
-
-							let findPageId = stringOfBodyClasses.match(
-								/(^|\s)page-id-(\d+)(\s|$)/
-							);
-
-							let wpPostId = null;
-							if (findPostId) {
-								wpPostId = findPostId[2];
-							} else if (findPageId) {
-								wpPostId = findPageId[2];
-							}
+							let wpPostId = this.findWpPostIdInMarkup(tree);
 
 							if (wpPostId !== null) {
 								this.addBrokenLink(
@@ -337,7 +328,7 @@ export default class BrokenLinkChecker extends Component {
 									wpPostId
 								);
 								this.updateBrokenLinksFound(true);
-								this.updateNumberBrokenLinksFound();
+								this.incrementNumberBrokenLinksFound();
 							}
 						}
 					});
@@ -364,14 +355,26 @@ export default class BrokenLinkChecker extends Component {
 	}
 
 	findWpPostIdInMarkup(tree) {
-		// TODO: Make this code continue to drill down until an exact match for the 'body' tag is found, just in case a custom template has modified the usual page structure
-		let stringOfBodyClasses =
-			tree.childNodes[1].childNodes[2].attrMap.class;
+		let stringOfBodyClasses = '';
+
+		tree.childNodes.forEach(function(item,key){
+			if(item.nodeName === "html"){
+				item.childNodes.forEach(function(item,key){
+					if(item.nodeName === "body"){
+						stringOfBodyClasses = item.attrMap.class;
+					}
+				})
+			}
+		});
 
 		// TODO: Also make note of special classes like .home
-		let findPostId = stringOfBodyClasses.match(/(^|\s)postid-(\d+)(\s|$)/);
+		let findPostId = stringOfBodyClasses.match(
+			/(^|\s)postid-(\d+)(\s|$)/
+		);
 
-		let findPageId = stringOfBodyClasses.match(/(^|\s)page-id-(\d+)(\s|$)/);
+		let findPageId = stringOfBodyClasses.match(
+			/(^|\s)page-id-(\d+)(\s|$)/
+		);
 
 		let wpPostId = null;
 		if (findPostId) {
@@ -416,8 +419,35 @@ export default class BrokenLinkChecker extends Component {
 					<ProgressBar progress={progressCompletedPercentage} />
 				</div>
 			);
+		} else if (this.state.firstRunComplete && this.state.resultsOnScreen) {
+			return (
+				<div>
+					<p style={{ textAlign: "center" }}>
+						Broken Links <b>{this.state.numberBrokenLinksFound}</b>
+					</p>
+					<ProgressBar progress={progressCompletedPercentage} />
+				</div>
+			);
 		} else {
 			return null;
+		}
+	}
+
+	renderActionButton(){
+		let startButtonText = "Start";
+		if (this.state.resultsOnScreen) {
+			startButtonText = "Start";
+		}
+
+		if (this.state.scanInProgress) {
+			return (
+				<PrimaryButton disabled="true" onClick={this.startScan} style={{ marginTop: 15, marginLeft: "auto", marginRight: 10, marginBottom: 10, display: "block" }}>Scanning</PrimaryButton>
+			);
+		} else {
+			return (
+			<PrimaryButton onClick={this.startScan} style={{ marginTop: 15, marginLeft: "auto", marginRight: 10, marginBottom: 10, display: "block" }}>{startButtonText}</PrimaryButton>
+			);
+	
 		}
 	}
 
@@ -437,11 +467,6 @@ export default class BrokenLinkChecker extends Component {
 			this.state.siteRootUrl == null
 		) {
 			message += " There was a problem checking the website's homepage.";
-		}
-
-		let startButtonText = "Start Scan";
-		if (this.state.resultsOnScreen) {
-			startButtonText = "Re-Run Scan";
 		}
 
 		let scanProgressMessage = this.state.scanInProgress
@@ -508,8 +533,7 @@ export default class BrokenLinkChecker extends Component {
 
 				{this.renderProgressBarElements()}
 
-				<PrimaryButton onClick={this.startScan} style={{ marginTop: 15, marginLeft: "auto", marginRight: 10, marginBottom: 10, display: "block" }}>{startButtonText}</PrimaryButton>
-
+				{this.renderActionButton()}				
 			</div>
 		);
 	}
