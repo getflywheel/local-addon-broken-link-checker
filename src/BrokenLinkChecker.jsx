@@ -162,21 +162,6 @@ export default class BrokenLinkChecker extends Component {
 		});
 	  };
 
-	// updateTotalSitePosts() {
-	// 	this.setState((prevState) => ({
-	// 		getTotalSitePostsInProgress: true,
-	// 	}));
-
-	// 	setTimeout(() => {
-	// 		ipcAsync("get-total-posts", this.state.siteId).then((result) => {
-	// 			this.setState((prevState) => ({
-	// 				totalSitePosts: parseInt(result),
-	// 				getTotalSitePostsInProgress: false,
-	// 			}));
-	// 		});
-	// 	}, 3000);
-	// }
-
 	updateTotalSitePosts = () => {
 		return new Promise((resolve, reject) => {
 			this.setState((prevState) => ({
@@ -189,7 +174,7 @@ export default class BrokenLinkChecker extends Component {
 					getTotalSitePostsInProgress: false,
 				}));
 				resolve(true);
-			});
+			}).catch((err) => reject("updateTotalSitePosts Error: " + err));
 		});
 	};
 
@@ -263,8 +248,7 @@ export default class BrokenLinkChecker extends Component {
 
 			// Update total site posts count
 			if (
-				this.state.getTotalSitePostsInProgress === false &&
-				this.state.totalSitePosts === null
+				this.state.getTotalSitePostsInProgress === false
 			) {
 	
 				this.updateTotalSitePosts().then(() => {
@@ -292,7 +276,7 @@ export default class BrokenLinkChecker extends Component {
 					} else {
 						this.updateSiteState(siteStatus);
 					}
-				});
+				}).catch((err) => console.log("Errer getting total site posts: " + err));
 			}
 		});		
 	};
@@ -469,18 +453,12 @@ export default class BrokenLinkChecker extends Component {
 			message += " There was a problem checking the website's homepage.";
 		}
 
-		let scanProgressMessage = this.state.scanInProgress
-			? "Scan is in progress."
-			: "Scan is not running.";
-
 		return (
 			<div
 				style={{ flex: "1", overflowY: "auto" }}
 				className="brokenLinkCheckWrap"
 			>
 				<p>{message}</p>
-
-				<p>{scanProgressMessage}</p>
 
 				<TableListMultiDisplay
 					header={
