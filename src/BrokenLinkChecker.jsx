@@ -378,6 +378,32 @@ export default class BrokenLinkChecker extends Component {
 		}
 	  };
 
+	renderMessage() {
+		let message = "";
+		if (this.state.siteStatus === "halted") {
+			message = "Please start the site before running a link scan.";
+		} else if (
+			this.state.firstRunComplete &&
+			!this.state.brokenLinksFound
+		) {
+			message = "No broken links found.";
+		}
+
+		if (
+			this.state.scanInProgress &&
+			this.state.siteRootUrl == null
+		) {
+			message += " There was a problem checking the website's homepage.";
+		}
+
+		if(message !== ""){
+			return(<p>{message}</p>);
+		} else {
+			return;
+		}
+		
+	}
+
 	renderProgressBarElements() {
 		let progressCompletedPercentage = 0;
 
@@ -436,29 +462,12 @@ export default class BrokenLinkChecker extends Component {
 	}
 
 	render() {
-		let message = "";
-		if (this.state.siteStatus === "halted") {
-			message = "Please start the site before running a link scan.";
-		} else if (
-			this.state.firstRunComplete &&
-			!this.state.brokenLinksFound
-		) {
-			message = "No broken links found.";
-		}
-
-		if (
-			this.state.scanInProgress &&
-			this.state.siteRootUrl == null
-		) {
-			message += " There was a problem checking the website's homepage.";
-		}
-
 		return (
 			<div
 				style={{ flex: "1", overflowY: "auto" }}
 				className="brokenLinkCheckWrap"
 			>
-				<p>{message}</p>
+				{this.renderMessage()}
 
 				<TableListMultiDisplay
 					header={
@@ -467,7 +476,7 @@ export default class BrokenLinkChecker extends Component {
 							<strong style={{ width: "35%" }}>Origin URL</strong>
 							<strong style={{ width: "30%" }}>Link URL</strong>
 							<strong style={{ width: "15%" }}>Link Text</strong>
-							<strong style={{ width: "10%" }}>Post ID</strong>
+							<strong style={{ width: "10%" }}></strong>
 						</>
 					}
 					repeatingContent={(item, index, updateItem) => (
@@ -485,12 +494,10 @@ export default class BrokenLinkChecker extends Component {
 							</div>
 
 							<div>
-								<p>{item.linkText}</p>
+								<p style={{ flexShrink: 1 }}>{item.linkText}</p>
 							</div>
 
-							<div>
-								{item.wpPostId}{" "}
-								{item.wpPostId != null ? "(" : ""}
+							<div style={{ lineHeight: "1em" }}>
 								<a
 									href={
 										this.state.siteRootUrl +
@@ -499,9 +506,8 @@ export default class BrokenLinkChecker extends Component {
 										"&action=edit"
 									}
 								>
-									{item.wpPostId != null ? "Edit" : ""}
+									Fix in WP Admin
 								</a>
-								{item.wpPostId != null ? ")" : ""}
 							</div>
 						</>
 					)}
