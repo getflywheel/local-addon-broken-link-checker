@@ -160,7 +160,7 @@ export default class BrokenLinkChecker extends Component {
 			isUrlBrokenChecker.enqueue("http://" + siteDomain + "/");
 			isUrlBrokenChecker.enqueue("https://" + siteDomain + "/");
 		});
-	  };
+	};
 
 	updateTotalSitePosts = () => {
 		return new Promise((resolve, reject) => {
@@ -240,11 +240,16 @@ export default class BrokenLinkChecker extends Component {
 
 	startScan = () => {
 
+		console.log("Start clicked, here is the state:");
+		console.log(this.state);
+
 		let routeChildrenProps = this.props.routeChildrenProps;
 		let site = routeChildrenProps.site;
 		let siteDomain = site.domain;
 
 		this.testSiteRootUrlVariantsAndUpdate(siteDomain).then((rootUrl) => {
+
+			console.log("Root URL found successfully after start clicked.");
 
 			// Update total site posts count
 			if (
@@ -252,6 +257,9 @@ export default class BrokenLinkChecker extends Component {
 			) {
 	
 				this.updateTotalSitePosts().then(() => {
+
+					console.log("GetTotalSitePosts() completed after start clicked.");
+
 					// Start site tasks
 					let routeChildrenProps = this.props.routeChildrenProps;
 					let siteStatus = routeChildrenProps.siteStatus;
@@ -261,6 +269,9 @@ export default class BrokenLinkChecker extends Component {
 						String(this.state.siteStatus) !== "halted" &&
 						this.state.siteStatus != null
 					) {
+
+						console.log("Clearing links since some already displayed, now starting scan");
+
 						// Clear the existing broken links on screen if some have been rendered already
 						this.clearBrokenLinks();
 						this.clearNumberPostsFound();
@@ -271,13 +282,23 @@ export default class BrokenLinkChecker extends Component {
 						String(this.state.siteStatus) !== "halted" &&
 						this.state.siteStatus != null
 					) {
+						console.log("Starting scan");
+
 						this.checkLinks(this.state.siteRootUrl);
 						this.updateScanInProgress(true);
 					} else {
+						console.log("Site was not running when scan clicked");
+
 						this.updateSiteState(siteStatus);
 					}
 				}).catch((err) => console.log("Errer getting total site posts: " + err));
 			}
+		}).catch((err) => {
+			// Finding root URL failed
+			console.log("Could not find root URL");
+			let routeChildrenProps = this.props.routeChildrenProps;
+			let siteStatus = routeChildrenProps.siteStatus;
+			this.updateSiteState(siteStatus);
 		});		
 	};
 
