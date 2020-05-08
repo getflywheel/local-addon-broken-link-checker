@@ -173,7 +173,7 @@ export default class BrokenLinkChecker extends Component {
 					totalSitePosts: parseInt(result),
 					getTotalSitePostsInProgress: false,
 				}));
-				resolve(true);
+				resolve(parseInt(result));
 			}).catch((err) => reject("updateTotalSitePosts Error: " + err));
 		});
 	};
@@ -256,9 +256,9 @@ export default class BrokenLinkChecker extends Component {
 				this.state.getTotalSitePostsInProgress === false
 			) {
 	
-				this.updateTotalSitePosts().then(() => {
+				this.updateTotalSitePosts().then((totalSitePosts) => {
 
-					console.log("GetTotalSitePosts() completed after start clicked.");
+					console.log("GetTotalSitePosts() completed after start clicked. Found: " + totalSitePosts);
 
 					// Start site tasks
 					let routeChildrenProps = this.props.routeChildrenProps;

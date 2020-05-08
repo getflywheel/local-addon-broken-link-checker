@@ -28,19 +28,20 @@ async function getTotalPosts(siteId) {
 			"-e",
 			"SELECT COUNT(ID) FROM wp_posts WHERE post_status = 'publish'",
 		]
-	);
-	// .then((data) => {
+	).catch((error) => {
+		LocalMain.getServiceContainer().cradle.localLogger.log(
+			"info",
+			"STARTDEBUG encountered this error when calling DB: " + error
+		);
+	});
+
+	// then((data) => {
 	// 	LocalMain.getServiceContainer().cradle.localLogger.log(
 	// 		"info",
-	// 		"Hey here is some data from the db call: " + data
+	// 		"STARTDEBUG Hey here is some data from the db call: " + data
 	// 	);
 	// })
-	// .catch((error) => {
-	// 	LocalMain.getServiceContainer().cradle.localLogger.log(
-	// 		"info",
-	// 		"encountered this error when calling DB: " + error
-	// 	);
-	// });
+	
 
 	LocalMain.getServiceContainer().cradle.localLogger.log(
 		"info",
