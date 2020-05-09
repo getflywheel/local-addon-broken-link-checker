@@ -21,6 +21,7 @@ export default class BrokenLinkChecker extends Component {
 			siteStatus: null,
 			siteRootUrl: null,
 			siteId: null,
+			tablePrefix: null,
 			scanInProgress: false,
 			numberPostsFound: 0,
 			numberBrokenLinksFound: 0,
@@ -162,19 +163,30 @@ export default class BrokenLinkChecker extends Component {
 		});
 	};
 
-	updateTotalSitePosts = () => {
+	updateTotalSitePosts = (prefix) => {
 		return new Promise((resolve, reject) => {
 			this.setState((prevState) => ({
 				getTotalSitePostsInProgress: true,
 			}));
 
-			ipcAsync("get-total-posts", this.state.siteId).then((result) => {
+			ipcAsync("get-total-posts", this.state.siteId, prefix).then((result) => {
 				this.setState((prevState) => ({
 					totalSitePosts: parseInt(result),
 					getTotalSitePostsInProgress: false,
 				}));
 				resolve(parseInt(result));
 			}).catch((err) => reject("updateTotalSitePosts Error: " + err));
+		});
+	};
+
+	updateTablePrefix = () => {
+		return new Promise((resolve, reject) => {
+			ipcAsync("get-table-prefix", this.state.siteId).then((result) => {
+				this.setState((prevState) => ({
+					tablePrefix: result,
+				}));
+				resolve(result);
+			}).catch((err) => reject("updateTablePrefix Error: " + err));
 		});
 	};
 
@@ -255,43 +267,45 @@ export default class BrokenLinkChecker extends Component {
 			if (
 				this.state.getTotalSitePostsInProgress === false
 			) {
+
+				this.updateTablePrefix().then((prefix) => {
+					this.updateTotalSitePosts(prefix).then((totalSitePosts) => {
+
+						console.log("GetTotalSitePosts() completed after start clicked. Found: " + totalSitePosts);
 	
-				this.updateTotalSitePosts().then((totalSitePosts) => {
-
-					console.log("GetTotalSitePosts() completed after start clicked. Found: " + totalSitePosts);
-
-					// Start site tasks
-					let routeChildrenProps = this.props.routeChildrenProps;
-					let siteStatus = routeChildrenProps.siteStatus;
-
-					if (
-						(this.state.resultsOnScreen || !this.state.brokenLinksFound) &&
-						String(this.state.siteStatus) !== "halted" &&
-						this.state.siteStatus != null
-					) {
-
-						console.log("Clearing links since some already displayed, now starting scan");
-
-						// Clear the existing broken links on screen if some have been rendered already
-						this.clearBrokenLinks();
-						this.clearNumberPostsFound();
-						this.clearNumberBrokenLinksFound();
-						this.checkLinks(this.state.siteRootUrl);
-						this.updateScanInProgress(true);
-					} else if (
-						String(this.state.siteStatus) !== "halted" &&
-						this.state.siteStatus != null
-					) {
-						console.log("Starting scan");
-
-						this.checkLinks(this.state.siteRootUrl);
-						this.updateScanInProgress(true);
-					} else {
-						console.log("Site was not running when scan clicked");
-
-						this.updateSiteState(siteStatus);
-					}
-				}).catch((err) => console.log("Errer getting total site posts: " + err));
+						// Start site tasks
+						let routeChildrenProps = this.props.routeChildrenProps;
+						let siteStatus = routeChildrenProps.siteStatus;
+	
+						if (
+							(this.state.resultsOnScreen || !this.state.brokenLinksFound) &&
+							String(this.state.siteStatus) !== "halted" &&
+							this.state.siteStatus != null
+						) {
+	
+							console.log("Clearing links since some already displayed, now starting scan");
+	
+							// Clear the existing broken links on screen if some have been rendered already
+							this.clearBrokenLinks();
+							this.clearNumberPostsFound();
+							this.clearNumberBrokenLinksFound();
+							this.checkLinks(this.state.siteRootUrl);
+							this.updateScanInProgress(true);
+						} else if (
+							String(this.state.siteStatus) !== "halted" &&
+							this.state.siteStatus != null
+						) {
+							console.log("Starting scan");
+	
+							this.checkLinks(this.state.siteRootUrl);
+							this.updateScanInProgress(true);
+						} else {
+							console.log("Site was not running when scan clicked");
+	
+							this.updateSiteState(siteStatus);
+						}
+					}).catch((err) => console.log("Errer getting total site posts: " + err));
+				});			
 			}
 		}).catch((err) => {
 			// Finding root URL failed
