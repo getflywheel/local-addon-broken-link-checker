@@ -331,6 +331,7 @@ export default class BrokenLinkChecker extends Component {
 						linkURL: String(result.url.original),
 						linkText: String(result.html.text),
 						originURL: String(result.base.original),
+						resultDump: result
 					};
 
 					let singlePageChecker = new HtmlUrlChecker(null, {
@@ -346,6 +347,10 @@ export default class BrokenLinkChecker extends Component {
 									customData["originURL"],
 									wpPostId
 								);
+
+								console.log("This link was declared broken:");
+								console.log(customData["resultDump"]);
+
 								this.updateBrokenLinksFound(true);
 								this.incrementNumberBrokenLinksFound();
 							}
