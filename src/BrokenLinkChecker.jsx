@@ -252,16 +252,11 @@ export default class BrokenLinkChecker extends Component {
 
 	startScan = () => {
 
-		console.log("Start clicked, here is the state:");
-		console.log(this.state);
-
 		let routeChildrenProps = this.props.routeChildrenProps;
 		let site = routeChildrenProps.site;
 		let siteDomain = site.domain;
 
 		this.testSiteRootUrlVariantsAndUpdate(siteDomain).then((rootUrl) => {
-
-			console.log("Root URL found successfully after start clicked.");
 
 			// Update total site posts count
 			if (
@@ -270,8 +265,6 @@ export default class BrokenLinkChecker extends Component {
 
 				this.updateTablePrefix().then((prefix) => {
 					this.updateTotalSitePosts(prefix).then((totalSitePosts) => {
-
-						console.log("GetTotalSitePosts() completed after start clicked. Found: " + totalSitePosts);
 	
 						// Start site tasks
 						let routeChildrenProps = this.props.routeChildrenProps;
@@ -283,8 +276,6 @@ export default class BrokenLinkChecker extends Component {
 							this.state.siteStatus != null
 						) {
 	
-							console.log("Clearing links since some already displayed, now starting scan");
-	
 							// Clear the existing broken links on screen if some have been rendered already
 							this.clearBrokenLinks();
 							this.clearNumberPostsFound();
@@ -294,14 +285,10 @@ export default class BrokenLinkChecker extends Component {
 						} else if (
 							String(this.state.siteStatus) !== "halted" &&
 							this.state.siteStatus != null
-						) {
-							console.log("Starting scan");
-	
+						) {	
 							this.checkLinks(this.state.siteRootUrl);
 							this.updateScanInProgress(true);
-						} else {
-							console.log("Site was not running when scan clicked");
-	
+						} else {	
 							this.updateSiteState(siteStatus);
 						}
 					}).catch((err) => console.log("Errer getting total site posts: " + err));
@@ -338,9 +325,6 @@ export default class BrokenLinkChecker extends Component {
 						resultDump: result
 					};
 
-					console.log("One day we found a link, and this is what it was:");
-					console.log(result);
-
 					let singlePageChecker = new HtmlUrlChecker(null, {
 						html: (tree, robots, response, pageUrl, customData) => {
 
@@ -354,9 +338,6 @@ export default class BrokenLinkChecker extends Component {
 									customData["originURL"],
 									wpPostId
 								);
-
-								console.log("...which was later declared broken because:");
-								console.log(customData["resultDump"]);
 
 								this.updateBrokenLinksFound(true);
 								this.incrementNumberBrokenLinksFound();
