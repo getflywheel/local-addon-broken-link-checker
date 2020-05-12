@@ -317,7 +317,11 @@ export default class BrokenLinkChecker extends Component {
 	};
 
 	checkLinks(siteURL) {
-		let siteChecker = new SiteChecker(null, {
+
+		let options = new Object();
+			options.maxSocketsPerHost = 10;
+
+		let siteChecker = new SiteChecker(options, {
 			html: (tree, robots, response, pageUrl, customData) => {
 				// This code is used to increment the number of WP posts we traverse in our scan
 				if (this.findWpPostIdInMarkup(tree)) {
