@@ -549,7 +549,7 @@ export default class BrokenLinkChecker extends Component {
 								<a
 									href={
 										this.state.siteRootUrl +
-										"/wp-admin/post.php?post=" +
+										"wp-admin/post.php?post=" +
 										item.wpPostId +
 										"&action=edit"
 									}
