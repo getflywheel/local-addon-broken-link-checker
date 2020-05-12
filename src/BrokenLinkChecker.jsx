@@ -319,7 +319,7 @@ export default class BrokenLinkChecker extends Component {
 	checkLinks(siteURL) {
 
 		let options = new Object();
-			options.maxSocketsPerHost = 10;
+			options.maxSocketsPerHost = 3;
 
 		let siteChecker = new SiteChecker(options, {
 			html: (tree, robots, response, pageUrl, customData) => {
@@ -338,6 +338,9 @@ export default class BrokenLinkChecker extends Component {
 						resultDump: result
 					};
 
+					console.log("One day we found a link, and this is what it was:");
+					console.log(result);
+
 					let singlePageChecker = new HtmlUrlChecker(null, {
 						html: (tree, robots, response, pageUrl, customData) => {
 
@@ -352,7 +355,7 @@ export default class BrokenLinkChecker extends Component {
 									wpPostId
 								);
 
-								console.log("This link was declared broken:");
+								console.log("...which was later declared broken because:");
 								console.log(customData["resultDump"]);
 
 								this.updateBrokenLinksFound(true);
