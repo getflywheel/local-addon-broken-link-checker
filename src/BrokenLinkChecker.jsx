@@ -461,7 +461,8 @@ export default class BrokenLinkChecker extends Component {
 		} else if (
 			this.state.totalSitePosts !== null &&
 			this.state.getTotalSitePostsInProgress !== true &&
-			!this.state.scanInProgress
+			!this.state.scanInProgress &&
+			this.state.resultsOnScreen
 		) {
 			progressCompletedPercentage = 100;
 		}
