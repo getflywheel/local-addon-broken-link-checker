@@ -558,7 +558,7 @@ export default class BrokenLinkChecker extends Component {
 										"&action=edit"
 									}
 								>
-									Fix in WP Admin
+									Fix in Admin
 								</a>
 							</div>
 						</>
