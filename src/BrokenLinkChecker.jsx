@@ -21,6 +21,7 @@ export default class BrokenLinkChecker extends Component {
 			siteStatus: null,
 			siteRootUrl: null,
 			siteId: null,
+			tablePrefix: null,
 			scanInProgress: false,
 			numberPostsFound: 0,
 			numberBrokenLinksFound: 0,
@@ -160,21 +161,32 @@ export default class BrokenLinkChecker extends Component {
 			isUrlBrokenChecker.enqueue("http://" + siteDomain + "/");
 			isUrlBrokenChecker.enqueue("https://" + siteDomain + "/");
 		});
-	  };
+	};
 
-	updateTotalSitePosts = () => {
+	updateTotalSitePosts = (prefix) => {
 		return new Promise((resolve, reject) => {
 			this.setState((prevState) => ({
 				getTotalSitePostsInProgress: true,
 			}));
 
-			ipcAsync("get-total-posts", this.state.siteId).then((result) => {
+			ipcAsync("get-total-posts", this.state.siteId, prefix).then((result) => {
 				this.setState((prevState) => ({
 					totalSitePosts: parseInt(result),
 					getTotalSitePostsInProgress: false,
 				}));
-				resolve(true);
+				resolve(parseInt(result));
 			}).catch((err) => reject("updateTotalSitePosts Error: " + err));
+		});
+	};
+
+	updateTablePrefix = () => {
+		return new Promise((resolve, reject) => {
+			ipcAsync("get-table-prefix", this.state.siteId).then((result) => {
+				this.setState((prevState) => ({
+					tablePrefix: result,
+				}));
+				resolve(result);
+			}).catch((err) => reject("updateTablePrefix Error: " + err));
 		});
 	};
 
@@ -250,39 +262,53 @@ export default class BrokenLinkChecker extends Component {
 			if (
 				this.state.getTotalSitePostsInProgress === false
 			) {
-	
-				this.updateTotalSitePosts().then(() => {
-					// Start site tasks
-					let routeChildrenProps = this.props.routeChildrenProps;
-					let siteStatus = routeChildrenProps.siteStatus;
 
-					if (
-						(this.state.resultsOnScreen || !this.state.brokenLinksFound) &&
-						String(this.state.siteStatus) !== "halted" &&
-						this.state.siteStatus != null
-					) {
-						// Clear the existing broken links on screen if some have been rendered already
-						this.clearBrokenLinks();
-						this.clearNumberPostsFound();
-						this.clearNumberBrokenLinksFound();
-						this.checkLinks(this.state.siteRootUrl);
-						this.updateScanInProgress(true);
-					} else if (
-						String(this.state.siteStatus) !== "halted" &&
-						this.state.siteStatus != null
-					) {
-						this.checkLinks(this.state.siteRootUrl);
-						this.updateScanInProgress(true);
-					} else {
-						this.updateSiteState(siteStatus);
-					}
-				}).catch((err) => console.log("Errer getting total site posts: " + err));
+				this.updateTablePrefix().then((prefix) => {
+					this.updateTotalSitePosts(prefix).then((totalSitePosts) => {
+	
+						// Start site tasks
+						let routeChildrenProps = this.props.routeChildrenProps;
+						let siteStatus = routeChildrenProps.siteStatus;
+	
+						if (
+							(this.state.resultsOnScreen || !this.state.brokenLinksFound) &&
+							String(this.state.siteStatus) !== "halted" &&
+							this.state.siteStatus != null
+						) {
+	
+							// Clear the existing broken links on screen if some have been rendered already
+							this.clearBrokenLinks();
+							this.clearNumberPostsFound();
+							this.clearNumberBrokenLinksFound();
+							this.checkLinks(this.state.siteRootUrl);
+							this.updateScanInProgress(true);
+						} else if (
+							String(this.state.siteStatus) !== "halted" &&
+							this.state.siteStatus != null
+						) {	
+							this.checkLinks(this.state.siteRootUrl);
+							this.updateScanInProgress(true);
+						} else {	
+							this.updateSiteState(siteStatus);
+						}
+					}).catch((err) => console.log("Errer getting total site posts: " + err));
+				});			
 			}
+		}).catch((err) => {
+			// Finding root URL failed
+			console.log("Could not find root URL");
+			let routeChildrenProps = this.props.routeChildrenProps;
+			let siteStatus = routeChildrenProps.siteStatus;
+			this.updateSiteState(siteStatus);
 		});		
 	};
 
 	checkLinks(siteURL) {
-		let siteChecker = new SiteChecker(null, {
+
+		let options = new Object();
+			options.maxSocketsPerHost = 3;
+
+		let siteChecker = new SiteChecker(options, {
 			html: (tree, robots, response, pageUrl, customData) => {
 				// This code is used to increment the number of WP posts we traverse in our scan
 				if (this.findWpPostIdInMarkup(tree)) {
@@ -296,6 +322,7 @@ export default class BrokenLinkChecker extends Component {
 						linkURL: String(result.url.original),
 						linkText: String(result.html.text),
 						originURL: String(result.base.original),
+						resultDump: result
 					};
 
 					let singlePageChecker = new HtmlUrlChecker(null, {
@@ -311,6 +338,7 @@ export default class BrokenLinkChecker extends Component {
 									customData["originURL"],
 									wpPostId
 								);
+
 								this.updateBrokenLinksFound(true);
 								this.incrementNumberBrokenLinksFound();
 							}
@@ -409,7 +437,8 @@ export default class BrokenLinkChecker extends Component {
 
 		if (
 			this.state.totalSitePosts !== null &&
-			this.state.getTotalSitePostsInProgress !== true
+			this.state.getTotalSitePostsInProgress !== true &&
+			this.state.scanInProgress
 		) {
 
 			progressCompletedPercentage = parseInt(
@@ -417,6 +446,13 @@ export default class BrokenLinkChecker extends Component {
 					parseInt(this.state.totalSitePosts)) *
 					100
 			);
+		} else if (
+			this.state.totalSitePosts !== null &&
+			this.state.getTotalSitePostsInProgress !== true &&
+			!this.state.scanInProgress &&
+			this.state.resultsOnScreen
+		) {
+			progressCompletedPercentage = 100;
 		}
 
 		if (this.state.scanInProgress) {
@@ -501,12 +537,12 @@ export default class BrokenLinkChecker extends Component {
 								<a
 									href={
 										this.state.siteRootUrl +
-										"/wp-admin/post.php?post=" +
+										"wp-admin/post.php?post=" +
 										item.wpPostId +
 										"&action=edit"
 									}
 								>
-									Fix in WP Admin
+									Fix in Admin
 								</a>
 							</div>
 						</>

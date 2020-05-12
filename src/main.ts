@@ -11,12 +11,16 @@ export default function (context) {
 		});
 	});
 
-	ipcMain.on("get-total-posts", async (event, replyChannel, siteId) => {
-		event.reply(replyChannel, await getTotalPosts(siteId));
+	ipcMain.on("get-total-posts", async (event, replyChannel, siteId, prefix) => {
+		event.reply(replyChannel, await getTotalPosts(siteId, prefix));
+	});
+
+	ipcMain.on("get-table-prefix", async (event, replyChannel, siteId) => {
+		event.reply(replyChannel, await getTablePrefix(siteId));
 	});
 }
 
-async function getTotalPosts(siteId) {
+async function getTotalPosts(siteId, prefix) {
 	const site = LocalMain.SiteData.getSite(siteId);
 
 	let numberOfPostsDbCall = await LocalMain.getServiceContainer().cradle.siteDatabase.exec(
@@ -26,21 +30,22 @@ async function getTotalPosts(siteId) {
 			"--batch",
 			"--skip-column-names",
 			"-e",
-			"SELECT COUNT(ID) FROM wp_posts WHERE post_status = 'publish'",
+			"SELECT COUNT(ID) FROM " + prefix + "posts WHERE post_status = 'publish'",
 		]
-	);
-	// .then((data) => {
+	).catch((error) => {
+		LocalMain.getServiceContainer().cradle.localLogger.log(
+			"info",
+			"STARTDEBUG encountered this error when calling DB: " + error
+		);
+	});
+
+	// then((data) => {
 	// 	LocalMain.getServiceContainer().cradle.localLogger.log(
 	// 		"info",
-	// 		"Hey here is some data from the db call: " + data
+	// 		"STARTDEBUG Hey here is some data from the db call: " + data
 	// 	);
 	// })
-	// .catch((error) => {
-	// 	LocalMain.getServiceContainer().cradle.localLogger.log(
-	// 		"info",
-	// 		"encountered this error when calling DB: " + error
-	// 	);
-	// });
+	
 
 	LocalMain.getServiceContainer().cradle.localLogger.log(
 		"info",
@@ -48,4 +53,17 @@ async function getTotalPosts(siteId) {
 	);
 
 	return numberOfPostsDbCall;
+}
+
+async function getTablePrefix(siteId) {
+	const site = LocalMain.SiteData.getSite(siteId);
+
+	let wpPrefixCall = await LocalMain.getServiceContainer().cradle.siteDatabase.getTablePrefix(site).catch((error) => {
+		LocalMain.getServiceContainer().cradle.localLogger.log(
+			"info",
+			"Encountered this error when getting table prefix: " + error
+		);
+	});
+
+	return wpPrefixCall;
 }
