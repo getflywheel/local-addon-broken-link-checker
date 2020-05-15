@@ -71,7 +71,13 @@ export default class BrokenLinkChecker extends Component {
 	}
 
 	legacyPluginDataDetected(){
-		return (!this.state.brokenLinks[0].hasOwnProperty('originURI') && this.state.brokenLinks[0] != null);
+		// If there's any data in the brokenLinks array
+		if(this.state.brokenLinks[0]) {
+			// Return true if the originURI field is not found in the first element
+			return !this.state.brokenLinks[0].hasOwnProperty('originURI')
+		} else {
+			return false
+		}
 	}
 
 	addBrokenLink(statusCode, linkURL, linkText, originURL, originURI, wpPostId) {
