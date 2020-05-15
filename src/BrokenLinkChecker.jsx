@@ -68,6 +68,7 @@ export default class BrokenLinkChecker extends Component {
 
 	addBrokenLink(statusCode, linkURL, linkText, originURL, wpPostId) {
 		let newBrokenLink = {
+			dateAdded: Date.now(),
 			statusCode: statusCode,
 			linkURL: linkURL,
 			linkText: linkText,
@@ -497,7 +498,34 @@ export default class BrokenLinkChecker extends Component {
 		}
 	}
 
+	renderLastUpdatedTimestamp(){
+		if(this.state.brokenLinks[0].dateAdded != null){
+			let dateData = this.state.brokenLinks[0].dateAdded;
+			let dateObject = new Date(dateData);
+			
+			let day = dateObject.getDate();
+			let month = dateObject.getMonth();
+			let year = dateObject.getFullYear();
+			let amPmTime = this.formatAMPM(dateObject);
+
+			console.log(amPmTime);
+		}
+	}
+
+	// Thanks to https://stackoverflow.com/questions/8888491/how-do-you-display-javascript-datetime-in-12-hour-am-pm-format#answer-8888498
+	formatAMPM(date) {
+		var hours = date.getHours();
+		var minutes = date.getMinutes();
+		var ampm = hours >= 12 ? 'pm' : 'am';
+		hours = hours % 12;
+		hours = hours ? hours : 12; // the hour '0' should be '12'
+		minutes = minutes < 10 ? '0'+minutes : minutes;
+		var strTime = hours + ':' + minutes + ' ' + ampm;
+		return strTime;
+	}
+
 	render() {
+		console.log(this.state.brokenLinks);
 		return (
 			<div
 				style={{ flex: "1", overflowY: "auto" }}
@@ -508,6 +536,8 @@ export default class BrokenLinkChecker extends Component {
 
 					<p>Last updated July 12, 2020 4:55 PM</p>
 				</div>
+
+				{this.renderLastUpdatedTimestamp()}
 
 				{this.renderMessage()}
 
