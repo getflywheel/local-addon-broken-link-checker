@@ -7,7 +7,7 @@ const {
 	HtmlUrlChecker,
 	UrlChecker,
 } = require("broken-link-checker");
-import { TableListMultiDisplay, ProgressBar, PrimaryButton } from "@getflywheel/local-components";
+import { TableListMultiDisplay, ProgressBar, PrimaryButton, Tooltip } from "@getflywheel/local-components";
 
 export default class BrokenLinkChecker extends Component {
 	constructor(props) {
@@ -321,7 +321,7 @@ export default class BrokenLinkChecker extends Component {
 						statusCode: String(result.http.response.statusCode),
 						linkURL: String(result.url.original),
 						linkText: String(result.html.text),
-						originURL: String(result.base.original),
+						originURL: String(result.base.parsed.path),
 						resultDump: result
 					};
 
@@ -344,8 +344,18 @@ export default class BrokenLinkChecker extends Component {
 							}
 						}
 					});
+
+					let originUrlToTest = '';
+					if (this.state.siteRootUrl.substring(this.state.siteRootUrl.length-1) == "/")
+					{
+						originUrlToTest = this.state.siteRootUrl.substring(0, this.state.siteRootUrl.length-1);
+						originUrlToTest += brokenLinkScanResults["originURL"];
+					} else {
+						originUrlToTest = this.state.siteRootUrl + brokenLinkScanResults["originURL"];
+					}
+
 					singlePageChecker.enqueue(
-						brokenLinkScanResults["originURL"],
+						originUrlToTest,
 						brokenLinkScanResults
 					);
 				}
