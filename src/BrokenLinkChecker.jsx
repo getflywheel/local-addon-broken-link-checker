@@ -7,7 +7,7 @@ const {
 	HtmlUrlChecker,
 	UrlChecker,
 } = require("broken-link-checker");
-import { TableListMultiDisplay, ProgressBar, PrimaryButton } from "@getflywheel/local-components";
+import { TableListMultiDisplay, ProgressBar, PrimaryButton, Title } from "@getflywheel/local-components";
 
 export default class BrokenLinkChecker extends Component {
 	constructor(props) {
@@ -503,6 +503,12 @@ export default class BrokenLinkChecker extends Component {
 				style={{ flex: "1", overflowY: "auto" }}
 				className="brokenLinkCheckWrap"
 			>
+				<div style={{ flex: "1", display: "flex", flexDirection: "row", justifyContent: "space-between", alignItems: "center", padding: "0 10px" }}>
+					<Title size="s">Broken Links</Title>
+
+					<p>Last updated July 12, 2020 4:55 PM</p>
+				</div>
+
 				{this.renderMessage()}
 
 				<TableListMultiDisplay
