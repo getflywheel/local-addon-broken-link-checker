@@ -27,7 +27,6 @@ export default class BrokenLinkChecker extends Component {
 			numberBrokenLinksFound: 0,
 			totalSitePosts: null,
 			getTotalSitePostsInProgress: false,
-			legacyPluginDataDetected: false,
 		};
 
 		this.checkLinks = this.checkLinks.bind(this);
@@ -35,9 +34,6 @@ export default class BrokenLinkChecker extends Component {
 	}
 
 	componentDidMount() {
-		if(this.legacyPluginDataDetected()){
-			this.updateLegacyPluginDataDetected(true);
-		}
 		let routeChildrenProps = this.props.routeChildrenProps;
 		let siteStatus = routeChildrenProps.siteStatus;
 		let site = routeChildrenProps.site;
@@ -71,13 +67,19 @@ export default class BrokenLinkChecker extends Component {
 	}
 
 	legacyPluginDataDetected(){
-		// If there's any data in the brokenLinks array
-		if(this.state.brokenLinks[0]) {
-			// Return true if the originURI field is not found in the first element
-			return !this.state.brokenLinks[0].hasOwnProperty('originURI')
-		} else {
-			return false
+		// If the broken links array exists in siteData
+		if(this.state.hasOwnProperty('brokenLinks')) {
+			// If there is any data in the array
+			if(this.state.brokenLinks.length) {
+				// Return true if the originURI field is not found in the first element
+				if (!this.state.brokenLinks[0].hasOwnProperty('originURI')) {
+					console.log("I found old data");
+					return true;
+				}
+			}
 		}
+
+		return false;
 	}
 
 	addBrokenLink(statusCode, linkURL, linkText, originURL, originURI, wpPostId) {
@@ -250,12 +252,6 @@ export default class BrokenLinkChecker extends Component {
 	updateScanInProgress(boolean) {
 		this.setState((prevState) => ({
 			scanInProgress: boolean,
-		}));
-	}
-
-	updateLegacyPluginDataDetected(boolean) {
-		this.setState((prevState) => ({
-			legacyPluginDataDetected: boolean,
 		}));
 	}
 
@@ -522,8 +518,7 @@ export default class BrokenLinkChecker extends Component {
 	}
 
 	render() {
-		if(this.state.legacyPluginDataDetected){
-			console.log("Legacy plugin data was detected. Now clearing that data. Please restart Local.")
+		if(this.legacyPluginDataDetected()) {
 			this.clearBrokenLinks();
 			return(<div></div>);
 		} else {
@@ -546,6 +541,9 @@ export default class BrokenLinkChecker extends Component {
 					}
 					repeatingContent={(item, index, updateItem) => (
 						<>
+							{console.log("About to truncate these items: ")}
+							{console.log(item.originURI)}
+							{console.log(item.linkURL)}
 							<div>
 								{item.statusCode}
 							</div>
