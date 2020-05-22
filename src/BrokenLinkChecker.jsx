@@ -72,8 +72,8 @@ export default class BrokenLinkChecker extends Component {
 			// If there is any data in the array
 			if(this.state.brokenLinks.length) {
 				// Return true if the originURI field is not found in the first element
+				// Can add more checks to this if statement for future array changes
 				if (!this.state.brokenLinks[0].hasOwnProperty('originURI')) {
-					console.log("I found old data");
 					return true;
 				}
 			}
@@ -541,9 +541,6 @@ export default class BrokenLinkChecker extends Component {
 					}
 					repeatingContent={(item, index, updateItem) => (
 						<>
-							{console.log("About to truncate these items: ")}
-							{console.log(item.originURI)}
-							{console.log(item.linkURL)}
 							<div>
 								{item.statusCode}
 							</div>
