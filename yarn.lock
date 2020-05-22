@@ -133,14 +133,15 @@
   resolved "https://registry.yarnpkg.com/@getflywheel/eslint-config-local/-/eslint-config-local-1.0.4.tgz#2fab6bb77b63ec123e831534f50e1d3c7c135571"
   integrity sha512-GvnhhT3XaNipDdVvHifWbKjoFpLAbezkKsYBGfDF4uG/9gWo5UX9YLANPlzSLRyvgBrX0+27S5Cu8YE/yM7kPg==
 
-"@getflywheel/local-components@>= 13.1.0":
-  version "13.1.0"
-  resolved "https://registry.yarnpkg.com/@getflywheel/local-components/-/local-components-13.1.0.tgz#770c9d754b9e5e54ed5115800ee71d6531f48451"
-  integrity sha512-HDT3SivhP44dZpEgrwIrghy3x8YYqE1obRDjO6CHsKQUiiKB2xUubrtGagbda/7I3vfMXb+Xc15UEi9Pp8Wnbw==
+"@getflywheel/local-components@^13.2.2":
+  version "13.2.2"
+  resolved "https://registry.yarnpkg.com/@getflywheel/local-components/-/local-components-13.2.2.tgz#c479c69de0b92a2abafa9f9c838446da7e576f43"
+  integrity sha512-lWH18nT/AcXBwer05/UmC65jp1s33qP5FQx603Yn2nNIeaRkS4c3WuvgTldiLsk3k/vlRrYdn8eI/K04oZ4RoQ==
   dependencies:
     "@getflywheel/memoize-one-ts" "^0.0.2"
     "@types/untildify" "^3.0.0"
     classnames "^2.2.6"
+    clipboard-copy "^3.1.0"
     highlight.js "^9.13.1"
     lodash.isequal "^4.5.0"
     react-lowlight "^2.0.0"
@@ -581,6 +582,11 @@ cli-width@^2.0.0:
   version "2.2.0"
   resolved "https://registry.yarnpkg.com/cli-width/-/cli-width-2.2.0.tgz#ff19ede8a9a5e579324147b0c11f0fbcbabed639"
   integrity sha1-/xnt6Kml5XkyQUewwR8PvLq+1jk=
+
+clipboard-copy@^3.1.0:
+  version "3.1.0"
+  resolved "https://registry.yarnpkg.com/clipboard-copy/-/clipboard-copy-3.1.0.tgz#4c59030a43d4988990564a664baeafba99f78ca4"
+  integrity sha512-Xsu1NddBXB89IUauda5BIq3Zq73UWkjkaQlPQbLNvNsd5WBMnTWPNKYR6HGaySOxGYZ+BKxP2E9X4ElnI3yiPA==
 
 clone-response@^1.0.2:
   version "1.0.2"
