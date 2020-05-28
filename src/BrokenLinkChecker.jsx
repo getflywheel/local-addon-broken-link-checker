@@ -323,7 +323,7 @@ export default class BrokenLinkChecker extends Component {
 	checkLinks(siteURL) {
 
 		let options = new Object();
-			options.maxSocketsPerHost = 3;
+			options.maxSocketsPerHost = 15;
 
 		let siteChecker = new SiteChecker(options, {
 			html: (tree, robots, response, pageUrl, customData) => {
@@ -474,6 +474,9 @@ export default class BrokenLinkChecker extends Component {
 		) {
 			progressCompletedPercentage = 100;
 		}
+
+		// Round percentage up to nearest integer just in case it's a decimal
+		progressCompletedPercentage = Math.ceil(progressCompletedPercentage);
 
 		if (this.state.scanInProgress) {
 			return (
