@@ -477,6 +477,7 @@ export default class BrokenLinkChecker extends Component {
 
 		// Round percentage up to nearest integer just in case it's a decimal
 		progressCompletedPercentage = Math.ceil(progressCompletedPercentage);
+		progressCompletedPercentage = (progressCompletedPercentage == 0 ? 1 : progressCompletedPercentage);
 
 		if (this.state.scanInProgress) {
 			return (
