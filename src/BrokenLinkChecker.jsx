@@ -501,9 +501,9 @@ export default class BrokenLinkChecker extends Component {
 	}
 
 	renderActionButton(){
-		let startButtonText = "Start";
+		let startButtonText = "Check Links";
 		if (this.state.resultsOnScreen) {
-			startButtonText = "Start";
+			startButtonText = "Check Links";
 		}
 
 		if (this.state.scanInProgress) {
@@ -579,7 +579,7 @@ export default class BrokenLinkChecker extends Component {
 				className="brokenLinkCheckWrap"
 			>
 				<div style={{ flex: "1", display: "flex", flexDirection: "row", justifyContent: "space-between", alignItems: "center", padding: "0 10px" }}>
-					<Title size="s" style={{marginTop: 14, marginBottom: 14}}>Broken Links</Title>
+					<Title size="s" style={{marginTop: 14, marginBottom: 14}}>Check Links</Title>
 
 					<p>{this.renderLastUpdatedTimestamp()}</p>
 				</div>
