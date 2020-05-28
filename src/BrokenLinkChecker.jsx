@@ -7,7 +7,7 @@ const {
 	HtmlUrlChecker,
 	UrlChecker,
 } = require("broken-link-checker");
-import { TableListMultiDisplay, ProgressBar, PrimaryButton, Title } from "@getflywheel/local-components";
+import { TableListMultiDisplay, ProgressBar, PrimaryButton, Title, Tooltip } from "@getflywheel/local-components";
 
 export default class BrokenLinkChecker extends Component {
 	constructor(props) {
@@ -66,13 +66,30 @@ export default class BrokenLinkChecker extends Component {
 		}
 	}
 
-	addBrokenLink(statusCode, linkURL, linkText, originURL, wpPostId) {
+	legacyPluginDataDetected(){
+		// If the broken links array exists in siteData
+		if(this.state.hasOwnProperty('brokenLinks')) {
+			// If there is any data in the array
+			if(this.state.brokenLinks.length) {
+				// Return true if the originURI field is not found in the first element
+				// Can add more checks to this if statement for future array changes
+				if (!this.state.brokenLinks[0].hasOwnProperty('originURI')) {
+					return true;
+				}
+			}
+		}
+
+		return false;
+	}
+
+	addBrokenLink(statusCode, linkURL, linkText, originURL, originURI, wpPostId) {
 		let newBrokenLink = {
 			dateAdded: Date.now(),
 			statusCode: statusCode,
 			linkURL: linkURL,
 			linkText: linkText,
 			originURL: originURL,
+			originURI: originURI,
 			wpPostId: wpPostId,
 		};
 
@@ -323,6 +340,7 @@ export default class BrokenLinkChecker extends Component {
 						linkURL: String(result.url.original),
 						linkText: String(result.html.text),
 						originURL: String(result.base.original),
+						originURI: String(result.base.parsed.path),
 						resultDump: result
 					};
 
@@ -337,6 +355,7 @@ export default class BrokenLinkChecker extends Component {
 									customData["linkURL"],
 									customData["linkText"],
 									customData["originURL"],
+									customData["originURI"],
 									wpPostId
 								);
 
@@ -345,6 +364,7 @@ export default class BrokenLinkChecker extends Component {
 							}
 						}
 					});
+
 					singlePageChecker.enqueue(
 						brokenLinkScanResults["originURL"],
 						brokenLinkScanResults
@@ -525,7 +545,10 @@ export default class BrokenLinkChecker extends Component {
 	}
 
 	render() {
-		console.log(this.state.brokenLinks);
+		if(this.legacyPluginDataDetected()) {
+			this.clearBrokenLinks();
+			return(<div></div>);
+		} else {
 		return (
 			<div
 				style={{ flex: "1", overflowY: "auto" }}
@@ -545,10 +568,10 @@ export default class BrokenLinkChecker extends Component {
 					header={
 						<>
 							<strong style={{ width: "10%" }}>Status</strong>
-							<strong style={{ width: "35%" }}>Origin URL</strong>
+							<strong style={{ width: "20%" }}>Origin URL</strong>
 							<strong style={{ width: "30%" }}>Link URL</strong>
-							<strong style={{ width: "15%" }}>Link Text</strong>
-							<strong style={{ width: "10%" }}></strong>
+							<strong style={{ width: "28%" }}>Link Text</strong>
+							<strong style={{ width: "12%" }}></strong>
 						</>
 					}
 					repeatingContent={(item, index, updateItem) => (
@@ -558,11 +581,15 @@ export default class BrokenLinkChecker extends Component {
 							</div>
 
 							<div>
-								<a href={item.originURL}>{this.truncate(item.originURL, 35)}</a>
+								<Tooltip content={<div style={{ lineHeight: "1em" }}>{item.originURL}</div>}>
+									<a href={item.originURL}>{this.truncate(item.originURI, 35)}</a>
+								</Tooltip>
 							</div>
 
 							<div>
-								<a href={item.linkURL}>{this.truncate(item.linkURL, 35)}</a>
+								<Tooltip content={<div style={{ lineHeight: "1em" }}>{item.linkURL}</div>}>
+									<a href={item.linkURL}>{this.truncate(item.linkURL, 35)}</a>
+								</Tooltip>
 							</div>
 
 							<div>
@@ -591,6 +618,6 @@ export default class BrokenLinkChecker extends Component {
 
 				{this.renderActionButton()}				
 			</div>
-		);
+		);}
 	}
 }
