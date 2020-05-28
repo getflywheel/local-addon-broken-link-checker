@@ -73,7 +73,7 @@ export default class BrokenLinkChecker extends Component {
 			if(this.state.brokenLinks.length) {
 				// Return true if the originURI field is not found in the first element
 				// Can add more checks to this if statement for future array changes
-				if (!this.state.brokenLinks[0].hasOwnProperty('originURI')) {
+				if ( !this.state.brokenLinks[0].hasOwnProperty('originURI') || !this.state.brokenLinks[0].hasOwnProperty('dateAdded') ) {
 					return true;
 				}
 			}
