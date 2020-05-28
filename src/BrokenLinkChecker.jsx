@@ -519,24 +519,48 @@ export default class BrokenLinkChecker extends Component {
 	}
 
 	renderLastUpdatedTimestamp(){
-		if(this.state.brokenLinks[0].dateAdded != null){
-			let dateData = this.state.brokenLinks[0].dateAdded;
-			let dateObject = new Date(dateData);
-			
-			let day = dateObject.getDate();
-			let month = dateObject.getMonth();
-			let year = dateObject.getFullYear();
-			let amPmTime = this.formatAMPM(dateObject);
+		if(this.state.hasOwnProperty('brokenLinks')) {
+			if(this.state.brokenLinks.length) {
+				if (this.state.brokenLinks[0].hasOwnProperty('dateAdded')) {
+					let dateData = this.state.brokenLinks[0].dateAdded;
+					let dateObject = new Date(dateData);
+					
+					let day = dateObject.getDate();
+					let month = this.getMonthName(dateObject);
+					let year = dateObject.getFullYear();
+					let amPmTime = this.formatAMPM(dateObject);
 
-			console.log(amPmTime);
+					return String(month) + ' ' + String(day) + ', ' + String(year) + ' ' + String(amPmTime);
+				}
+			}
 		}
+
+		return '';
+	}
+
+	getMonthName(date){
+		let month = new Array();
+		month[0] = "January";
+		month[1] = "February";
+		month[2] = "March";
+		month[3] = "April";
+		month[4] = "May";
+		month[5] = "June";
+		month[6] = "July";
+		month[7] = "August";
+		month[8] = "September";
+		month[9] = "October";
+		month[10] = "November";
+		month[11] = "December";
+
+		return month[date.getMonth()];
 	}
 
 	// Thanks to https://stackoverflow.com/questions/8888491/how-do-you-display-javascript-datetime-in-12-hour-am-pm-format#answer-8888498
 	formatAMPM(date) {
 		var hours = date.getHours();
 		var minutes = date.getMinutes();
-		var ampm = hours >= 12 ? 'pm' : 'am';
+		var ampm = hours >= 12 ? 'PM' : 'AM';
 		hours = hours % 12;
 		hours = hours ? hours : 12; // the hour '0' should be '12'
 		minutes = minutes < 10 ? '0'+minutes : minutes;
@@ -555,12 +579,10 @@ export default class BrokenLinkChecker extends Component {
 				className="brokenLinkCheckWrap"
 			>
 				<div style={{ flex: "1", display: "flex", flexDirection: "row", justifyContent: "space-between", alignItems: "center", padding: "0 10px" }}>
-					<Title size="s">Broken Links</Title>
+					<Title size="s" style={{marginTop: 14, marginBottom: 14}}>Broken Links</Title>
 
-					<p>Last updated July 12, 2020 4:55 PM</p>
+					<p>{this.renderLastUpdatedTimestamp()}</p>
 				</div>
-
-				{this.renderLastUpdatedTimestamp()}
 
 				{this.renderMessage()}
 
