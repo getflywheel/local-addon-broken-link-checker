@@ -7,7 +7,7 @@ const {
 	HtmlUrlChecker,
 	UrlChecker,
 } = require("broken-link-checker");
-import { TableListMultiDisplay, ProgressBar, PrimaryButton, Tooltip } from "@getflywheel/local-components";
+import { TableListMultiDisplay, ProgressBar, PrimaryButton, Title, Tooltip } from "@getflywheel/local-components";
 
 export default class BrokenLinkChecker extends Component {
 	constructor(props) {
@@ -73,7 +73,7 @@ export default class BrokenLinkChecker extends Component {
 			if(this.state.brokenLinks.length) {
 				// Return true if the originURI field is not found in the first element
 				// Can add more checks to this if statement for future array changes
-				if (!this.state.brokenLinks[0].hasOwnProperty('originURI')) {
+				if ( !this.state.brokenLinks[0].hasOwnProperty('originURI') || !this.state.brokenLinks[0].hasOwnProperty('dateAdded') ) {
 					return true;
 				}
 			}
@@ -84,6 +84,7 @@ export default class BrokenLinkChecker extends Component {
 
 	addBrokenLink(statusCode, linkURL, linkText, originURL, originURI, wpPostId) {
 		let newBrokenLink = {
+			dateAdded: Date.now(),
 			statusCode: statusCode,
 			linkURL: linkURL,
 			linkText: linkText,
@@ -500,9 +501,9 @@ export default class BrokenLinkChecker extends Component {
 	}
 
 	renderActionButton(){
-		let startButtonText = "Start";
+		let startButtonText = "Check Links";
 		if (this.state.resultsOnScreen) {
-			startButtonText = "Start";
+			startButtonText = "Check Links";
 		}
 
 		if (this.state.scanInProgress) {
@@ -517,6 +518,56 @@ export default class BrokenLinkChecker extends Component {
 		}
 	}
 
+	renderLastUpdatedTimestamp(){
+		if(this.state.hasOwnProperty('brokenLinks')) {
+			if(this.state.brokenLinks.length) {
+				if (this.state.brokenLinks[0].hasOwnProperty('dateAdded')) {
+					let dateData = this.state.brokenLinks[0].dateAdded;
+					let dateObject = new Date(dateData);
+					
+					let day = dateObject.getDate();
+					let month = this.getMonthName(dateObject);
+					let year = dateObject.getFullYear();
+					let amPmTime = this.formatAMPM(dateObject);
+
+					return String(month) + ' ' + String(day) + ', ' + String(year) + ' ' + String(amPmTime);
+				}
+			}
+		}
+
+		return '';
+	}
+
+	getMonthName(date){
+		let month = new Array();
+		month[0] = "January";
+		month[1] = "February";
+		month[2] = "March";
+		month[3] = "April";
+		month[4] = "May";
+		month[5] = "June";
+		month[6] = "July";
+		month[7] = "August";
+		month[8] = "September";
+		month[9] = "October";
+		month[10] = "November";
+		month[11] = "December";
+
+		return month[date.getMonth()];
+	}
+
+	// Thanks to https://stackoverflow.com/questions/8888491/how-do-you-display-javascript-datetime-in-12-hour-am-pm-format#answer-8888498
+	formatAMPM(date) {
+		var hours = date.getHours();
+		var minutes = date.getMinutes();
+		var ampm = hours >= 12 ? 'PM' : 'AM';
+		hours = hours % 12;
+		hours = hours ? hours : 12; // the hour '0' should be '12'
+		minutes = minutes < 10 ? '0'+minutes : minutes;
+		var strTime = hours + ':' + minutes + ' ' + ampm;
+		return strTime;
+	}
+
 	render() {
 		if(this.legacyPluginDataDetected()) {
 			this.clearBrokenLinks();
@@ -527,6 +578,12 @@ export default class BrokenLinkChecker extends Component {
 				style={{ flex: "1", overflowY: "auto" }}
 				className="brokenLinkCheckWrap"
 			>
+				<div style={{ flex: "1", display: "flex", flexDirection: "row", justifyContent: "space-between", alignItems: "center", padding: "0 10px" }}>
+					<Title size="s" style={{marginTop: 14, marginBottom: 14}}>Check Links</Title>
+
+					<p>{this.renderLastUpdatedTimestamp()}</p>
+				</div>
+
 				{this.renderMessage()}
 
 				<TableListMultiDisplay

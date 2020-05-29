@@ -33,7 +33,7 @@ export default function(context) {
 	// Add menu option within the site menu bar
 	hooks.addFilter("siteInfoMoreMenu", function(menu, site) {
 		menu.push({
-			label: "Broken Link Checker",
+			label: "Check Links",
 			enabled: true,
 			click: () => {
 				context.events.send(
