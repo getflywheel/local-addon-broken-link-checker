@@ -7,7 +7,8 @@ const {
 	HtmlUrlChecker,
 	UrlChecker,
 } = require("broken-link-checker");
-import { TableListMultiDisplay, ProgressBar, PrimaryButton, Title, Tooltip } from "@getflywheel/local-components";
+
+import { TableListMultiDisplay, ProgressBar, PrimaryButton, Title, Tooltip, Banner, Text } from "@getflywheel/local-components";
 
 export default class BrokenLinkChecker extends Component {
 	constructor(props) {
@@ -453,6 +454,16 @@ export default class BrokenLinkChecker extends Component {
 		
 	}
 
+	renderHeader() {
+		return (<Banner style={{backgroundColor: "#fff"}} icon={false} buttonText="Start Scan" buttonOnClick={() => console.log('Hey a button')}>
+			<div style={{ flex: "1", display: "flex", flexDirection: "row", justifyContent: "space-between", alignItems: "center", padding: "0 10px" }}>
+				<Title size="s" style={{marginTop: 14, marginBottom: 14}}>Check Links</Title>
+
+				<Text size="caption">Last updated {this.renderLastUpdatedTimestamp()}</Text>
+			</div>
+		</Banner>);
+	}
+
 	renderProgressBarElements() {
 		let progressCompletedPercentage = 0;
 
@@ -582,6 +593,9 @@ export default class BrokenLinkChecker extends Component {
 				style={{ flex: "1", overflowY: "auto" }}
 				className="brokenLinkCheckWrap"
 			>
+
+				{this.renderHeader()}
+
 				<div style={{ flex: "1", display: "flex", flexDirection: "row", justifyContent: "space-between", alignItems: "center", padding: "0 10px" }}>
 					<Title size="s" style={{marginTop: 14, marginBottom: 14}}>Check Links</Title>
 

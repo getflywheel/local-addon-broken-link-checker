@@ -1,0 +1,7 @@
+.brokenLinkCheckWrap [class*=Banner] {
+    background: #fff !important;
+}
+
+.brokenLinkCheckWrap [class*=Banner] [class*=Content] {
+    width: 100%;
+}
