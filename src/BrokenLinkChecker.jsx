@@ -7,7 +7,7 @@ const {
 	HtmlUrlChecker,
 	UrlChecker,
 } = require("broken-link-checker");
-import { TableListMultiDisplay, ProgressBar, PrimaryButton, Tooltip, FlyTooltip } from "@getflywheel/local-components";
+import { TableListMultiDisplay, ProgressBar, PrimaryButton, Tooltip } from "@getflywheel/local-components";
 
 export default class BrokenLinkChecker extends Component {
 	constructor(props) {
@@ -551,15 +551,15 @@ export default class BrokenLinkChecker extends Component {
 							</div>
 
 							<div>
-								<FlyTooltip position="center" content={<div style={{ lineHeight: "1em" }}>{item.originURL}</div>}>
+								<Tooltip content={<div style={{ lineHeight: "1em" }}>{item.originURL}</div>}>
 									<a href={item.originURL}>{this.truncate(item.originURI, 35)}</a>
-								</FlyTooltip>
+								</Tooltip>
 							</div>
 
 							<div>
-								<FlyTooltip position="center" content={<div style={{ lineHeight: "1em" }}>{item.linkURL}</div>}>
+								<Tooltip content={<div style={{ lineHeight: "1em" }}>{item.linkURL}</div>}>
 									<a href={item.linkURL}>{this.truncate(item.linkURL, 35)}</a>
-								</FlyTooltip>
+								</Tooltip>
 							</div>
 
 							<div>
