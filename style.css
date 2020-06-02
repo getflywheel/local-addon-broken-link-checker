@@ -9,6 +9,14 @@
 	word-break: break-word;
 }
 
+.brokenLinkCheckWrap [class*=Banner] {
+    background: #fff !important;
+}
+
+.brokenLinkCheckWrap [class*=Banner] [class*=Content] {
+    width: 100%;
+}
+
 /* END BROKEN LINK CHECKER STYLES */
 
 /* START STYLES FROM NOTES ADDON */
