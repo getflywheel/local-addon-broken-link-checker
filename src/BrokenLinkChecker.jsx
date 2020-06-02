@@ -455,13 +455,20 @@ export default class BrokenLinkChecker extends Component {
 	}
 
 	renderHeader() {
-		return (<Banner style={{backgroundColor: "#fff"}} icon={false} buttonText="Start Scan" buttonOnClick={() => console.log('Hey a button')}>
-			<div style={{ flex: "1", display: "flex", flexDirection: "row", justifyContent: "space-between", alignItems: "center", padding: "0 10px" }}>
-				<Title size="s" style={{marginTop: 14, marginBottom: 14}}>Check Links</Title>
+		let buttonText = "Start Scan";
+		if (this.state.scanInProgress){
+			buttonText = "Scanning";
+		}
+		return (<div>
+				<Banner style={{backgroundColor: "#fff"}} icon={false} buttonText={buttonText} buttonOnClick={this.startScan}>
+				<div style={{ flex: "1", display: "flex", flexDirection: "row", justifyContent: "space-between", alignItems: "center", padding: "0 10px" }}>
+					<Title size="s" style={{marginTop: 14, marginBottom: 14}}>Check Links</Title>
 
-				<Text size="caption">Last updated {this.renderLastUpdatedTimestamp()}</Text>
-			</div>
-		</Banner>);
+					<Text size="caption">Last updated {this.renderLastUpdatedTimestamp()}</Text>
+				</div>
+			</Banner>
+			{this.renderProgressBarElements()}
+		</div>);
 	}
 
 	renderProgressBarElements() {
@@ -493,22 +500,11 @@ export default class BrokenLinkChecker extends Component {
 
 		if (this.state.scanInProgress) {
 			return (
-				<div>
-					<p style={{ textAlign: "center" }}>Searching for Links</p>
-					<p style={{ textAlign: "center" }}>
-						Broken Links <b>{this.state.numberBrokenLinksFound}</b>
-					</p>
 					<ProgressBar progress={progressCompletedPercentage} />
-				</div>
 			);
 		} else if (this.state.firstRunComplete && this.state.resultsOnScreen) {
 			return (
-				<div>
-					<p style={{ textAlign: "center" }}>
-						Broken Links <b>{this.state.numberBrokenLinksFound}</b>
-					</p>
 					<ProgressBar progress={progressCompletedPercentage} />
-				</div>
 			);
 		} else {
 			return null;
@@ -596,12 +592,6 @@ export default class BrokenLinkChecker extends Component {
 
 				{this.renderHeader()}
 
-				<div style={{ flex: "1", display: "flex", flexDirection: "row", justifyContent: "space-between", alignItems: "center", padding: "0 10px" }}>
-					<Title size="s" style={{marginTop: 14, marginBottom: 14}}>Check Links</Title>
-
-					<p>{this.renderLastUpdatedTimestamp()}</p>
-				</div>
-
 				{this.renderMessage()}
 
 				<TableListMultiDisplay
@@ -652,11 +642,7 @@ export default class BrokenLinkChecker extends Component {
 					)}
 					itemTemplate={{}}
 					data={this.state.brokenLinks}
-				/>
-
-				{this.renderProgressBarElements()}
-
-				{this.renderActionButton()}				
+				/>			
 			</div>
 		);}
 	}
