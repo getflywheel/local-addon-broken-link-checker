@@ -456,15 +456,23 @@ export default class BrokenLinkChecker extends Component {
 
 	renderHeader() {
 		let buttonText = "Start Scan";
+		let messageLeftOfActionButtonText = "Last updated " + this.renderLastUpdatedTimestamp();
+
 		if (this.state.scanInProgress){
 			buttonText = "Scanning";
+			messageLeftOfActionButtonText = "Searching for links....";
+			
+			if(this.state.brokenLinksFound) {
+				messageLeftOfActionButtonText = "Searching for links.... Broken Links " + this.state.numberBrokenLinksFound; 
+			}
 		}
+
 		return (<div>
 				<Banner style={{backgroundColor: "#fff"}} icon={false} buttonText={buttonText} buttonOnClick={this.startScan}>
 				<div style={{ flex: "1", display: "flex", flexDirection: "row", justifyContent: "space-between", alignItems: "center", padding: "0 10px" }}>
 					<Title size="s" style={{marginTop: 14, marginBottom: 14}}>Check Links</Title>
 
-					<Text size="caption">Last updated {this.renderLastUpdatedTimestamp()}</Text>
+					<Text size="caption">{messageLeftOfActionButtonText}</Text>
 				</div>
 			</Banner>
 			{this.renderProgressBarElements()}
