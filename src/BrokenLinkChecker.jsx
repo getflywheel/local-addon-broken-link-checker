@@ -428,32 +428,6 @@ export default class BrokenLinkChecker extends Component {
 		}
 	  };
 
-	renderMessage() {
-		let message = "";
-		if (this.state.siteStatus === "halted") {
-			message = "Please start the site before running a link scan.";
-		} else if (
-			this.state.firstRunComplete &&
-			!this.state.brokenLinksFound
-		) {
-			message = "No broken links found.";
-		}
-
-		if (
-			this.state.scanInProgress &&
-			this.state.siteRootUrl == null
-		) {
-			message += " There was a problem checking the website's homepage.";
-		}
-
-		if(message !== ""){
-			return(<p>{message}</p>);
-		} else {
-			return;
-		}
-		
-	}
-
 	renderHeader() {
 		let buttonText = "Start Scan";
 		let messageLeftOfActionButtonText = "Last updated " + this.renderLastUpdatedTimestamp();
@@ -519,24 +493,6 @@ export default class BrokenLinkChecker extends Component {
 		}
 	}
 
-	renderActionButton(){
-		let startButtonText = "Check Links";
-		if (this.state.resultsOnScreen) {
-			startButtonText = "Check Links";
-		}
-
-		if (this.state.scanInProgress) {
-			return (
-				<PrimaryButton disabled="true" onClick={this.startScan} style={{ marginTop: 15, marginLeft: "auto", marginRight: 10, marginBottom: 10, display: "block" }}>Scanning</PrimaryButton>
-			);
-		} else {
-			return (
-			<PrimaryButton onClick={this.startScan} style={{ marginTop: 15, marginLeft: "auto", marginRight: 10, marginBottom: 10, display: "block" }}>{startButtonText}</PrimaryButton>
-			);
-	
-		}
-	}
-
 	renderLastUpdatedTimestamp(){
 		if(this.state.hasOwnProperty('brokenLinks')) {
 			if(this.state.brokenLinks.length) {
@@ -587,6 +543,36 @@ export default class BrokenLinkChecker extends Component {
 		return strTime;
 	}
 
+	renderFooterMessage() {
+		let message = "";
+		if (this.state.siteStatus === "halted") {
+			message = "Please start the site to begin a scan";
+		} else if (
+			this.state.firstRunComplete &&
+			!this.state.brokenLinksFound
+		) {
+			message = "No broken links found";
+		} else if (
+			this.state.siteStatus === "running" &&
+			!this.state.scanInProgress
+		) {
+			message = "Scan for broken links"
+		}
+
+		if (
+			this.state.scanInProgress &&
+			this.state.siteRootUrl == null
+		) {
+			message += " There was a problem checking the website's homepage.";
+		}
+
+		if(message !== ""){
+		return(<Title size="caption" style={{textAlign:'center'}}>{message}</Title>);
+		} else {
+			return;
+		}
+	}
+
 	render() {
 		if(this.legacyPluginDataDetected()) {
 			this.clearBrokenLinks();
@@ -599,8 +585,6 @@ export default class BrokenLinkChecker extends Component {
 			>
 
 				{this.renderHeader()}
-
-				{this.renderMessage()}
 
 				<TableListMultiDisplay
 					header={
@@ -651,6 +635,8 @@ export default class BrokenLinkChecker extends Component {
 					itemTemplate={{}}
 					data={this.state.brokenLinks}
 				/>			
+
+				{this.renderFooterMessage()}
 			</div>
 		);}
 	}
