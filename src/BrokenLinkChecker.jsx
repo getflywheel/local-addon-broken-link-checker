@@ -64,6 +64,12 @@ export default class BrokenLinkChecker extends Component {
 		if (siteStatus !== this.state.siteStatus) {
 			this.updateSiteState(siteStatus);
 		}
+
+		console.log('size:', remote.getCurrentWindow().getSize());
+		// size: [1000, 700]
+
+		console.log('bounds:', remote.getCurrentWindow().getBounds());
+		// bounds: {height: 700, width: 1000, x: 226, y: 97}
 	}
 
 	legacyPluginDataDetected(){
