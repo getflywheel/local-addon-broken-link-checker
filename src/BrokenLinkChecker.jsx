@@ -434,11 +434,7 @@ export default class BrokenLinkChecker extends Component {
 
 		if (this.state.scanInProgress){
 			buttonText = "Scanning";
-			messageLeftOfActionButtonText = "Searching for links....";
-			
-			if(this.state.brokenLinksFound) {
-				messageLeftOfActionButtonText = "Searching for links.... Broken Links " + this.state.numberBrokenLinksFound; 
-			}
+			messageLeftOfActionButtonText = "";
 		}
 
 		return (<div>
@@ -446,7 +442,7 @@ export default class BrokenLinkChecker extends Component {
                   {} : 
                   this.startScan}>
 				<div style={{ flex: "1", display: "flex", flexDirection: "row", justifyContent: "space-between", alignItems: "center", padding: "0 10px" }}>
-					<Title size="s" style={{marginTop: 14, marginBottom: 14}}>Check Links</Title>
+				<Title size="s" style={{marginTop: 14, marginBottom: 14}}>{ (this.state.scanInProgress && this.state.numberBrokenLinksFound != null) ? (<span>Broken Links <strong>{this.state.numberBrokenLinksFound}</strong></span>) : (<span>Check Links</span>) }</Title>
 
 					<Text size="caption">{messageLeftOfActionButtonText}</Text>
 				</div>
