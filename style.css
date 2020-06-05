@@ -10,7 +10,8 @@
 }
 
 .brokenLinkCheckWrap [class*=Banner] {
-    background: #fff !important;
+	background: #fff !important;
+	padding-left: 10px !important;
 }
 
 .brokenLinkCheckWrap [class*=Banner] [class*=Content] {
