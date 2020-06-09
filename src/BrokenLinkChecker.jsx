@@ -27,6 +27,8 @@ export default class BrokenLinkChecker extends Component {
 			numberBrokenLinksFound: 0,
 			totalSitePosts: null,
 			getTotalSitePostsInProgress: false,
+			windowWidth: 0,
+			windowHeight: 0,
 		};
 
 		this.checkLinks = this.checkLinks.bind(this);
@@ -65,11 +67,17 @@ export default class BrokenLinkChecker extends Component {
 			this.updateSiteState(siteStatus);
 		}
 
-		console.log('size:', remote.getCurrentWindow().getSize());
-		// size: [1000, 700]
-
-		console.log('bounds:', remote.getCurrentWindow().getBounds());
-		// bounds: {height: 700, width: 1000, x: 226, y: 97}
+		if(this.state.windowWidth === 0){
+			let windowSize = remote.getCurrentWindow().getSize();
+			this.updateWindowSize(windowSize[0], windowSize[1]);
+		}
+		
+		remote.getCurrentWindow().on('resize', () => {
+			let windowSize = remote.getCurrentWindow().getSize();
+			if((this.state.windowWidth !== windowSize[0]) || (this.state.windowHeight !== windowSize[1])){
+				this.updateWindowSize(windowSize[0], windowSize[1]);
+			}
+		});
 	}
 
 	legacyPluginDataDetected(){
@@ -262,6 +270,13 @@ export default class BrokenLinkChecker extends Component {
 		}));
 	}
 
+	updateWindowSize(width, height) {
+		this.setState((prevState) => ({
+			windowWidth: width,
+			windowHeight: height
+		}));
+	}
+
 	incrementNumberPostsFound() {
 		this.setState((prevState) => ({
 			numberPostsFound: prevState.numberPostsFound + 1,
@@ -426,6 +441,12 @@ export default class BrokenLinkChecker extends Component {
 	}
 
 	truncate(str, n){
+
+		// Increase truncation factor automatically based on window size
+		if (this.state.windowWidth <= 1135){
+			n -= 5;
+		}
+
 		if (str.length > n) {
 			return str.substr(0, n-1) + '...';
 		} else {
