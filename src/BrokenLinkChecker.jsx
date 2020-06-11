@@ -633,23 +633,23 @@ export default class BrokenLinkChecker extends Component {
 								{item.statusCode}
 							</div>
 
-							<div>
-								<Tooltip content={<div style={{ lineHeight: "1em" }}>{item.originURL}</div>}>
+							<div style={{ lineHeight: "1.3em" }}>
+								<Tooltip content={<div style={{ lineHeight: "1.3em" }}>{item.originURL}</div>}>
 									<a href={item.originURL}>{this.truncate(item.originURI, 35)}</a>
 								</Tooltip>
 							</div>
 
-							<div>
-								<Tooltip content={<div style={{ lineHeight: "1em" }}>{item.linkURL}</div>}>
+							<div style={{ lineHeight: "1.3em" }}>
+								<Tooltip content={<div style={{ lineHeight: "1.3em" }}>{item.linkURL}</div>}>
 									<a href={item.linkURL}>{this.truncate(item.linkURL, 35)}</a>
 								</Tooltip>
 							</div>
 
-							<div>
+							<div style={{ lineHeight: "1.3em" }}>
 								<p style={{ flexShrink: 1 }}>{item.linkText}</p>
 							</div>
 
-							<div style={{ lineHeight: "1em" }}>
+							<div style={{ lineHeight: "1.3em" }}>
 								<a
 									href={
 										this.state.siteRootUrl +
