@@ -432,6 +432,10 @@ export default class BrokenLinkChecker extends Component {
 		let buttonText = "Start Scan";
 		let messageLeftOfActionButtonText = "Last updated " + this.renderLastUpdatedTimestamp();
 
+		if(this.renderLastUpdatedTimestamp() === ''){
+			messageLeftOfActionButtonText = "";
+		}
+
 		if (this.state.scanInProgress){
 			buttonText = "Scanning";
 			messageLeftOfActionButtonText = "";
