@@ -27,8 +27,6 @@ export default class BrokenLinkChecker extends Component {
 			numberBrokenLinksFound: 0,
 			totalSitePosts: null,
 			getTotalSitePostsInProgress: false,
-			windowWidth: 0,
-			windowHeight: 0,
 		};
 
 		this.checkLinks = this.checkLinks.bind(this);
@@ -66,18 +64,6 @@ export default class BrokenLinkChecker extends Component {
 		if (siteStatus !== this.state.siteStatus) {
 			this.updateSiteState(siteStatus);
 		}
-
-		if(this.state.windowWidth === 0){
-			let windowSize = remote.getCurrentWindow().getSize();
-			this.updateWindowSize(windowSize[0], windowSize[1]);
-		}
-		
-		remote.getCurrentWindow().on('resize', () => {
-			let windowSize = remote.getCurrentWindow().getSize();
-			if((this.state.windowWidth !== windowSize[0]) || (this.state.windowHeight !== windowSize[1])){
-				this.updateWindowSize(windowSize[0], windowSize[1]);
-			}
-		});
 	}
 
 	legacyPluginDataDetected(){
@@ -270,13 +256,6 @@ export default class BrokenLinkChecker extends Component {
 		}));
 	}
 
-	updateWindowSize(width, height) {
-		this.setState((prevState) => ({
-			windowWidth: width,
-			windowHeight: height
-		}));
-	}
-
 	incrementNumberPostsFound() {
 		this.setState((prevState) => ({
 			numberPostsFound: prevState.numberPostsFound + 1,
@@ -442,8 +421,10 @@ export default class BrokenLinkChecker extends Component {
 
 	truncate(str, n){
 
+		let windowSize = remote.getCurrentWindow().getSize();
+
 		// Increase truncation factor automatically based on window size
-		if (this.state.windowWidth <= 1135){
+		if (windowSize[0] <= 1135){
 			n -= 5;
 		}
 
