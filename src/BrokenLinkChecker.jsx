@@ -425,8 +425,8 @@ export default class BrokenLinkChecker extends Component {
 		let windowSize = remote.getCurrentWindow().getSize();
 
 		// Increase truncation factor automatically based on window size
-		if (windowSize[0] <= 1135){
-			n -= 5;
+		if (windowSize[0] <= 1300){
+			n -= 10;
 		}
 
 		if (str.length > n) {
