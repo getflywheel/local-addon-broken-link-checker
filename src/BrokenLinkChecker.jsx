@@ -7,7 +7,8 @@ const {
 	HtmlUrlChecker,
 	UrlChecker,
 } = require("broken-link-checker");
-import { TableListMultiDisplay, ProgressBar, PrimaryButton, Title, Tooltip } from "@getflywheel/local-components";
+
+import { TableListMultiDisplay, ProgressBar, PrimaryButton, Title, Tooltip, Banner, Text } from "@getflywheel/local-components";
 
 export default class BrokenLinkChecker extends Component {
 	constructor(props) {
@@ -435,30 +436,31 @@ export default class BrokenLinkChecker extends Component {
 		}
 	  };
 
-	renderMessage() {
-		let message = "";
-		if (this.state.siteStatus === "halted") {
-			message = "Please start the site before running a link scan.";
-		} else if (
-			this.state.firstRunComplete &&
-			!this.state.brokenLinksFound
-		) {
-			message = "No broken links found.";
+	renderHeader() {
+		let buttonText = "Start Scan";
+		let messageLeftOfActionButtonText = "Last updated " + this.renderLastUpdatedTimestamp();
+
+		if(this.renderLastUpdatedTimestamp() === ''){
+			messageLeftOfActionButtonText = "";
 		}
 
-		if (
-			this.state.scanInProgress &&
-			this.state.siteRootUrl == null
-		) {
-			message += " There was a problem checking the website's homepage.";
+		if (this.state.scanInProgress){
+			buttonText = "Scanning";
+			messageLeftOfActionButtonText = "";
 		}
 
-		if(message !== ""){
-			return(<p>{message}</p>);
-		} else {
-			return;
-		}
-		
+		return (<div>
+				<Banner style={{backgroundColor: "#fff"}} icon={false} buttonText={buttonText} buttonOnClick={this.state.scanInProgress ?
+                  {} : 
+                  this.startScan}>
+				<div style={{ flex: "1", display: "flex", flexDirection: "row", justifyContent: "space-between", alignItems: "center", padding: "0 10px" }}>
+				<Title size="s" style={{marginTop: 14, marginBottom: 14}}>{ (this.state.scanInProgress && this.state.numberBrokenLinksFound != null) ? (<span>Broken Links <strong>{this.state.numberBrokenLinksFound}</strong></span>) : (<span>Link Checker</span>) }</Title>
+
+					<Text size="caption">{messageLeftOfActionButtonText}</Text>
+				</div>
+			</Banner>
+			{this.renderProgressBarElements()}
+		</div>);
 	}
 
 	renderProgressBarElements() {
@@ -490,43 +492,14 @@ export default class BrokenLinkChecker extends Component {
 
 		if (this.state.scanInProgress) {
 			return (
-				<div>
-					<p style={{ textAlign: "center" }}>Searching for Links</p>
-					<p style={{ textAlign: "center" }}>
-						Broken Links <b>{this.state.numberBrokenLinksFound}</b>
-					</p>
 					<ProgressBar progress={progressCompletedPercentage} />
-				</div>
 			);
 		} else if (this.state.firstRunComplete && this.state.resultsOnScreen) {
 			return (
-				<div>
-					<p style={{ textAlign: "center" }}>
-						Broken Links <b>{this.state.numberBrokenLinksFound}</b>
-					</p>
 					<ProgressBar progress={progressCompletedPercentage} />
-				</div>
 			);
 		} else {
 			return null;
-		}
-	}
-
-	renderActionButton(){
-		let startButtonText = "Check Links";
-		if (this.state.resultsOnScreen) {
-			startButtonText = "Check Links";
-		}
-
-		if (this.state.scanInProgress) {
-			return (
-				<PrimaryButton disabled="true" onClick={this.startScan} style={{ marginTop: 15, marginLeft: "auto", marginRight: 10, marginBottom: 10, display: "block" }}>Scanning</PrimaryButton>
-			);
-		} else {
-			return (
-			<PrimaryButton onClick={this.startScan} style={{ marginTop: 15, marginLeft: "auto", marginRight: 10, marginBottom: 10, display: "block" }}>{startButtonText}</PrimaryButton>
-			);
-	
 		}
 	}
 
@@ -580,6 +553,36 @@ export default class BrokenLinkChecker extends Component {
 		return strTime;
 	}
 
+	renderFooterMessage() {
+		let message = "";
+		if (this.state.siteStatus === "halted") {
+			message = "Please start the site to begin a scan";
+		} else if (
+			this.state.firstRunComplete &&
+			!this.state.brokenLinksFound
+		) {
+			message = "No broken links found";
+		} else if (
+			this.state.siteStatus === "running" &&
+			!this.state.scanInProgress
+		) {
+			message = "Scan for broken links"
+		}
+
+		if (
+			this.state.scanInProgress &&
+			this.state.siteRootUrl == null
+		) {
+			message += " There was a problem checking the website's homepage.";
+		}
+
+		if(message !== ""){
+		return(<Title size="caption" style={{textAlign:'center'}}>{message}</Title>);
+		} else {
+			return;
+		}
+	}
+
 	render() {
 		if(this.legacyPluginDataDetected()) {
 			this.clearBrokenLinks();
@@ -590,13 +593,8 @@ export default class BrokenLinkChecker extends Component {
 				style={{ flex: "1", overflowY: "auto" }}
 				className="brokenLinkCheckWrap"
 			>
-				<div style={{ flex: "1", display: "flex", flexDirection: "row", justifyContent: "space-between", alignItems: "center", padding: "0 10px" }}>
-					<Title size="s" style={{marginTop: 14, marginBottom: 14}}>Check Links</Title>
 
-					<p>{this.renderLastUpdatedTimestamp()}</p>
-				</div>
-
-				{this.renderMessage()}
+				{this.renderHeader()}
 
 				<TableListMultiDisplay
 					header={
@@ -646,11 +644,9 @@ export default class BrokenLinkChecker extends Component {
 					)}
 					itemTemplate={{}}
 					data={this.state.brokenLinks}
-				/>
+				/>			
 
-				{this.renderProgressBarElements()}
-
-				{this.renderActionButton()}				
+				{this.renderFooterMessage()}
 			</div>
 		);}
 	}
