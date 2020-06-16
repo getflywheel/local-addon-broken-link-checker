@@ -65,6 +65,14 @@ export default class BrokenLinkChecker extends Component {
 		if (siteStatus !== this.state.siteStatus) {
 			this.updateSiteState(siteStatus);
 		}
+
+		remote.getCurrentWindow().on('resize', () => {
+			let windowSize = remote.getCurrentWindow().getSize();
+			console.log(windowSize);
+			// if((this.state.windowWidth !== windowSize[0]) || (this.state.windowHeight !== windowSize[1])){
+			// 	this.updateWindowSize(windowSize[0], windowSize[1]);
+			// }
+		});
 	}
 
 	legacyPluginDataDetected(){
