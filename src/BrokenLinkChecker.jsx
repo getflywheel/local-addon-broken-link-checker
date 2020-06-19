@@ -66,13 +66,14 @@ export default class BrokenLinkChecker extends Component {
 			this.updateSiteState(siteStatus);
 		}
 
-		remote.getCurrentWindow().on('resize', () => {
-			let windowSize = remote.getCurrentWindow().getSize();
-			console.log(windowSize);
-			// if((this.state.windowWidth !== windowSize[0]) || (this.state.windowHeight !== windowSize[1])){
-			// 	this.updateWindowSize(windowSize[0], windowSize[1]);
-			// }
-		});
+		// The resize hook that makes things slow
+		// remote.getCurrentWindow().on('resize', () => {
+		// 	let windowSize = remote.getCurrentWindow().getSize();
+		// 	console.log(windowSize);
+		// 	// if((this.state.windowWidth !== windowSize[0]) || (this.state.windowHeight !== windowSize[1])){
+		// 	// 	this.updateWindowSize(windowSize[0], windowSize[1]);
+		// 	// }
+		// });
 	}
 
 	legacyPluginDataDetected(){
@@ -620,15 +621,15 @@ export default class BrokenLinkChecker extends Component {
 								{item.statusCode}
 							</div>
 
-							<div style={{ lineHeight: "1.3em" }}>
+							<div className="blcTooltipWrapper">
 								<Tooltip content={<div style={{ lineHeight: "1.3em" }}>{item.originURL}</div>}>
-									<a href={item.originURL}>{this.truncate(item.originURI, 35)}</a>
+									<a href={item.originURL} className="blcTruncate">{item.originURI}</a>
 								</Tooltip>
 							</div>
 
-							<div style={{ lineHeight: "1.3em" }}>
+							<div className="blcTooltipWrapper">
 								<Tooltip content={<div style={{ lineHeight: "1.3em" }}>{item.linkURL}</div>}>
-									<a href={item.linkURL}>{this.truncate(item.linkURL, 35)}</a>
+									<a href={item.linkURL} className="blcTruncate">{item.linkURL}</a>
 								</Tooltip>
 							</div>
 

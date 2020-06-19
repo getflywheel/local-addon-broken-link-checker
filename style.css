@@ -18,6 +18,19 @@
     width: 100%;
 }
 
+.brokenLinkCheckWrap .blcTooltipWrapper {
+	line-height: 1.3em; 
+	white-space: normal;
+	overflow-wrap: break-word;
+}
+
+.brokenLinkCheckWrap .blcTruncate {
+	display: block;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
 /* END BROKEN LINK CHECKER STYLES */
 
 /* START STYLES FROM NOTES ADDON */
