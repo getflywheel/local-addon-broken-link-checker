@@ -65,15 +65,6 @@ export default class BrokenLinkChecker extends Component {
 		if (siteStatus !== this.state.siteStatus) {
 			this.updateSiteState(siteStatus);
 		}
-
-		// The resize hook that makes things slow
-		// remote.getCurrentWindow().on('resize', () => {
-		// 	let windowSize = remote.getCurrentWindow().getSize();
-		// 	console.log(windowSize);
-		// 	// if((this.state.windowWidth !== windowSize[0]) || (this.state.windowHeight !== windowSize[1])){
-		// 	// 	this.updateWindowSize(windowSize[0], windowSize[1]);
-		// 	// }
-		// });
 	}
 
 	legacyPluginDataDetected(){
@@ -428,22 +419,6 @@ export default class BrokenLinkChecker extends Component {
 
 		return wpPostId;
 	}
-
-	truncate(str, n){
-
-		let windowSize = remote.getCurrentWindow().getSize();
-
-		// Increase truncation factor automatically based on window size
-		if (windowSize[0] <= 1300){
-			n -= 10;
-		}
-
-		if (str.length > n) {
-			return str.substr(0, n-1) + '...';
-		} else {
-			return str;
-		}
-	  };
 
 	renderHeader() {
 		let buttonText = "Start Scan";
