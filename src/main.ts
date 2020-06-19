@@ -1,4 +1,6 @@
 import * as LocalMain from "@getflywheel/local/main";
+const { fork } = require('child_process');
+import path from 'path';
 
 export default function (context) {
 	const { electron } = context;
@@ -17,6 +19,10 @@ export default function (context) {
 
 	ipcMain.on("get-table-prefix", async (event, replyChannel, siteId) => {
 		event.reply(replyChannel, await getTablePrefix(siteId));
+	});
+
+	ipcMain.on("spawn-process", async (event, replyChannel, siteId) => {
+		event.reply(replyChannel, await spawnChildProcess());
 	});
 }
 
@@ -66,4 +72,15 @@ async function getTablePrefix(siteId) {
 	});
 
 	return wpPrefixCall;
+}
+
+async function spawnChildProcess() {
+	const process = fork(path.join(__dirname, '/processes', 'checkLinks.jsx'), ['hello'], {
+		stdio: ['pipe', 'pipe', 'pipe', 'ipc'],
+	});
+	process.send('waffles');   // listen for messages from forked process
+	process.on('message', (message) => {
+	  console.log(`They indeed received the ${message}`);
+	  return message;
+	});
 }

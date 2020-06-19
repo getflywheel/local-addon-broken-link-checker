@@ -56,6 +56,12 @@ export default class BrokenLinkChecker extends Component {
 
 		this.updateSiteId(siteId);
 		this.updateSiteState(siteStatus);
+
+		console.log("about to call the process");
+		ipcAsync("spawn-process", "waffles").then((result) => {
+			console.log("Received response with this data", result);
+		});
+		
 	}
 
 	componentDidUpdate() {
@@ -324,68 +330,78 @@ export default class BrokenLinkChecker extends Component {
 
 	checkLinks(siteURL) {
 
-		let options = new Object();
-			options.maxSocketsPerHost = 15;
+		// fork another process
+		// const process = fork('./processes/checkLinks.jsx');
+		// const dummyPayload = "waffles";
+		// process.send({ dummyPayload });   // listen for messages from forked process
+		// process.on('message', (message) => {
+		//   console.log(`They indeed received the ${message.dummyPayload}`);
+		// });
 
-		let siteChecker = new SiteChecker(options, {
-			html: (tree, robots, response, pageUrl, customData) => {
-				// This code is used to increment the number of WP posts we traverse in our scan
-				if (this.findWpPostIdInMarkup(tree)) {
-					this.incrementNumberPostsFound();
-				}
-			},
-			link: (result, customData) => {
-				if (result.broken) {
-					let brokenLinkScanResults = {
-						statusCode: String(result.http.response.statusCode),
-						linkURL: String(result.url.original),
-						linkText: String(result.html.text),
-						originURL: String(result.base.original),
-						originURI: String(result.base.parsed.path),
-						resultDump: result
-					};
+		// --------------------------------------------------
 
-					let singlePageChecker = new HtmlUrlChecker(null, {
-						html: (tree, robots, response, pageUrl, customData) => {
+		// let options = new Object();
+		// 	options.maxSocketsPerHost = 15;
 
-							let wpPostId = this.findWpPostIdInMarkup(tree);
+		// let siteChecker = new SiteChecker(options, {
+		// 	html: (tree, robots, response, pageUrl, customData) => {
+		// 		// This code is used to increment the number of WP posts we traverse in our scan
+		// 		if (this.findWpPostIdInMarkup(tree)) {
+		// 			this.incrementNumberPostsFound();
+		// 		}
+		// 	},
+		// 	link: (result, customData) => {
+		// 		if (result.broken) {
+		// 			let brokenLinkScanResults = {
+		// 				statusCode: String(result.http.response.statusCode),
+		// 				linkURL: String(result.url.original),
+		// 				linkText: String(result.html.text),
+		// 				originURL: String(result.base.original),
+		// 				originURI: String(result.base.parsed.path),
+		// 				resultDump: result
+		// 			};
 
-							if (wpPostId !== null) {
-								this.addBrokenLink(
-									customData["statusCode"],
-									customData["linkURL"],
-									customData["linkText"],
-									customData["originURL"],
-									customData["originURI"],
-									wpPostId
-								);
+		// 			let singlePageChecker = new HtmlUrlChecker(null, {
+		// 				html: (tree, robots, response, pageUrl, customData) => {
 
-								this.updateBrokenLinksFound(true);
-								this.incrementNumberBrokenLinksFound();
-							}
-						}
-					});
+		// 					let wpPostId = this.findWpPostIdInMarkup(tree);
 
-					singlePageChecker.enqueue(
-						brokenLinkScanResults["originURL"],
-						brokenLinkScanResults
-					);
-				}
-			},
-			end: (result, customData) => {
-				// At last the first run is done, so we update the state
-				this.updateFirstRunComplete(true);
-				this.updateScanInProgress(false);
+		// 					if (wpPostId !== null) {
+		// 						this.addBrokenLink(
+		// 							customData["statusCode"],
+		// 							customData["linkURL"],
+		// 							customData["linkText"],
+		// 							customData["originURL"],
+		// 							customData["originURI"],
+		// 							wpPostId
+		// 						);
 
-				if (
-					this.state.brokenLinks === null ||
-					this.state.brokenLinks.length === 0
-				) {
-					this.updateBrokenLinksFound(false);
-				}
-			},
-		});
-		siteChecker.enqueue(siteURL);
+		// 						this.updateBrokenLinksFound(true);
+		// 						this.incrementNumberBrokenLinksFound();
+		// 					}
+		// 				}
+		// 			});
+
+		// 			singlePageChecker.enqueue(
+		// 				brokenLinkScanResults["originURL"],
+		// 				brokenLinkScanResults
+		// 			);
+		// 		}
+		// 	},
+		// 	end: (result, customData) => {
+		// 		// At last the first run is done, so we update the state
+		// 		this.updateFirstRunComplete(true);
+		// 		this.updateScanInProgress(false);
+
+		// 		if (
+		// 			this.state.brokenLinks === null ||
+		// 			this.state.brokenLinks.length === 0
+		// 		) {
+		// 			this.updateBrokenLinksFound(false);
+		// 		}
+		// 	},
+		// });
+		// siteChecker.enqueue(siteURL);
 	}
 
 	findWpPostIdInMarkup(tree) {
