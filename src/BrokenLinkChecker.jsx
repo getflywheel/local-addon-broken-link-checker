@@ -420,14 +420,6 @@ export default class BrokenLinkChecker extends Component {
 		return wpPostId;
 	}
 
-	truncate(str, n){
-		if (str.length > n) {
-			return str.substr(0, n-1) + '...';
-		} else {
-			return str;
-		}
-	  };
-
 	renderHeader() {
 		let buttonText = "Start Scan";
 		let messageLeftOfActionButtonText = "Last updated " + this.renderLastUpdatedTimestamp();
@@ -604,23 +596,23 @@ export default class BrokenLinkChecker extends Component {
 								{item.statusCode}
 							</div>
 
-							<div>
-								<Tooltip content={<div style={{ lineHeight: "1em" }}>{item.originURL}</div>}>
-									<a href={item.originURL}>{this.truncate(item.originURI, 35)}</a>
+							<div className="blcTooltipWrapper">
+								<Tooltip content={<div style={{ lineHeight: "1.3em" }}>{item.originURL}</div>}>
+									<a href={item.originURL} className="blcTruncate">{item.originURI}</a>
 								</Tooltip>
 							</div>
 
-							<div>
-								<Tooltip content={<div style={{ lineHeight: "1em" }}>{item.linkURL}</div>}>
-									<a href={item.linkURL}>{this.truncate(item.linkURL, 35)}</a>
+							<div className="blcTooltipWrapper">
+								<Tooltip content={<div style={{ lineHeight: "1.3em" }}>{item.linkURL}</div>}>
+									<a href={item.linkURL} className="blcTruncate">{item.linkURL}</a>
 								</Tooltip>
 							</div>
 
-							<div>
+							<div style={{ lineHeight: "1.3em" }}>
 								<p style={{ flexShrink: 1 }}>{item.linkText}</p>
 							</div>
 
-							<div style={{ lineHeight: "1em" }}>
+							<div style={{ lineHeight: "1.3em" }}>
 								<a
 									href={
 										this.state.siteRootUrl +
