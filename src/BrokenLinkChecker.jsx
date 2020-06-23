@@ -58,7 +58,7 @@ export default class BrokenLinkChecker extends Component {
 		this.updateSiteState(siteStatus);
 
 		console.log("about to call the process");
-		ipcAsync("spawn-process", "waffles").then((result) => {
+		ipcAsync("fork-process", "waffles").then((result) => {
 			console.log("Received response with this data", result);
 		});
 		

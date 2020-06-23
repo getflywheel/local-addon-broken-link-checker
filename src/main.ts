@@ -21,7 +21,7 @@ export default function (context) {
 		event.reply(replyChannel, await getTablePrefix(siteId));
 	});
 
-	ipcMain.on("spawn-process", async (event, replyChannel, siteId) => {
+	ipcMain.on("fork-process", async (event, replyChannel, siteId) => {
 		event.reply(replyChannel, await spawnChildProcess());
 	});
 }
@@ -75,12 +75,19 @@ async function getTablePrefix(siteId) {
 }
 
 async function spawnChildProcess() {
+	//return 'turtles'; -> will result in "receiving response of turtles" in BrokenLinkChecker.jsx
 	const process = fork(path.join(__dirname, '/processes', 'checkLinks.jsx'), ['hello'], {
 		stdio: ['pipe', 'pipe', 'pipe', 'ipc'],
 	});
 	process.send('waffles');   // listen for messages from forked process
-	process.on('message', (message) => {
-	  console.log(`They indeed received the ${message}`);
-	  return message;
-	});
+
+	try {
+		return await process.on('message', (message) => {
+			console.log(`They indeed received the ${message}`);
+			return message;
+		  });
+	}
+	catch (e) {
+		return false;
+	}
 }
