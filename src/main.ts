@@ -79,27 +79,28 @@ async function getTablePrefix(siteId) {
 }
 
 async function spawnChildProcess() {
-	//return 'turtles'; -> will result in "receiving response of turtles" in BrokenLinkChecker.jsx
+	
 	const process = fork(path.join(__dirname, '../src/processes', 'checkLinks.jsx'), ['hello'], {
 		stdio: ['pipe', 'pipe', 'pipe', 'ipc'],
 	});
 	process.send('waffles');   // poke the bull so the bull can send something back
 
 	try {
-		return await process.on('message', (message) => {
+		let returnMessage = await process.on('message', (message) => {
 			LocalMain.getServiceContainer().cradle.localLogger.log(
 				"info",
 				`FORKPROCESS They indeed received the ${message}`
 			); // this now gets logged!
 			return message;
-		  });
+		});
 
+		return returnMessage;
 	}
 	catch (e) {
 		LocalMain.getServiceContainer().cradle.localLogger.log(
 			"info",
 			`FORKPROCESS There was an error returned from the process: ${e}`
 		); 
-		return false;
+		return 'HarryPotter';
 	}
 }
