@@ -22,6 +22,10 @@ export default function (context) {
 	});
 
 	ipcMain.on("fork-process", async (event, replyChannel, siteId) => {
+		LocalMain.getServiceContainer().cradle.localLogger.log(
+			"info",
+			`FORKPROCESS Received request to fork the process`
+		); // This gets logged
 		event.reply(replyChannel, await spawnChildProcess());
 	});
 }
@@ -76,18 +80,26 @@ async function getTablePrefix(siteId) {
 
 async function spawnChildProcess() {
 	//return 'turtles'; -> will result in "receiving response of turtles" in BrokenLinkChecker.jsx
-	const process = fork(path.join(__dirname, '/processes', 'checkLinks.jsx'), ['hello'], {
+	const process = fork(path.join(__dirname, '../src/processes', 'checkLinks.jsx'), ['hello'], {
 		stdio: ['pipe', 'pipe', 'pipe', 'ipc'],
 	});
-	process.send('waffles');   // listen for messages from forked process
+	process.send('waffles');   // poke the bull so the bull can send something back
 
 	try {
 		return await process.on('message', (message) => {
-			console.log(`They indeed received the ${message}`);
+			LocalMain.getServiceContainer().cradle.localLogger.log(
+				"info",
+				`FORKPROCESS They indeed received the ${message}`
+			); // this now gets logged!
 			return message;
 		  });
+
 	}
 	catch (e) {
+		LocalMain.getServiceContainer().cradle.localLogger.log(
+			"info",
+			`FORKPROCESS There was an error returned from the process: ${e}`
+		); 
 		return false;
 	}
 }
