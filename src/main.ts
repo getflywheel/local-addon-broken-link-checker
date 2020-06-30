@@ -86,15 +86,16 @@ async function spawnChildProcess() {
 	process.send('waffles');   // poke the bull so the bull can send something back
 
 	try {
-		let returnMessage = await process.on('message', (message) => {
-			LocalMain.getServiceContainer().cradle.localLogger.log(
-				"info",
-				`FORKPROCESS They indeed received the ${message}`
-			); // this now gets logged!
-			return message;
-		});
-
-		return returnMessage;
+		let returnMessage = await new Promise((resolve) => {
+			process.on('message', (message) => {
+			   LocalMain.getServiceContainer().cradle.localLogger.log(
+				  "info",
+				  `FORKPROCESS They indeed received the ${message}`
+			   ); // this now gets logged!
+			   resolve(message);
+			});
+		 });
+		 return returnMessage;
 	}
 	catch (e) {
 		LocalMain.getServiceContainer().cradle.localLogger.log(
