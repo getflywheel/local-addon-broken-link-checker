@@ -21,12 +21,12 @@ export default function (context) {
 		event.reply(replyChannel, await getTablePrefix(siteId));
 	});
 
-	ipcMain.on("fork-process", async (event, replyChannel, siteId) => {
+	ipcMain.on("fork-process", async (event, replyChannel, siteURL) => {
 		LocalMain.getServiceContainer().cradle.localLogger.log(
 			"info",
 			`FORKPROCESS Received request to fork the process`
 		); // This gets logged
-		event.reply(replyChannel, await spawnChildProcess());
+		event.reply(replyChannel, await spawnChildProcess(siteURL));
 	});
 }
 
@@ -78,12 +78,12 @@ async function getTablePrefix(siteId) {
 	return wpPrefixCall;
 }
 
-async function spawnChildProcess() {
+async function spawnChildProcess(siteURL) {
 	
-	const process = fork(path.join(__dirname, '../src/processes', 'checkLinks.jsx'), ['hello'], {
+	const process = fork(path.join(__dirname, '../src/processes', 'checkLinks.jsx'), [siteURL], {
 		stdio: ['pipe', 'pipe', 'pipe', 'ipc'],
 	});
-	process.send('waffles');   // poke the bull so the bull can send something back
+	process.send(siteURL);   // poke the bull so the bull can send something back
 
 	try {
 		let returnMessage = await new Promise((resolve) => {
@@ -102,6 +102,6 @@ async function spawnChildProcess() {
 			"info",
 			`FORKPROCESS There was an error returned from the process: ${e}`
 		); 
-		return 'HarryPotter';
+		return false;
 	}
 }

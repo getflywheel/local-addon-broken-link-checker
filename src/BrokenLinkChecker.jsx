@@ -56,12 +56,6 @@ export default class BrokenLinkChecker extends Component {
 
 		this.updateSiteId(siteId);
 		this.updateSiteState(siteStatus);
-
-		console.log("about to call the process");
-		ipcAsync("fork-process", "waffles").then((result) => {
-			console.log("Received response with this data", result);
-		});
-		
 	}
 
 	componentDidUpdate() {
@@ -330,13 +324,10 @@ export default class BrokenLinkChecker extends Component {
 
 	checkLinks(siteURL) {
 
-		// fork another process
-		// const process = fork('./processes/checkLinks.jsx');
-		// const dummyPayload = "waffles";
-		// process.send({ dummyPayload });   // listen for messages from forked process
-		// process.on('message', (message) => {
-		//   console.log(`They indeed received the ${message.dummyPayload}`);
-		// });
+		console.log("about to call the process");
+		ipcAsync("fork-process", siteURL).then((result) => {
+			console.log("You gave me this data", result);
+		});
 
 		// --------------------------------------------------
 
