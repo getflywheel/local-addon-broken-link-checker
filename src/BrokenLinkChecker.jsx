@@ -331,6 +331,7 @@ export default class BrokenLinkChecker extends Component {
 
 		// --------------------------------------------------
 
+		// MOVED TO PROCESS
 		// let options = new Object();
 		// 	options.maxSocketsPerHost = 15;
 
@@ -395,37 +396,38 @@ export default class BrokenLinkChecker extends Component {
 		// siteChecker.enqueue(siteURL);
 	}
 
-	findWpPostIdInMarkup(tree) {
-		let stringOfBodyClasses = '';
+	// MOVED TO PROCESS
+	// findWpPostIdInMarkup(tree) {
+	// 	let stringOfBodyClasses = '';
 
-		tree.childNodes.forEach(function(item,key){
-			if(item.nodeName === "html"){
-				item.childNodes.forEach(function(item,key){
-					if(item.nodeName === "body"){
-						stringOfBodyClasses = item.attrMap.class;
-					}
-				})
-			}
-		});
+	// 	tree.childNodes.forEach(function(item,key){
+	// 		if(item.nodeName === "html"){
+	// 			item.childNodes.forEach(function(item,key){
+	// 				if(item.nodeName === "body"){
+	// 					stringOfBodyClasses = item.attrMap.class;
+	// 				}
+	// 			})
+	// 		}
+	// 	});
 
-		// TODO: Also make note of special classes like .home
-		let findPostId = stringOfBodyClasses.match(
-			/(^|\s)postid-(\d+)(\s|$)/
-		);
+	// 	// TODO: Also make note of special classes like .home
+	// 	let findPostId = stringOfBodyClasses.match(
+	// 		/(^|\s)postid-(\d+)(\s|$)/
+	// 	);
 
-		let findPageId = stringOfBodyClasses.match(
-			/(^|\s)page-id-(\d+)(\s|$)/
-		);
+	// 	let findPageId = stringOfBodyClasses.match(
+	// 		/(^|\s)page-id-(\d+)(\s|$)/
+	// 	);
 
-		let wpPostId = null;
-		if (findPostId) {
-			wpPostId = findPostId[2];
-		} else if (findPageId) {
-			wpPostId = findPageId[2];
-		}
+	// 	let wpPostId = null;
+	// 	if (findPostId) {
+	// 		wpPostId = findPostId[2];
+	// 	} else if (findPageId) {
+	// 		wpPostId = findPageId[2];
+	// 	}
 
-		return wpPostId;
-	}
+	// 	return wpPostId;
+	// }
 
 	renderHeader() {
 		let buttonText = "Start Scan";
