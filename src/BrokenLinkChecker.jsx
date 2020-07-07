@@ -325,7 +325,7 @@ export default class BrokenLinkChecker extends Component {
 	checkLinks(siteURL) {
 
 		console.log("about to call the process");
-		ipcAsync("fork-process", siteURL).then((result) => {
+		ipcAsync("fork-process", "start-scan", siteURL).then((result) => {
 			console.log("You gave me this data", result);
 		});
 

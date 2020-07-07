@@ -21,12 +21,12 @@ export default function (context) {
 		event.reply(replyChannel, await getTablePrefix(siteId));
 	});
 
-	ipcMain.on("fork-process", async (event, replyChannel, siteURL) => {
+	ipcMain.on("fork-process", async (event, replyChannel, command, siteURL) => {
 		LocalMain.getServiceContainer().cradle.localLogger.log(
 			"info",
 			`FORKPROCESS Received request to fork the process`
 		); // This gets logged
-		event.reply(replyChannel, await spawnChildProcess(siteURL));
+		event.reply(replyChannel, await spawnChildProcess(command, siteURL));
 	});
 }
 
@@ -78,19 +78,19 @@ async function getTablePrefix(siteId) {
 	return wpPrefixCall;
 }
 
-async function spawnChildProcess(siteURL) {
+async function spawnChildProcess(command, siteURL) {
 	
-	const process = fork(path.join(__dirname, '../src/processes', 'checkLinks.jsx'), [siteURL], {
+	const process = fork(path.join(__dirname, '../src/processes', 'checkLinks.jsx'), [command,siteURL], {
 		stdio: ['pipe', 'pipe', 'pipe', 'ipc'],
 	});
-	process.send(siteURL);   // poke the bull so the bull can send something back
+	process.send([command,siteURL]);   // poke the bull so the bull can send something back
 
 	try {
 		let returnMessage = await new Promise((resolve) => {
 			process.on('message', (message) => {
 			   LocalMain.getServiceContainer().cradle.localLogger.log(
 				  "info",
-				  `FORKPROCESS They indeed received the ${message}`
+				  `FORKPROCESS They indeed received the ${message[0]}`
 			   ); // this now gets logged!
 			   resolve(message);
 			});

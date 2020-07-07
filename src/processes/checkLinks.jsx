@@ -8,11 +8,29 @@ const {
 
 // receive message from master process
 process.on('message', (m) => {
-	console.log('Got message:', m);
 	process.send(m);
+	
+	// This commented-out code seems to prevent a reponse from being sent
+	// if( (m[0] === "start-scan") && (m[1] !== 'undefined')) {
+	// 	scanFinishedData = await new Promise((resolve) => {
+	// 		resolve(checkLinks(m[1]));
+	// 	}).then((scanFinishedData) => {process.send(["scan-finished", scanFinishedData])});
+		
+	// }
+	// //process.send(m);
+
+	// else if(m[0] === "cancel-scan" && m[1] !== 'undefined'){
+	// 	// TODO: Cancel the scan
+	// }
+	// else {
+	// 	process.send(["error"]);
+	// }
   });
 
 async function checkLinks(siteURL) {   
+
+	addBrokenLink("1" ,"1", "1", "1", "1");
+	return "cheese";
 
   	let options = new Object();
 	options.maxSocketsPerHost = 15;
@@ -51,7 +69,6 @@ async function checkLinks(siteURL) {
 							);
 
 							updateBrokenLinksFound(true);
-							incrementNumberBrokenLinksFound();
 						}
 					}
 				});
@@ -118,15 +135,13 @@ function incrementNumberPostsFound(){
 	// TODO: populate
 } 
 
-function addBrokenLink(){
+function addBrokenLink(statusCode, linkURL, linkText, originURL, originURI){
 	// TODO: populate
+	// Needs to make addBrokenLink() and incrementNumberBrokenLinksFound() be called back in renderer
+	process.send(["add-broken-link", [statusCode, linkURL, linkText, originURL, originURI]]);
 }
 
 function updateBrokenLinksFound(){
-	// TODO: populate
-}
-
-function incrementNumberBrokenLinksFound() {
 	// TODO: populate
 }
 
