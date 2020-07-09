@@ -34,6 +34,7 @@ let checkLinks = function(siteURL) {
 	return new Promise(function(resolve, reject) {
 
 		if(true){
+			addBrokenLink("1" ,"1", "1", "1", "1");
 			resolve("Stuff worked!");
 		} else {
 			reject(Error("It broke"));

@@ -1,10 +1,15 @@
 import * as LocalMain from "@getflywheel/local/main";
 const { fork } = require('child_process');
 import path from 'path';
+import ipcAsync from "./ipcAsync"; // This might not be the solution I use
+const process = fork(path.join(__dirname, '../src/processes', 'checkLinks.jsx'), null, {
+	stdio: ['pipe', 'pipe', 'pipe', 'ipc'],
+});
 
 export default function (context) {
 	const { electron } = context;
 	const { ipcMain } = electron;
+	let theSiteId = null;
 
 	ipcMain.on("store-broken-links", (event, siteId, brokenLinks) => {
 		LocalMain.SiteData.updateSite(siteId, {
@@ -18,6 +23,7 @@ export default function (context) {
 	});
 
 	ipcMain.on("get-table-prefix", async (event, replyChannel, siteId) => {
+		theSiteId = siteId;
 		event.reply(replyChannel, await getTablePrefix(siteId));
 	});
 
@@ -28,6 +34,16 @@ export default function (context) {
 		); // This gets logged
 		event.reply(replyChannel, await spawnChildProcess(command, siteURL));
 	});
+
+	// When process sends message that's not in response to a direct command from renderer
+	// This might not be the solution I use
+	process.on('message', (message) => {
+		LocalMain.getServiceContainer().cradle.localLogger.log(
+		   "info",
+		   `FORKPROCESS The process sent over this message ${message}`
+		); 
+		ipcAsync("blc-process-add-broken-link", theSiteId, message);
+	 });
 }
 
 async function getTotalPosts(siteId, prefix) {
@@ -79,10 +95,7 @@ async function getTablePrefix(siteId) {
 }
 
 async function spawnChildProcess(command, siteURL) {
-	
-	const process = fork(path.join(__dirname, '../src/processes', 'checkLinks.jsx'), [command,siteURL], {
-		stdio: ['pipe', 'pipe', 'pipe', 'ipc'],
-	});
+
 	process.send([command,siteURL]);   // poke the bull so the bull can send something back
 
 	try {

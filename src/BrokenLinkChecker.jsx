@@ -7,6 +7,7 @@ const {
 	HtmlUrlChecker,
 	UrlChecker,
 } = require("broken-link-checker");
+const { ipcMain } = electron; // This doesn't work
 
 import { TableListMultiDisplay, ProgressBar, PrimaryButton, Title, Tooltip, Banner, Text } from "@getflywheel/local-components";
 
@@ -65,6 +66,11 @@ export default class BrokenLinkChecker extends Component {
 		if (siteStatus !== this.state.siteStatus) {
 			this.updateSiteState(siteStatus);
 		}
+
+		// This might not be the solution I use
+		ipcMain.on("blc-process-add-broken-link", async (event, replyChannel, siteId, message) => {
+			console.log(`We have received this message ${message}`);
+		});
 	}
 
 	legacyPluginDataDetected(){
