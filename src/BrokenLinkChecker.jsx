@@ -66,7 +66,7 @@ export default class BrokenLinkChecker extends Component {
 			this.updateSiteState(siteStatus);
 		}
 
-		ipcRenderer.on('blc-process-add-broken-link', (event, response) => { 
+		ipcRenderer.on('blc-async-message-from-process', (event, response) => { 
 			console.log({ event, response}); 
 		});
 	}

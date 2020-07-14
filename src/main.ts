@@ -34,14 +34,13 @@ export default function (context) {
 		event.reply(replyChannel, await spawnChildProcess(command, siteURL));
 	});
 
-	// When process sends message that's not in response to a direct command from renderer
-	// This might not be the solution I use
+	// When process sends message that's not in response to a direct command from renderer, pass along to renderer
 	process.on('message', (message) => {
 		LocalMain.getServiceContainer().cradle.localLogger.log(
 		   "info",
 		   `FORKPROCESS The process sent over this message ${message}`
 		); 
-		LocalMain.getServiceContainer().cradle.sendIPCEvent('blc-process-add-broken-link', message);
+		LocalMain.getServiceContainer().cradle.sendIPCEvent('blc-async-message-from-process', message);
 	 });
 }
 
