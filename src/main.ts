@@ -1,7 +1,6 @@
 import * as LocalMain from "@getflywheel/local/main";
 const { fork } = require('child_process');
 import path from 'path';
-import ipcAsync from "./ipcAsync"; // This might not be the solution I use
 const process = fork(path.join(__dirname, '../src/processes', 'checkLinks.jsx'), null, {
 	stdio: ['pipe', 'pipe', 'pipe', 'ipc'],
 });
@@ -42,7 +41,7 @@ export default function (context) {
 		   "info",
 		   `FORKPROCESS The process sent over this message ${message}`
 		); 
-		ipcAsync("blc-process-add-broken-link", theSiteId, message);
+		LocalMain.getServiceContainer().cradle.sendIPCEvent('blc-process-add-broken-link', message);
 	 });
 }
 
