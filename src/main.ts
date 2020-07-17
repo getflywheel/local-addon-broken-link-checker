@@ -1,9 +1,10 @@
 import * as LocalMain from "@getflywheel/local/main";
 const { fork } = require('child_process');
 import path from 'path';
-const process = fork(path.join(__dirname, '../src/processes', 'checkLinks.jsx'), null, {
+let process = fork(path.join(__dirname, '../src/processes', 'checkLinks.jsx'), null, {
 	stdio: ['pipe', 'pipe', 'pipe', 'ipc'],
 });
+let processWasKilledBefore = false;
 
 export default function (context) {
 	const { electron } = context;
@@ -40,6 +41,23 @@ export default function (context) {
 		   "info",
 		   `FORKPROCESS The process sent over this message ${message}`
 		); 
+		if(message[0] === 'scan-finished'){
+			//process.kill('SIGKILL');
+			// process.stdin.write('stop\n');
+			// process.kill('SIGKILL');
+			// process = null;
+			// processWasKilledBefore = true;
+
+
+			process.on('close', (code, signal) => {
+				this.process = fork(path.join(__dirname, '../src/processes', 'checkLinks.jsx'), null, {
+					stdio: ['pipe', 'pipe', 'pipe', 'ipc'],
+				});
+			});
+			
+			// Send SIGHUP to process.
+			process.kill();
+		}
 		LocalMain.getServiceContainer().cradle.sendIPCEvent('blc-async-message-from-process', message);
 	 });
 }
@@ -94,7 +112,11 @@ async function getTablePrefix(siteId) {
 
 async function spawnChildProcess(command, siteURL) {
 
-	process.send([command,siteURL]);   // poke the bull so the bull can send something back
+	if (processWasKilledBefore) {
+		
+	}
+
+	process.send([command,siteURL]);   // Initially poke the bull so the bull can send something back
 
 	try {
 		let returnMessage = await new Promise((resolve) => {

@@ -65,10 +65,6 @@ export default class BrokenLinkChecker extends Component {
 		if (siteStatus !== this.state.siteStatus) {
 			this.updateSiteState(siteStatus);
 		}
-
-		ipcRenderer.on('blc-async-message-from-process', (event, response) => { 
-			console.log({ event, response}); 
-		});
 	}
 
 	legacyPluginDataDetected(){
@@ -330,108 +326,47 @@ export default class BrokenLinkChecker extends Component {
 
 		console.log("about to call the process");
 		ipcAsync("fork-process", "start-scan", siteURL).then((result) => {
-			console.log("You gave me this data", result);
+			// 'result' is basically the first thing it hears back
 		});
 
-		// --------------------------------------------------
+		ipcRenderer.on('blc-async-message-from-process', (event, response) => { 
+			console.log({ event, response}); 
 
-		// MOVED TO PROCESS
-		// let options = new Object();
-		// 	options.maxSocketsPerHost = 15;
+			if(response[0]){
+				switch(response[0]) {
+					case 'increment-number-posts-found':
+					  // Needs to call incrementNumberPostsFound() back in the renderer
+					  this.incrementNumberPostsFound();
+					  break;
+					case 'add-broken-link':
+					  // Needs to make addBrokenLink() and incrementNumberBrokenLinksFound() be called back in renderer
+					  console.log('adding a broken link');
+					  this.addBrokenLink(response[1][0], response[1][1], response[1][2], response[1][3], response[1][4], response[1][5]);
+					  this.incrementNumberBrokenLinksFound();
+					  break;
+					case 'update-broken-links-found-boolean':
+					  // Needs to call updateBrokenLinksFound() back in the renderer
+					  this.updateBrokenLinksFound(Boolean(response[1]));
+					  break;
+					case 'update-first-run-complete-boolean':
+					  // Needs to call updateFirstRunComplete() back in renderer
+					  this.updateFirstRunComplete(Boolean(response[1]));
+					  break;
+					case 'update-scan-in-progress-boolean':
+					  // Needs to call updateScanInProgress() back in renderer
+					  this.updateScanInProgress(Boolean(response[1]));
+					  break;
+					case 'scan-finished':
+					  console.log('Hey look the scan finished, we should kill the process now');
+					  break;
+					default:
+					  // 
+				} 
+			}
+			
+		});
 
-		// let siteChecker = new SiteChecker(options, {
-		// 	html: (tree, robots, response, pageUrl, customData) => {
-		// 		// This code is used to increment the number of WP posts we traverse in our scan
-		// 		if (this.findWpPostIdInMarkup(tree)) {
-		// 			this.incrementNumberPostsFound();
-		// 		}
-		// 	},
-		// 	link: (result, customData) => {
-		// 		if (result.broken) {
-		// 			let brokenLinkScanResults = {
-		// 				statusCode: String(result.http.response.statusCode),
-		// 				linkURL: String(result.url.original),
-		// 				linkText: String(result.html.text),
-		// 				originURL: String(result.base.original),
-		// 				originURI: String(result.base.parsed.path),
-		// 				resultDump: result
-		// 			};
-
-		// 			let singlePageChecker = new HtmlUrlChecker(null, {
-		// 				html: (tree, robots, response, pageUrl, customData) => {
-
-		// 					let wpPostId = this.findWpPostIdInMarkup(tree);
-
-		// 					if (wpPostId !== null) {
-		// 						this.addBrokenLink(
-		// 							customData["statusCode"],
-		// 							customData["linkURL"],
-		// 							customData["linkText"],
-		// 							customData["originURL"],
-		// 							customData["originURI"],
-		// 							wpPostId
-		// 						);
-
-		// 						this.updateBrokenLinksFound(true);
-		// 						this.incrementNumberBrokenLinksFound();
-		// 					}
-		// 				}
-		// 			});
-
-		// 			singlePageChecker.enqueue(
-		// 				brokenLinkScanResults["originURL"],
-		// 				brokenLinkScanResults
-		// 			);
-		// 		}
-		// 	},
-		// 	end: (result, customData) => {
-		// 		// At last the first run is done, so we update the state
-		// 		this.updateFirstRunComplete(true);
-		// 		this.updateScanInProgress(false);
-
-		// 		if (
-		// 			this.state.brokenLinks === null ||
-		// 			this.state.brokenLinks.length === 0
-		// 		) {
-		// 			this.updateBrokenLinksFound(false);
-		// 		}
-		// 	},
-		// });
-		// siteChecker.enqueue(siteURL);
 	}
-
-	// MOVED TO PROCESS
-	// findWpPostIdInMarkup(tree) {
-	// 	let stringOfBodyClasses = '';
-
-	// 	tree.childNodes.forEach(function(item,key){
-	// 		if(item.nodeName === "html"){
-	// 			item.childNodes.forEach(function(item,key){
-	// 				if(item.nodeName === "body"){
-	// 					stringOfBodyClasses = item.attrMap.class;
-	// 				}
-	// 			})
-	// 		}
-	// 	});
-
-	// 	// TODO: Also make note of special classes like .home
-	// 	let findPostId = stringOfBodyClasses.match(
-	// 		/(^|\s)postid-(\d+)(\s|$)/
-	// 	);
-
-	// 	let findPageId = stringOfBodyClasses.match(
-	// 		/(^|\s)page-id-(\d+)(\s|$)/
-	// 	);
-
-	// 	let wpPostId = null;
-	// 	if (findPostId) {
-	// 		wpPostId = findPostId[2];
-	// 	} else if (findPageId) {
-	// 		wpPostId = findPageId[2];
-	// 	}
-
-	// 	return wpPostId;
-	// }
 
 	renderHeader() {
 		let buttonText = "Start Scan";

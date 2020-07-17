@@ -86,6 +86,7 @@ let checkLinks = function(siteURL) {
 				// At last the first run is done, so we update the state
 				updateFirstRunComplete(true);
 				updateScanInProgress(false);
+				callScanFinished(true);
 
 				if (
 					this.state.brokenLinks === null ||
@@ -93,7 +94,7 @@ let checkLinks = function(siteURL) {
 				) {
 					updateBrokenLinksFound(false);
 				}
-
+				
 				resolve('finished');
 			},
 		});
@@ -142,9 +143,9 @@ function incrementNumberPostsFound(){
 	process.send(["increment-number-posts-found", 'yes']);
 } 
 
-function addBrokenLink(statusCode, linkURL, linkText, originURL, originURI){
+function addBrokenLink(statusCode, linkURL, linkText, originURL, originURI, wpPostId){
 	// Needs to make addBrokenLink() and incrementNumberBrokenLinksFound() be called back in renderer
-	process.send(["add-broken-link", [statusCode, linkURL, linkText, originURL, originURI]]);
+	process.send( ["add-broken-link", [statusCode, linkURL, linkText, originURL, originURI, wpPostId], getRandomInt(10, 200)] );
 }
 
 function updateBrokenLinksFound(boolean){
@@ -162,3 +163,13 @@ function updateScanInProgress(boolean){
 	process.send(["update-scan-in-progress-boolean", boolean]);
 }
 
+function callScanFinished(boolean){
+	process.send(["scan-finished", boolean]);
+}
+
+// Thank you to https://stackoverflow.com/a/1527820/8143105
+function getRandomInt(min, max) {
+    min = Math.ceil(min);
+    max = Math.floor(max);
+    return Math.floor(Math.random() * (max - min + 1)) + min;
+}
