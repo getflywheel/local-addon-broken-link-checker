@@ -332,6 +332,8 @@ export default class BrokenLinkChecker extends Component {
 				// This code is used to increment the number of WP posts we traverse in our scan
 				if (this.findWpPostIdInMarkup(tree)) {
 					this.incrementNumberPostsFound();
+					console.log("We are currently on this page that has a post ID:");
+					console.log(pageUrl);
 				}
 			},
 			link: (result, customData) => {
@@ -359,6 +361,10 @@ export default class BrokenLinkChecker extends Component {
 									customData["originURI"],
 									wpPostId
 								);
+
+								console.log("The broken URL of " + customData["linkURL"] + " was found on this page " + customData["originURL"]);
+								console.log("It was broken because");
+								console.log(result);
 
 								this.updateBrokenLinksFound(true);
 								this.incrementNumberBrokenLinksFound();
