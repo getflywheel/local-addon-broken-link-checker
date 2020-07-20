@@ -337,9 +337,17 @@ export default class BrokenLinkChecker extends Component {
 				}
 			},
 			link: (result, customData) => {
-				if (result.broken) {
+				if (result.broken && (result.http.response.statusCode != 999)) {
+
+					let statusCode = '';
+					if(result.brokenReason === "HTTP_undefined"){
+						statusCode = "Timeout";
+					} else {
+						statusCode = String(result.http.response.statusCode);
+					}
+
 					let brokenLinkScanResults = {
-						statusCode: String(result.http.response.statusCode),
+						statusCode: statusCode,
 						linkURL: String(result.url.original),
 						linkText: String(result.html.text),
 						originURL: String(result.base.original),
