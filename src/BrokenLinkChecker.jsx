@@ -28,6 +28,7 @@ export default class BrokenLinkChecker extends Component {
 			numberBrokenLinksFound: 0,
 			totalSitePosts: null,
 			getTotalSitePostsInProgress: false,
+			currentCheckingUri: ''
 		};
 
 		this.checkLinks = this.checkLinks.bind(this);
@@ -221,6 +222,12 @@ export default class BrokenLinkChecker extends Component {
 		}));
 	}
 
+	updateCurrentCheckingUri(uri) {
+		this.setState((prevState) => ({
+			currentCheckingUri: uri,
+		}));
+	}
+
 	updateResultsOnScreen(boolean) {
 		this.setState((prevState) => ({
 			resultsOnScreen: boolean,
@@ -332,58 +339,62 @@ export default class BrokenLinkChecker extends Component {
 				// This code is used to increment the number of WP posts we traverse in our scan
 				if (this.findWpPostIdInMarkup(tree)) {
 					this.incrementNumberPostsFound();
-					console.log("We are currently on this page that has a post ID:");
-					console.log(pageUrl);
+					this.updateCurrentCheckingUri(pageUrl);
 				}
 			},
 			link: (result, customData) => {
-				if (result.broken && (result.http.response.statusCode != 999)) {
+				try {
+					if (result.broken && (result.http.response.statusCode != 999)) {
 
-					let statusCode = '';
-					if(result.brokenReason === "HTTP_undefined"){
-						statusCode = "Timeout";
-					} else {
-						statusCode = String(result.http.response.statusCode);
-					}
-
-					let brokenLinkScanResults = {
-						statusCode: statusCode,
-						linkURL: String(result.url.original),
-						linkText: String(result.html.text),
-						originURL: String(result.base.original),
-						originURI: String(result.base.parsed.path),
-						resultDump: result
-					};
-
-					let singlePageChecker = new HtmlUrlChecker(null, {
-						html: (tree, robots, response, pageUrl, customData) => {
-
-							let wpPostId = this.findWpPostIdInMarkup(tree);
-
-							if (wpPostId !== null) {
-								this.addBrokenLink(
-									customData["statusCode"],
-									customData["linkURL"],
-									customData["linkText"],
-									customData["originURL"],
-									customData["originURI"],
-									wpPostId
-								);
-
-								console.log("The broken URL of " + customData["linkURL"] + " was found on this page " + customData["originURL"]);
-								console.log("It was broken because");
-								console.log(result);
-
-								this.updateBrokenLinksFound(true);
-								this.incrementNumberBrokenLinksFound();
-							}
+						let statusCode = '';
+						if(result.brokenReason === "HTTP_undefined"){
+							statusCode = "Timeout";
+						} else {
+							statusCode = String(result.http.response.statusCode);
 						}
-					});
 
-					singlePageChecker.enqueue(
-						brokenLinkScanResults["originURL"],
-						brokenLinkScanResults
-					);
+						let linkText = '';
+						if(result.html.text){
+							linkText = String(result.html.text);
+						}
+
+						let brokenLinkScanResults = {
+							statusCode: statusCode,
+							linkURL: String(result.url.original),
+							linkText: linkText,
+							originURL: String(result.base.original),
+							originURI: String(result.base.parsed.path),
+							resultDump: result
+						};
+
+						let singlePageChecker = new HtmlUrlChecker(null, {
+							html: (tree, robots, response, pageUrl, customData) => {
+
+								let wpPostId = this.findWpPostIdInMarkup(tree);
+
+								if (wpPostId !== null) {
+									this.addBrokenLink(
+										customData["statusCode"],
+										customData["linkURL"],
+										customData["linkText"],
+										customData["originURL"],
+										customData["originURI"],
+										wpPostId
+									);
+
+									this.updateBrokenLinksFound(true);
+									this.incrementNumberBrokenLinksFound();
+								}
+							}
+						});
+
+						singlePageChecker.enqueue(
+							brokenLinkScanResults["originURL"],
+							brokenLinkScanResults
+						);
+					}
+				} catch(e){
+					// The "broken" link was missing critical fields (such as a status code), so we skip
 				}
 			},
 			end: (result, customData) => {
@@ -565,6 +576,11 @@ export default class BrokenLinkChecker extends Component {
 			!this.state.scanInProgress
 		) {
 			message = "Scan for broken links"
+		} else if (
+			this.state.siteStatus === "running" &&
+			this.state.scanInProgress
+		) {
+			message = "Checking " + String(this.state.currentCheckingUri);
 		}
 
 		if (
