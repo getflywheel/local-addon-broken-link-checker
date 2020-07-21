@@ -1,10 +1,6 @@
 import * as LocalMain from "@getflywheel/local/main";
 const { fork } = require('child_process');
 import path from 'path';
-let process = fork(path.join(__dirname, '../src/processes', 'checkLinks.jsx'), null, {
-	stdio: ['pipe', 'pipe', 'pipe', 'ipc'],
-});
-let processWasKilledBefore = false;
 
 export default function (context) {
 	const { electron } = context;
@@ -32,34 +28,8 @@ export default function (context) {
 			"info",
 			`FORKPROCESS Received request to fork the process`
 		); // This gets logged
-		event.reply(replyChannel, await spawnChildProcess(command, siteURL));
+		spawnChildProcess(command, siteURL)
 	});
-
-	// When process sends message that's not in response to a direct command from renderer, pass along to renderer
-	process.on('message', (message) => {
-		LocalMain.getServiceContainer().cradle.localLogger.log(
-		   "info",
-		   `FORKPROCESS The process sent over this message ${message}`
-		); 
-		if(message[0] === 'scan-finished'){
-			//process.kill('SIGKILL');
-			// process.stdin.write('stop\n');
-			// process.kill('SIGKILL');
-			// process = null;
-			// processWasKilledBefore = true;
-
-
-			process.on('close', (code, signal) => {
-				this.process = fork(path.join(__dirname, '../src/processes', 'checkLinks.jsx'), null, {
-					stdio: ['pipe', 'pipe', 'pipe', 'ipc'],
-				});
-			});
-			
-			// Send SIGHUP to process.
-			process.kill();
-		}
-		LocalMain.getServiceContainer().cradle.sendIPCEvent('blc-async-message-from-process', message);
-	 });
 }
 
 async function getTotalPosts(siteId, prefix) {
@@ -81,19 +51,6 @@ async function getTotalPosts(siteId, prefix) {
 		);
 	});
 
-	// then((data) => {
-	// 	LocalMain.getServiceContainer().cradle.localLogger.log(
-	// 		"info",
-	// 		"STARTDEBUG Hey here is some data from the db call: " + data
-	// 	);
-	// })
-	
-
-	LocalMain.getServiceContainer().cradle.localLogger.log(
-		"info",
-		`test in getTotalPosts(): ${numberOfPostsDbCall}`
-	);
-
 	return numberOfPostsDbCall;
 }
 
@@ -112,29 +69,37 @@ async function getTablePrefix(siteId) {
 
 async function spawnChildProcess(command, siteURL) {
 
-	if (processWasKilledBefore) {
-		
-	}
+	let siteScanProcess = fork(path.join(__dirname, '../src/processes', 'checkLinks.jsx'), null, {
+		stdio: ['pipe', 'pipe', 'pipe', 'ipc'],
+	});
 
-	process.send([command,siteURL]);   // Initially poke the bull so the bull can send something back
+	siteScanProcess.send([command,siteURL]);   // Pass the command along
 
-	try {
-		let returnMessage = await new Promise((resolve) => {
-			process.on('message', (message) => {
-			   LocalMain.getServiceContainer().cradle.localLogger.log(
-				  "info",
-				  `FORKPROCESS They indeed received the ${message[0]}`
-			   ); // this now gets logged!
-			   resolve(message);
-			});
-		 });
-		 return returnMessage;
-	}
-	catch (e) {
+	// When process sends a message, pass along to renderer
+	siteScanProcess.on('message', (message) => {
 		LocalMain.getServiceContainer().cradle.localLogger.log(
-			"info",
-			`FORKPROCESS There was an error returned from the process: ${e}`
+		   "info",
+		   `FORKPROCESS The process sent over this message ${message}`
 		); 
-		return false;
-	}
+		if(message[0] === 'scan-finished'){
+
+			//siteScanProcess.kill('SIGKILL');
+			// siteScanProcess.stdin.write('stop\n');
+			// siteScanProcess.kill('SIGKILL');
+			// siteScanProcess = null;
+			
+			// // Send SIGHUP to siteScanProcess.
+			siteScanProcess.stdin.write('stop\n');
+			siteScanProcess.kill('SIGKILL');
+			siteScanProcess = null;
+		}
+		LocalMain.getServiceContainer().cradle.sendIPCEvent('blc-async-message-from-process', message);
+	 });
+
+	// Re-fork when the fork is killed 
+	siteScanProcess.on('close', (code, signal) => {
+		siteScanProcess = fork(path.join(__dirname, '../src/processes', 'checkLinks.jsx'), null, {
+			stdio: ['pipe', 'pipe', 'pipe', 'ipc'],
+		});
+	});
 }
