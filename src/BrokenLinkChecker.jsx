@@ -56,6 +56,50 @@ export default class BrokenLinkChecker extends Component {
 
 		this.updateSiteId(siteId);
 		this.updateSiteState(siteStatus);
+		this.addListeners();
+	}
+
+	addListeners() {
+		ipcRenderer.on('blc-async-message-from-process', (event, response) => {
+			console.log({ event, response});
+
+			if(response[0]){
+				switch(response[0]) {
+					case 'increment-number-posts-found':
+						// Needs to call incrementNumberPostsFound() back in the renderer
+						this.incrementNumberPostsFound();
+						break;
+					case 'add-broken-link':
+						// Needs to make addBrokenLink() and incrementNumberBrokenLinksFound() be called back in renderer
+						console.log('adding a broken link');
+						this.addBrokenLink(response[1][0], response[1][1], response[1][2], response[1][3], response[1][4], response[1][5]);
+						this.incrementNumberBrokenLinksFound();
+						break;
+					case 'update-broken-links-found-boolean':
+						// Needs to call updateBrokenLinksFound() back in the renderer
+						this.updateBrokenLinksFound(Boolean(response[1]));
+						break;
+					case 'update-first-run-complete-boolean':
+						// Needs to call updateFirstRunComplete() back in renderer
+						this.updateFirstRunComplete(Boolean(response[1]));
+						break;
+					case 'update-scan-in-progress-boolean':
+						// Needs to call updateScanInProgress() back in renderer
+						this.updateScanInProgress(Boolean(response[1]));
+						break;
+					case 'scan-finished':
+						console.log('Hey look the scan finished, we should kill the process now');
+						break;
+					default:
+					//
+				}
+			}
+
+		});
+	}
+
+	componentWillUnmount () {
+		ipcRenderer.removeAllListeners('blc-async-message-from-process');
 	}
 
 	componentDidUpdate() {
@@ -142,26 +186,26 @@ export default class BrokenLinkChecker extends Component {
 
 			// TODO: Handle self-signed certificates more securely, like https://stackoverflow.com/questions/20433287/node-js-request-cert-has-expired#answer-29397100
 			process.env["NODE_TLS_REJECT_UNAUTHORIZED"] = 0;
-	
+
 			let options = new Object();
 			options.cacheResponses = false;
 			options.rateLimit = 500; // Give the local website time to start, so we avoid the 500 errors
 			let workingUrl = null;
-	
+
 			let isUrlBrokenChecker = new UrlChecker(options, {
 				link: (result, customData) => {
 					// If we get a 200 success on the URL, we use it and stop checking variants of the root URL
 					if (!result.broken) {
 						workingUrl = result.url.original;
-	
+
 						this.setState(prevState => ({
 							siteRootUrl: workingUrl
 						}));
-	
+
 						// In case the first root URL variant is the winner, dequeue the later options
 						isUrlBrokenChecker.dequeue(1);
 						isUrlBrokenChecker.dequeue(2);
-	
+
 						workingUrlFound = true;
 					}
 				},
@@ -284,17 +328,17 @@ export default class BrokenLinkChecker extends Component {
 
 				this.updateTablePrefix().then((prefix) => {
 					this.updateTotalSitePosts(prefix).then((totalSitePosts) => {
-	
+
 						// Start site tasks
 						let routeChildrenProps = this.props.routeChildrenProps;
 						let siteStatus = routeChildrenProps.siteStatus;
-	
+
 						if (
 							(this.state.resultsOnScreen || !this.state.brokenLinksFound) &&
 							String(this.state.siteStatus) !== "halted" &&
 							this.state.siteStatus != null
 						) {
-	
+
 							// Clear the existing broken links on screen if some have been rendered already
 							this.clearBrokenLinks();
 							this.clearNumberPostsFound();
@@ -304,14 +348,14 @@ export default class BrokenLinkChecker extends Component {
 						} else if (
 							String(this.state.siteStatus) !== "halted" &&
 							this.state.siteStatus != null
-						) {	
+						) {
 							this.checkLinks(this.state.siteRootUrl);
 							this.updateScanInProgress(true);
-						} else {	
+						} else {
 							this.updateSiteState(siteStatus);
 						}
 					}).catch((err) => console.log("Errer getting total site posts: " + err));
-				});			
+				});
 			}
 		}).catch((err) => {
 			// Finding root URL failed
@@ -319,7 +363,7 @@ export default class BrokenLinkChecker extends Component {
 			let routeChildrenProps = this.props.routeChildrenProps;
 			let siteStatus = routeChildrenProps.siteStatus;
 			this.updateSiteState(siteStatus);
-		});		
+		});
 	};
 
 	checkLinks(siteURL) {
@@ -328,44 +372,6 @@ export default class BrokenLinkChecker extends Component {
 		ipcAsync("fork-process", "start-scan", siteURL).then((result) => {
 			// 'result' is basically the first thing it hears back
 		});
-
-		ipcRenderer.on('blc-async-message-from-process', (event, response) => { 
-			console.log({ event, response}); 
-
-			if(response[0]){
-				switch(response[0]) {
-					case 'increment-number-posts-found':
-					  // Needs to call incrementNumberPostsFound() back in the renderer
-					  this.incrementNumberPostsFound();
-					  break;
-					case 'add-broken-link':
-					  // Needs to make addBrokenLink() and incrementNumberBrokenLinksFound() be called back in renderer
-					  console.log('adding a broken link');
-					  this.addBrokenLink(response[1][0], response[1][1], response[1][2], response[1][3], response[1][4], response[1][5]);
-					  this.incrementNumberBrokenLinksFound();
-					  break;
-					case 'update-broken-links-found-boolean':
-					  // Needs to call updateBrokenLinksFound() back in the renderer
-					  this.updateBrokenLinksFound(Boolean(response[1]));
-					  break;
-					case 'update-first-run-complete-boolean':
-					  // Needs to call updateFirstRunComplete() back in renderer
-					  this.updateFirstRunComplete(Boolean(response[1]));
-					  break;
-					case 'update-scan-in-progress-boolean':
-					  // Needs to call updateScanInProgress() back in renderer
-					  this.updateScanInProgress(Boolean(response[1]));
-					  break;
-					case 'scan-finished':
-					  console.log('Hey look the scan finished, we should kill the process now');
-					  break;
-					default:
-					  // 
-				} 
-			}
-			
-		});
-
 	}
 
 	renderHeader() {
@@ -383,7 +389,7 @@ export default class BrokenLinkChecker extends Component {
 
 		return (<div>
 				<Banner style={{backgroundColor: "#fff"}} icon={false} buttonText={buttonText} buttonOnClick={this.state.scanInProgress ?
-                  {} : 
+                  {} :
                   this.startScan}>
 				<div style={{ flex: "1", display: "flex", flexDirection: "row", justifyContent: "space-between", alignItems: "center", padding: "0 10px" }}>
 				<Title size="s" style={{marginTop: 14, marginBottom: 14}}>{ (this.state.scanInProgress && this.state.numberBrokenLinksFound != null) ? (<span>Broken Links <strong>{this.state.numberBrokenLinksFound}</strong></span>) : (<span>Link Checker</span>) }</Title>
@@ -441,7 +447,7 @@ export default class BrokenLinkChecker extends Component {
 				if (this.state.brokenLinks[0].hasOwnProperty('dateAdded')) {
 					let dateData = this.state.brokenLinks[0].dateAdded;
 					let dateObject = new Date(dateData);
-					
+
 					let day = dateObject.getDate();
 					let month = this.getMonthName(dateObject);
 					let year = dateObject.getFullYear();
@@ -576,7 +582,7 @@ export default class BrokenLinkChecker extends Component {
 					)}
 					itemTemplate={{}}
 					data={this.state.brokenLinks}
-				/>			
+				/>
 
 				{this.renderFooterMessage()}
 			</div>
