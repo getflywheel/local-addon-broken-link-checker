@@ -8,17 +8,17 @@ const {
 
 // receive message from master process
 process.on('message', (m) => {
-	
+
 	if( (m[0] === "start-scan") && (m[1] !== 'undefined')) {
 		checkLinks(m[1]).then((data) => process.send(["scan-finished", data]));
 	}
-	
+
 	// This commented-out code seems to prevent a reponse from being sent
 	// if( (m[0] === "start-scan") && (m[1] !== 'undefined')) {
 	// 	scanFinishedData = await new Promise((resolve) => {
 	// 		resolve(checkLinks(m[1]));
 	// 	}).then((scanFinishedData) => {process.send(["scan-finished", scanFinishedData])});
-		
+
 	// }
 	// //process.send(m);
 
@@ -47,8 +47,17 @@ let checkLinks = function(siteURL) {
 			},
 			link: (result, customData) => {
 				if (result.broken) {
+					let statusCode = result.http.response && result.http.response.statusCode;
+
+					/**
+					 * Fallback to error code from response for things like bad domains.
+					 */
+					if (!statusCode && result.http.response && result.http.response.code) {
+						statusCode = result.http.response.code;
+					}
+
 					let brokenLinkScanResults = {
-						statusCode: String(result.http.response.statusCode),
+						statusCode: String(statusCode),
 						linkURL: String(result.url.original),
 						linkText: String(result.html.text),
 						originURL: String(result.base.original),
@@ -88,22 +97,19 @@ let checkLinks = function(siteURL) {
 				updateScanInProgress(false);
 				callScanFinished(true);
 
-				if (
-					this.state.brokenLinks === null ||
-					this.state.brokenLinks.length === 0
-				) {
+				if (!result || (result && result.length === 0)) {
 					updateBrokenLinksFound(false);
 				}
-				
+
 				resolve('finished');
 			},
 		});
 		siteChecker.enqueue(siteURL);
-		
-	});
-} 
 
-	
+	});
+}
+
+
 
 function findWpPostIdInMarkup(tree) {
 	let stringOfBodyClasses = '';
@@ -141,7 +147,7 @@ function findWpPostIdInMarkup(tree) {
 function incrementNumberPostsFound(){
 	// Needs to call incrementNumberPostsFound() back in the renderer
 	process.send(["increment-number-posts-found", 'yes']);
-} 
+}
 
 function addBrokenLink(statusCode, linkURL, linkText, originURL, originURI, wpPostId){
 	// Needs to make addBrokenLink() and incrementNumberBrokenLinksFound() be called back in renderer
