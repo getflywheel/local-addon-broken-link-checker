@@ -2,6 +2,11 @@ import * as LocalMain from "@getflywheel/local/main";
 const { fork } = require('child_process');
 import path from 'path';
 
+let siteScanProcess;
+
+const { localLogger, sendIPCEvent, siteDatabase, siteData } = LocalMain.getServiceContainer().cradle;
+const { info: logInfo, warn: logWarn } = localLogger;
+
 export default function (context) {
 	const { electron } = context;
 	const { ipcMain } = electron;
@@ -24,18 +29,15 @@ export default function (context) {
 	});
 
 	ipcMain.on("fork-process", async (event, replyChannel, command, siteURL) => {
-		LocalMain.getServiceContainer().cradle.localLogger.log(
-			"info",
-			`FORKPROCESS Received request to fork the process`
-		); // This gets logged
+		logInfo(`FORKPROCESS Received request to fork the process`); // This gets logged
 		spawnChildProcess(command, siteURL)
 	});
 }
 
 async function getTotalPosts(siteId, prefix) {
-	const site = LocalMain.SiteData.getSite(siteId);
+	const site = siteData.getSite(siteId);
 
-	let numberOfPostsDbCall = await LocalMain.getServiceContainer().cradle.siteDatabase.exec(
+	let numberOfPostsDbCall = await siteDatabase.exec(
 		site,
 		[
 			"local",
@@ -45,10 +47,7 @@ async function getTotalPosts(siteId, prefix) {
 			"SELECT COUNT(ID) FROM " + prefix + "posts WHERE post_status = 'publish'",
 		]
 	).catch((error) => {
-		LocalMain.getServiceContainer().cradle.localLogger.log(
-			"info",
-			"STARTDEBUG encountered this error when calling DB: " + error
-		);
+		logInfo("STARTDEBUG encountered this error when calling DB: " + error);
 	});
 
 	return numberOfPostsDbCall;
@@ -58,48 +57,43 @@ async function getTablePrefix(siteId) {
 	const site = LocalMain.SiteData.getSite(siteId);
 
 	let wpPrefixCall = await LocalMain.getServiceContainer().cradle.siteDatabase.getTablePrefix(site).catch((error) => {
-		LocalMain.getServiceContainer().cradle.localLogger.log(
-			"info",
-			"Encountered this error when getting table prefix: " + error
-		);
+		logInfo("Encountered this error when getting table prefix: " + error);
 	});
 
 	return wpPrefixCall;
 }
 
 async function spawnChildProcess(command, siteURL) {
+	/**
+	 * Kill existing site scan process if it exists.
+	 */
+	if (siteScanProcess) {
+		try {
+			siteScanProcess.kill();
+		} catch (e) {
+			logWarn('Unable to kill existing site scan process.');
+		}
+	}
 
-	let siteScanProcess = fork(path.join(__dirname, '../src/processes', 'checkLinks.jsx'), null, {
-		stdio: ['pipe', 'pipe', 'pipe', 'ipc'],
-	});
+	siteScanProcess = fork(path.join(__dirname, './processes', 'checkLinks.js'));
 
 	siteScanProcess.send([command,siteURL]);   // Pass the command along
 
 	// When process sends a message, pass along to renderer
 	siteScanProcess.on('message', (message) => {
-		LocalMain.getServiceContainer().cradle.localLogger.log(
-		   "info",
-		   `FORKPROCESS The process sent over this message ${message}`
-		); 
+		logInfo(`FORKPROCESS The process sent over this message ${message}`);
+
 		if(message[0] === 'scan-finished'){
 
 			//siteScanProcess.kill('SIGKILL');
 			// siteScanProcess.stdin.write('stop\n');
 			// siteScanProcess.kill('SIGKILL');
 			// siteScanProcess = null;
-			
-			// // Send SIGHUP to siteScanProcess.
-			siteScanProcess.stdin.write('stop\n');
-			siteScanProcess.kill('SIGKILL');
-			siteScanProcess = null;
-		}
-		LocalMain.getServiceContainer().cradle.sendIPCEvent('blc-async-message-from-process', message);
-	 });
 
-	// Re-fork when the fork is killed 
-	siteScanProcess.on('close', (code, signal) => {
-		siteScanProcess = fork(path.join(__dirname, '../src/processes', 'checkLinks.jsx'), null, {
-			stdio: ['pipe', 'pipe', 'pipe', 'ipc'],
-		});
-	});
+			// // Send SIGHUP to siteScanProcess.
+			siteScanProcess.kill();
+		}
+
+		sendIPCEvent('blc-async-message-from-process', message);
+	 });
 }
