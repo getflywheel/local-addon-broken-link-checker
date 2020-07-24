@@ -62,7 +62,7 @@ export default class BrokenLinkChecker extends Component {
 
 	addListeners() {
 		ipcRenderer.on('blc-async-message-from-process', (event, response) => {
-			//console.log({ event, response});
+			console.log({ event, response});
 
 			if(response[0]){
 				switch(response[0]) {
@@ -368,7 +368,7 @@ export default class BrokenLinkChecker extends Component {
 						} else {
 							this.updateSiteState(siteStatus);
 						}
-					}).catch((err) => console.log("Errer getting total site posts: " + err));
+					}).catch((err) => console.log("Error getting total site posts: " + err));
 				});
 			}
 		}).catch((err) => {
