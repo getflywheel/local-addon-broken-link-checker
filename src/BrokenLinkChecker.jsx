@@ -346,9 +346,6 @@ export default class BrokenLinkChecker extends Component {
 				try {
 					if (result.broken && (result.http.response.statusCode != 999)) {
 
-						console.log('Info about this broken link we already have:');
-						console.log(result);
-
 						let statusCode = '';
 						if(result.brokenReason === "HTTP_undefined"){
 							statusCode = "Timeout";
@@ -366,6 +363,9 @@ export default class BrokenLinkChecker extends Component {
 								linkText = String(result.html.text);
 							}
 						}
+
+						console.log('Info about this ' + statusCode + ' broken link we already have (text: "' + linkText + '"):');
+						console.log(result);
 
 						let brokenLinkScanResults = {
 							statusCode: statusCode,
@@ -456,7 +456,7 @@ export default class BrokenLinkChecker extends Component {
 
 	containsPhpError(string){
 		let subString = '';
-		if(string.indexOf(':')){
+		if(string.indexOf(':') && string.indexOf('fatal error')){
 			subString = string.substring(0, string.indexOf(':'));
 		} else {
 			return false;
