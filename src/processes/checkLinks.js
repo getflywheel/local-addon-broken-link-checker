@@ -11,7 +11,7 @@ process.on('message', (m) => {
 		checkLinks(m[1]).then((data) => process.send(["scan-finished", data]));
 	}
 
-  });
+});
 
 let checkLinks = function(siteURL) {
 	return new Promise(function(resolve, reject) {
@@ -100,6 +100,7 @@ let checkLinks = function(siteURL) {
 					}
 				} catch(e){
 					// The "broken" link was missing critical fields (such as a status code), so we skip
+					reportError('caught-error-while-checking-broken-or-999-status-code', e);
 				}
 			},
 			end: (result, customData) => {
@@ -194,6 +195,10 @@ function updateScanInProgress(boolean){
 
 function callScanFinished(boolean){
 	process.send(["scan-finished", boolean]);
+}
+
+function reportError(name, errorInfo){
+	process.send(["error-encountered", name, errorInfo]);
 }
 
 // Thank you to https://stackoverflow.com/a/1527820/8143105
