@@ -61,7 +61,7 @@ export default class BrokenLinkChecker extends Component {
 
 	addListeners() {
 		ipcRenderer.on('blc-async-message-from-process', (event, response) => {
-			console.log({ event, response});
+			//console.log({ event, response});
 
 			if(response[0]){
 				switch(response[0]) {
@@ -71,7 +71,6 @@ export default class BrokenLinkChecker extends Component {
 						break;
 					case 'add-broken-link':
 						// Needs to make addBrokenLink() and incrementNumberBrokenLinksFound() be called back in renderer
-						console.log('adding a broken link');
 						this.addBrokenLink(response[1][0], response[1][1], response[1][2], response[1][3], response[1][4], response[1][5]);
 						this.incrementNumberBrokenLinksFound();
 						break;
@@ -88,7 +87,12 @@ export default class BrokenLinkChecker extends Component {
 						this.updateScanInProgress(Boolean(response[1]));
 						break;
 					case 'scan-finished':
-						console.log('Hey look the scan finished, we should kill the process now');
+						if (
+							this.state.brokenLinks === null ||
+							this.state.brokenLinks.length === 0
+						) {
+							this.updateBrokenLinksFound(false);
+						}
 						break;
 					default:
 					//
@@ -367,8 +371,6 @@ export default class BrokenLinkChecker extends Component {
 	};
 
 	checkLinks(siteURL) {
-
-		console.log("about to call the process");
 		ipcAsync("fork-process", "start-scan", siteURL).then((result) => {
 			// 'result' is basically the first thing it hears back
 		});
@@ -492,6 +494,7 @@ export default class BrokenLinkChecker extends Component {
 	}
 
 	renderFooterMessage() {
+
 		let message = "";
 		if (this.state.siteStatus === "halted") {
 			message = "Please start the site to begin a scan";

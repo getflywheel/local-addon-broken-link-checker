@@ -96,11 +96,7 @@ let checkLinks = function(siteURL) {
 				updateFirstRunComplete(true);
 				updateScanInProgress(false);
 				callScanFinished(true);
-
-				if (!result || (result && result.length === 0)) {
-					updateBrokenLinksFound(false);
-				}
-
+				
 				resolve('finished');
 			},
 		});
