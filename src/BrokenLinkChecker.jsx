@@ -580,7 +580,7 @@ export default class BrokenLinkChecker extends Component {
 			this.state.siteStatus === "running" &&
 			this.state.scanInProgress
 		) {
-			message = "Checking " + String(this.state.currentCheckingUri);
+			message = "Checking:\n" + String(this.state.currentCheckingUri);
 		}
 
 		if (
@@ -591,7 +591,7 @@ export default class BrokenLinkChecker extends Component {
 		}
 
 		if(message !== ""){
-		return(<Title size="caption" style={{textAlign:'center'}}>{message}</Title>);
+		return(<Title size="caption" style={{textAlign:'center', width: '60%', whiteSpace: 'pre-wrap', marginLeft: 'auto', marginRight: 'auto'}}>{message}</Title>);
 		} else {
 			return;
 		}
