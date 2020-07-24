@@ -28,6 +28,7 @@ export default class BrokenLinkChecker extends Component {
 			numberBrokenLinksFound: 0,
 			totalSitePosts: null,
 			getTotalSitePostsInProgress: false,
+			currentCheckingUri: ''
 		};
 
 		this.checkLinks = this.checkLinks.bind(this);
@@ -221,6 +222,12 @@ export default class BrokenLinkChecker extends Component {
 		}));
 	}
 
+	updateCurrentCheckingUri(uri) {
+		this.setState((prevState) => ({
+			currentCheckingUri: uri,
+		}));
+	}
+
 	updateResultsOnScreen(boolean) {
 		this.setState((prevState) => ({
 			resultsOnScreen: boolean,
@@ -332,44 +339,71 @@ export default class BrokenLinkChecker extends Component {
 				// This code is used to increment the number of WP posts we traverse in our scan
 				if (this.findWpPostIdInMarkup(tree)) {
 					this.incrementNumberPostsFound();
+					this.updateCurrentCheckingUri(pageUrl);
 				}
 			},
 			link: (result, customData) => {
-				if (result.broken) {
-					let brokenLinkScanResults = {
-						statusCode: String(result.http.response.statusCode),
-						linkURL: String(result.url.original),
-						linkText: String(result.html.text),
-						originURL: String(result.base.original),
-						originURI: String(result.base.parsed.path),
-						resultDump: result
-					};
+				try {
+					if (result.broken && (result.http.response.statusCode != 999)) {
 
-					let singlePageChecker = new HtmlUrlChecker(null, {
-						html: (tree, robots, response, pageUrl, customData) => {
+						let statusCode = '';
+						if(result.brokenReason === "HTTP_undefined"){
+							statusCode = "Timeout";
+						} else if(this.containsPhpError(String(result.html.text))){
+							statusCode = "Error";
+						} else {
+							statusCode = String(result.http.response.statusCode);
+						}
 
-							let wpPostId = this.findWpPostIdInMarkup(tree);
-
-							if (wpPostId !== null) {
-								this.addBrokenLink(
-									customData["statusCode"],
-									customData["linkURL"],
-									customData["linkText"],
-									customData["originURL"],
-									customData["originURI"],
-									wpPostId
-								);
-
-								this.updateBrokenLinksFound(true);
-								this.incrementNumberBrokenLinksFound();
+						let linkText = '';
+						if(result.html.text){
+							if(this.containsPhpError(String(result.html.text))){
+								linkText = this.containsPhpError(String(result.html.text));
+							} else {
+								linkText = String(result.html.text);
 							}
 						}
-					});
 
-					singlePageChecker.enqueue(
-						brokenLinkScanResults["originURL"],
-						brokenLinkScanResults
-					);
+						console.log('Info about this ' + statusCode + ' broken link we already have (text: "' + linkText + '"):');
+						console.log(result);
+
+						let brokenLinkScanResults = {
+							statusCode: statusCode,
+							linkURL: String(result.url.original),
+							linkText: linkText,
+							originURL: String(result.base.original),
+							originURI: String(result.base.parsed.path),
+							resultDump: result
+						};
+
+						let singlePageChecker = new HtmlUrlChecker(null, {
+							html: (tree, robots, response, pageUrl, customData) => {
+
+								let wpPostId = this.findWpPostIdInMarkup(tree);
+
+								if (wpPostId !== null) {
+									this.addBrokenLink(
+										customData["statusCode"],
+										customData["linkURL"],
+										customData["linkText"],
+										customData["originURL"],
+										customData["originURI"],
+										wpPostId
+									);
+
+									this.updateBrokenLinksFound(true);
+									this.incrementNumberBrokenLinksFound();
+								}
+							}
+						});
+
+						singlePageChecker.enqueue(
+							brokenLinkScanResults["originURL"],
+							brokenLinkScanResults
+						);
+					}
+				} catch(e){
+					// The "broken" link was missing critical fields (such as a status code), so we skip
 				}
 			},
 			end: (result, customData) => {
@@ -418,6 +452,17 @@ export default class BrokenLinkChecker extends Component {
 		}
 
 		return wpPostId;
+	}
+
+	containsPhpError(string){
+		let subString = '';
+		if(string.indexOf(':') && string.indexOf('fatal error')){
+			subString = string.substring(0, string.indexOf(':'));
+		} else {
+			return false;
+		}
+
+		return (subString === '') ? false : subString;
 	}
 
 	renderHeader() {
@@ -537,6 +582,28 @@ export default class BrokenLinkChecker extends Component {
 		return strTime;
 	}
 
+	renderFixInAdminButton(currentBrokenLink){
+
+		if(currentBrokenLink.statusCode === "Error") {
+			return '';
+		} else {
+			return (
+				<a
+					href={
+					this.state.siteRootUrl +
+					"wp-admin/post.php?post=" +
+					currentBrokenLink.wpPostId +
+					"&action=edit"
+					}
+				>
+				Fix in Admin
+				</a>
+			);
+		}
+	}
+
+	
+
 	renderFooterMessage() {
 		let message = "";
 		if (this.state.siteStatus === "halted") {
@@ -551,6 +618,11 @@ export default class BrokenLinkChecker extends Component {
 			!this.state.scanInProgress
 		) {
 			message = "Scan for broken links"
+		} else if (
+			this.state.siteStatus === "running" &&
+			this.state.scanInProgress
+		) {
+			message = "Checking:\n" + String(this.state.currentCheckingUri);
 		}
 
 		if (
@@ -561,7 +633,7 @@ export default class BrokenLinkChecker extends Component {
 		}
 
 		if(message !== ""){
-		return(<Title size="caption" style={{textAlign:'center'}}>{message}</Title>);
+		return(<Title size="caption" style={{textAlign:'center', width: '60%', whiteSpace: 'pre-wrap', marginLeft: 'auto', marginRight: 'auto'}}>{message}</Title>);
 		} else {
 			return;
 		}
@@ -592,7 +664,7 @@ export default class BrokenLinkChecker extends Component {
 					}
 					repeatingContent={(item, index, updateItem) => (
 						<>
-							<div>
+							<div style={{ lineHeight: "1.3em" }}>
 								{item.statusCode}
 							</div>
 
@@ -613,16 +685,7 @@ export default class BrokenLinkChecker extends Component {
 							</div>
 
 							<div style={{ lineHeight: "1.3em" }}>
-								<a
-									href={
-										this.state.siteRootUrl +
-										"wp-admin/post.php?post=" +
-										item.wpPostId +
-										"&action=edit"
-									}
-								>
-									Fix in Admin
-								</a>
+								{this.renderFixInAdminButton(item)}
 							</div>
 						</>
 					)}
