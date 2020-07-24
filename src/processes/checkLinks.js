@@ -3,8 +3,6 @@ const {
 	HtmlUrlChecker
 } = require("broken-link-checker");
 
-// TODO: Declare counter and pseudo-state variables
-// TODO: call and listen for following events: scan started, broken link found, progress bar increment, scan finished
 
 // receive message from master process
 process.on('message', (m) => {
@@ -12,7 +10,7 @@ process.on('message', (m) => {
 	if( (m[0] === "start-scan") && (m[1] !== 'undefined')) {
 		checkLinks(m[1]).then((data) => process.send(["scan-finished", data]));
 	}
-	
+
   });
 
 let checkLinks = function(siteURL) {
@@ -32,49 +30,76 @@ let checkLinks = function(siteURL) {
 				}
 			},
 			link: (result, customData) => {
-				if (result.broken) {
-					let statusCode = result.http.response && result.http.response.statusCode;
+				try {
+					if (result.broken && (result.http.response.statusCode != 999)) {
 
-					/**
-					 * Fallback to error code from response for things like bad domains.
-					 */
-					if (!statusCode && result.http.response && result.http.response.code) {
-						statusCode = result.http.response.code;
-					}
+						// TODO: Work this in
+						// let statusCode = result.http.response && result.http.response.statusCode;
 
-					let brokenLinkScanResults = {
-						statusCode: String(statusCode),
-						linkURL: String(result.url.original),
-						linkText: String(result.html.text),
-						originURL: String(result.base.original),
-						originURI: String(result.base.parsed.path),
-						resultDump: result
-					};
+						// /**
+						//  * Fallback to error code from response for things like bad domains.
+						//  */
+						// if (!statusCode && result.http.response && result.http.response.code) {
+						// 	statusCode = result.http.response.code;
+						// }
 
-					let singlePageChecker = new HtmlUrlChecker(null, {
-						html: (tree, robots, response, pageUrl, customData) => {
+						let statusCode = '';
+						if(result.brokenReason === "HTTP_undefined"){
+							statusCode = "Timeout";
+						} else if(containsPhpError(String(result.html.text))){
+							statusCode = "Error";
+						} else {
+							statusCode = String(result.http.response.statusCode);
+						}
 
-							let wpPostId = findWpPostIdInMarkup(tree);
-
-							if (wpPostId !== null) {
-								addBrokenLink(
-									customData["statusCode"],
-									customData["linkURL"],
-									customData["linkText"],
-									customData["originURL"],
-									customData["originURI"],
-									wpPostId
-								);
-
-								updateBrokenLinksFound(true);
+						let linkText = '';
+						if(result.html.text){
+							if(containsPhpError(String(result.html.text))){
+								linkText = containsPhpError(String(result.html.text));
+							} else {
+								linkText = String(result.html.text);
 							}
 						}
-					});
 
-					singlePageChecker.enqueue(
-						brokenLinkScanResults["originURL"],
-						brokenLinkScanResults
-					);
+						//console.log('Info about this ' + statusCode + ' broken link we already have (text: "' + linkText + '"):');
+						//console.log(result);
+
+						let brokenLinkScanResults = {
+							statusCode: String(statusCode),
+							linkURL: String(result.url.original),
+							linkText: String(linkText),
+							originURL: String(result.base.original),
+							originURI: String(result.base.parsed.path),
+							resultDump: result
+						};
+
+						let singlePageChecker = new HtmlUrlChecker(null, {
+							html: (tree, robots, response, pageUrl, customData) => {
+
+								let wpPostId = findWpPostIdInMarkup(tree);
+
+								if (wpPostId !== null) {
+									addBrokenLink(
+										customData["statusCode"],
+										customData["linkURL"],
+										customData["linkText"],
+										customData["originURL"],
+										customData["originURI"],
+										wpPostId
+									);
+
+									updateBrokenLinksFound(true);
+								}
+							}
+						});
+
+						singlePageChecker.enqueue(
+							brokenLinkScanResults["originURL"],
+							brokenLinkScanResults
+						);
+					}
+				} catch(e){
+					// The "broken" link was missing critical fields (such as a status code), so we skip
 				}
 			},
 			end: (result, customData) => {
@@ -123,6 +148,17 @@ function findWpPostIdInMarkup(tree) {
 	}
 
 	return wpPostId;
+}
+
+function containsPhpError(string){
+	let subString = '';
+	if(string.indexOf(':') && string.indexOf('fatal error')){
+		subString = string.substring(0, string.indexOf(':'));
+	} else {
+		return false;
+	}
+
+	return (subString === '') ? false : subString;
 }
 
 // Functions used to track data during the check links process
