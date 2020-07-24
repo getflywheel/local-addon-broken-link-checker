@@ -57,6 +57,57 @@ export default class BrokenLinkChecker extends Component {
 
 		this.updateSiteId(siteId);
 		this.updateSiteState(siteStatus);
+		this.addListeners();
+	}
+
+	addListeners() {
+		ipcRenderer.on('blc-async-message-from-process', (event, response) => {
+			//console.log({ event, response});
+
+			if(response[0]){
+				switch(response[0]) {
+					case 'increment-number-posts-found':
+						// Needs to call incrementNumberPostsFound() back in the renderer
+						this.incrementNumberPostsFound();
+						break;
+					case 'add-broken-link':
+						// Needs to make addBrokenLink() and incrementNumberBrokenLinksFound() be called back in renderer
+						this.addBrokenLink(response[1][0], response[1][1], response[1][2], response[1][3], response[1][4], response[1][5]);
+						this.incrementNumberBrokenLinksFound();
+						break;
+					case 'update-broken-links-found-boolean':
+						// Needs to call updateBrokenLinksFound() back in the renderer
+						this.updateBrokenLinksFound(Boolean(response[1]));
+						break;
+					case 'update-first-run-complete-boolean':
+						// Needs to call updateFirstRunComplete() back in renderer
+						this.updateFirstRunComplete(Boolean(response[1]));
+						break;
+					case 'update-scan-in-progress-boolean':
+						// Needs to call updateScanInProgress() back in renderer
+						this.updateScanInProgress(Boolean(response[1]));
+						break;
+					case 'update-current-checking-uri':
+						this.updateCurrentCheckingUri(response[1]);
+						break;
+					case 'scan-finished':
+						if (
+							this.state.brokenLinks === null ||
+							this.state.brokenLinks.length === 0
+						) {
+							this.updateBrokenLinksFound(false);
+						}
+						break;
+					default:
+					//
+				}
+			}
+
+		});
+	}
+
+	componentWillUnmount () {
+		ipcRenderer.removeAllListeners('blc-async-message-from-process');
 	}
 
 	componentDidUpdate() {
@@ -143,26 +194,26 @@ export default class BrokenLinkChecker extends Component {
 
 			// TODO: Handle self-signed certificates more securely, like https://stackoverflow.com/questions/20433287/node-js-request-cert-has-expired#answer-29397100
 			process.env["NODE_TLS_REJECT_UNAUTHORIZED"] = 0;
-	
+
 			let options = new Object();
 			options.cacheResponses = false;
 			options.rateLimit = 500; // Give the local website time to start, so we avoid the 500 errors
 			let workingUrl = null;
-	
+
 			let isUrlBrokenChecker = new UrlChecker(options, {
 				link: (result, customData) => {
 					// If we get a 200 success on the URL, we use it and stop checking variants of the root URL
 					if (!result.broken) {
 						workingUrl = result.url.original;
-	
+
 						this.setState(prevState => ({
 							siteRootUrl: workingUrl
 						}));
-	
+
 						// In case the first root URL variant is the winner, dequeue the later options
 						isUrlBrokenChecker.dequeue(1);
 						isUrlBrokenChecker.dequeue(2);
-	
+
 						workingUrlFound = true;
 					}
 				},
@@ -291,17 +342,17 @@ export default class BrokenLinkChecker extends Component {
 
 				this.updateTablePrefix().then((prefix) => {
 					this.updateTotalSitePosts(prefix).then((totalSitePosts) => {
-	
+
 						// Start site tasks
 						let routeChildrenProps = this.props.routeChildrenProps;
 						let siteStatus = routeChildrenProps.siteStatus;
-	
+
 						if (
 							(this.state.resultsOnScreen || !this.state.brokenLinksFound) &&
 							String(this.state.siteStatus) !== "halted" &&
 							this.state.siteStatus != null
 						) {
-	
+
 							// Clear the existing broken links on screen if some have been rendered already
 							this.clearBrokenLinks();
 							this.clearNumberPostsFound();
@@ -311,14 +362,14 @@ export default class BrokenLinkChecker extends Component {
 						} else if (
 							String(this.state.siteStatus) !== "halted" &&
 							this.state.siteStatus != null
-						) {	
+						) {
 							this.checkLinks(this.state.siteRootUrl);
 							this.updateScanInProgress(true);
-						} else {	
+						} else {
 							this.updateSiteState(siteStatus);
 						}
 					}).catch((err) => console.log("Errer getting total site posts: " + err));
-				});			
+				});
 			}
 		}).catch((err) => {
 			// Finding root URL failed
@@ -326,132 +377,104 @@ export default class BrokenLinkChecker extends Component {
 			let routeChildrenProps = this.props.routeChildrenProps;
 			let siteStatus = routeChildrenProps.siteStatus;
 			this.updateSiteState(siteStatus);
-		});		
+		});
 	};
 
 	checkLinks(siteURL) {
 
-		let options = new Object();
-			options.maxSocketsPerHost = 15;
+		// * Includes the changes made to handle different status codes and nulled sites...bring into process *
+		// let options = new Object();
+		// 	options.maxSocketsPerHost = 15;
 
-		let siteChecker = new SiteChecker(options, {
-			html: (tree, robots, response, pageUrl, customData) => {
-				// This code is used to increment the number of WP posts we traverse in our scan
-				if (this.findWpPostIdInMarkup(tree)) {
-					this.incrementNumberPostsFound();
-					this.updateCurrentCheckingUri(pageUrl);
-				}
-			},
-			link: (result, customData) => {
-				try {
-					if (result.broken && (result.http.response.statusCode != 999)) {
+		// let siteChecker = new SiteChecker(options, {
+		// 	html: (tree, robots, response, pageUrl, customData) => {
+		// 		// This code is used to increment the number of WP posts we traverse in our scan
+		// 		if (this.findWpPostIdInMarkup(tree)) {
+		// 			this.incrementNumberPostsFound();
+		// 			this.updateCurrentCheckingUri(pageUrl);
+		// 		}
+		// 	},
+		// 	link: (result, customData) => {
+		// 		try {
+		// 			if (result.broken && (result.http.response.statusCode != 999)) {
 
-						let statusCode = '';
-						if(result.brokenReason === "HTTP_undefined"){
-							statusCode = "Timeout";
-						} else if(this.containsPhpError(String(result.html.text))){
-							statusCode = "Error";
-						} else {
-							statusCode = String(result.http.response.statusCode);
-						}
+		// 				let statusCode = '';
+		// 				if(result.brokenReason === "HTTP_undefined"){
+		// 					statusCode = "Timeout";
+		// 				} else if(this.containsPhpError(String(result.html.text))){
+		// 					statusCode = "Error";
+		// 				} else {
+		// 					statusCode = String(result.http.response.statusCode);
+		// 				}
 
-						let linkText = '';
-						if(result.html.text){
-							if(this.containsPhpError(String(result.html.text))){
-								linkText = this.containsPhpError(String(result.html.text));
-							} else {
-								linkText = String(result.html.text);
-							}
-						}
+		// 				let linkText = '';
+		// 				if(result.html.text){
+		// 					if(this.containsPhpError(String(result.html.text))){
+		// 						linkText = this.containsPhpError(String(result.html.text));
+		// 					} else {
+		// 						linkText = String(result.html.text);
+		// 					}
+		// 				}
 
-						console.log('Info about this ' + statusCode + ' broken link we already have (text: "' + linkText + '"):');
-						console.log(result);
+		// 				console.log('Info about this ' + statusCode + ' broken link we already have (text: "' + linkText + '"):');
+		// 				console.log(result);
 
-						let brokenLinkScanResults = {
-							statusCode: statusCode,
-							linkURL: String(result.url.original),
-							linkText: linkText,
-							originURL: String(result.base.original),
-							originURI: String(result.base.parsed.path),
-							resultDump: result
-						};
+		// 				let brokenLinkScanResults = {
+		// 					statusCode: statusCode,
+		// 					linkURL: String(result.url.original),
+		// 					linkText: linkText,
+		// 					originURL: String(result.base.original),
+		// 					originURI: String(result.base.parsed.path),
+		// 					resultDump: result
+		// 				};
 
-						let singlePageChecker = new HtmlUrlChecker(null, {
-							html: (tree, robots, response, pageUrl, customData) => {
+		// 				let singlePageChecker = new HtmlUrlChecker(null, {
+		// 					html: (tree, robots, response, pageUrl, customData) => {
 
-								let wpPostId = this.findWpPostIdInMarkup(tree);
+		// 						let wpPostId = this.findWpPostIdInMarkup(tree);
 
-								if (wpPostId !== null) {
-									this.addBrokenLink(
-										customData["statusCode"],
-										customData["linkURL"],
-										customData["linkText"],
-										customData["originURL"],
-										customData["originURI"],
-										wpPostId
-									);
+		// 						if (wpPostId !== null) {
+		// 							this.addBrokenLink(
+		// 								customData["statusCode"],
+		// 								customData["linkURL"],
+		// 								customData["linkText"],
+		// 								customData["originURL"],
+		// 								customData["originURI"],
+		// 								wpPostId
+		// 							);
 
-									this.updateBrokenLinksFound(true);
-									this.incrementNumberBrokenLinksFound();
-								}
-							}
-						});
+		// 							this.updateBrokenLinksFound(true);
+		// 							this.incrementNumberBrokenLinksFound();
+		// 						}
+		// 					}
+		// 				});
 
-						singlePageChecker.enqueue(
-							brokenLinkScanResults["originURL"],
-							brokenLinkScanResults
-						);
-					}
-				} catch(e){
-					// The "broken" link was missing critical fields (such as a status code), so we skip
-				}
-			},
-			end: (result, customData) => {
-				// At last the first run is done, so we update the state
-				this.updateFirstRunComplete(true);
-				this.updateScanInProgress(false);
+		// 				singlePageChecker.enqueue(
+		// 					brokenLinkScanResults["originURL"],
+		// 					brokenLinkScanResults
+		// 				);
+		// 			}
+		// 		} catch(e){
+		// 			// The "broken" link was missing critical fields (such as a status code), so we skip
+		// 		}
+		// 	},
+		// 	end: (result, customData) => {
+		// 		// At last the first run is done, so we update the state
+		// 		this.updateFirstRunComplete(true);
+		// 		this.updateScanInProgress(false);
 
-				if (
-					this.state.brokenLinks === null ||
-					this.state.brokenLinks.length === 0
-				) {
-					this.updateBrokenLinksFound(false);
-				}
-			},
+		// 		if (
+		// 			this.state.brokenLinks === null ||
+		// 			this.state.brokenLinks.length === 0
+		// 		) {
+		// 			this.updateBrokenLinksFound(false);
+		// 		}
+		// 	},
+
+		// Call the process
+		ipcAsync("fork-process", "start-scan", siteURL).then((result) => {
+			// 'result' is basically the first thing it hears back
 		});
-		siteChecker.enqueue(siteURL);
-	}
-
-	findWpPostIdInMarkup(tree) {
-		let stringOfBodyClasses = '';
-
-		tree.childNodes.forEach(function(item,key){
-			if(item.nodeName === "html"){
-				item.childNodes.forEach(function(item,key){
-					if(item.nodeName === "body"){
-						stringOfBodyClasses = item.attrMap.class;
-					}
-				})
-			}
-		});
-
-		// TODO: Also make note of special classes like .home
-		let findPostId = stringOfBodyClasses.match(
-			/(^|\s)postid-(\d+)(\s|$)/
-		);
-
-		let findPageId = stringOfBodyClasses.match(
-			/(^|\s)page-id-(\d+)(\s|$)/
-		);
-
-		let wpPostId = null;
-		if (findPostId) {
-			wpPostId = findPostId[2];
-		} else if (findPageId) {
-			wpPostId = findPageId[2];
-		}
-
-		return wpPostId;
 	}
 
 	containsPhpError(string){
@@ -480,7 +503,7 @@ export default class BrokenLinkChecker extends Component {
 
 		return (<div>
 				<Banner style={{backgroundColor: "#fff"}} icon={false} buttonText={buttonText} buttonOnClick={this.state.scanInProgress ?
-                  {} : 
+                  {} :
                   this.startScan}>
 				<div style={{ flex: "1", display: "flex", flexDirection: "row", justifyContent: "space-between", alignItems: "center", padding: "0 10px" }}>
 				<Title size="s" style={{marginTop: 14, marginBottom: 14}}>{ (this.state.scanInProgress && this.state.numberBrokenLinksFound != null) ? (<span>Broken Links <strong>{this.state.numberBrokenLinksFound}</strong></span>) : (<span>Link Checker</span>) }</Title>
@@ -538,7 +561,7 @@ export default class BrokenLinkChecker extends Component {
 				if (this.state.brokenLinks[0].hasOwnProperty('dateAdded')) {
 					let dateData = this.state.brokenLinks[0].dateAdded;
 					let dateObject = new Date(dateData);
-					
+
 					let day = dateObject.getDate();
 					let month = this.getMonthName(dateObject);
 					let year = dateObject.getFullYear();
@@ -605,6 +628,7 @@ export default class BrokenLinkChecker extends Component {
 	
 
 	renderFooterMessage() {
+
 		let message = "";
 		if (this.state.siteStatus === "halted") {
 			message = "Please start the site to begin a scan";
@@ -691,7 +715,7 @@ export default class BrokenLinkChecker extends Component {
 					)}
 					itemTemplate={{}}
 					data={this.state.brokenLinks}
-				/>			
+				/>
 
 				{this.renderFooterMessage()}
 			</div>
