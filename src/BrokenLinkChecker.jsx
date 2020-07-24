@@ -346,16 +346,25 @@ export default class BrokenLinkChecker extends Component {
 				try {
 					if (result.broken && (result.http.response.statusCode != 999)) {
 
+						console.log('Info about this broken link we already have:');
+						console.log(result);
+
 						let statusCode = '';
 						if(result.brokenReason === "HTTP_undefined"){
 							statusCode = "Timeout";
+						} else if(this.containsPhpError(String(result.html.text))){
+							statusCode = "Error";
 						} else {
 							statusCode = String(result.http.response.statusCode);
 						}
 
 						let linkText = '';
 						if(result.html.text){
-							linkText = String(result.html.text);
+							if(this.containsPhpError(String(result.html.text))){
+								linkText = this.containsPhpError(String(result.html.text));
+							} else {
+								linkText = String(result.html.text);
+							}
 						}
 
 						let brokenLinkScanResults = {
@@ -443,6 +452,17 @@ export default class BrokenLinkChecker extends Component {
 		}
 
 		return wpPostId;
+	}
+
+	containsPhpError(string){
+		let subString = '';
+		if(string.indexOf(':')){
+			subString = string.substring(0, string.indexOf(':'));
+		} else {
+			return false;
+		}
+
+		return (subString === '') ? false : subString;
 	}
 
 	renderHeader() {
@@ -562,6 +582,28 @@ export default class BrokenLinkChecker extends Component {
 		return strTime;
 	}
 
+	renderFixInAdminButton(currentBrokenLink){
+
+		if(currentBrokenLink.statusCode === "Error") {
+			return '';
+		} else {
+			return (
+				<a
+					href={
+					this.state.siteRootUrl +
+					"wp-admin/post.php?post=" +
+					currentBrokenLink.wpPostId +
+					"&action=edit"
+					}
+				>
+				Fix in Admin
+				</a>
+			);
+		}
+	}
+
+	
+
 	renderFooterMessage() {
 		let message = "";
 		if (this.state.siteStatus === "halted") {
@@ -622,7 +664,7 @@ export default class BrokenLinkChecker extends Component {
 					}
 					repeatingContent={(item, index, updateItem) => (
 						<>
-							<div>
+							<div style={{ lineHeight: "1.3em" }}>
 								{item.statusCode}
 							</div>
 
@@ -643,16 +685,7 @@ export default class BrokenLinkChecker extends Component {
 							</div>
 
 							<div style={{ lineHeight: "1.3em" }}>
-								<a
-									href={
-										this.state.siteRootUrl +
-										"wp-admin/post.php?post=" +
-										item.wpPostId +
-										"&action=edit"
-									}
-								>
-									Fix in Admin
-								</a>
+								{this.renderFixInAdminButton(item)}
 							</div>
 						</>
 					)}
