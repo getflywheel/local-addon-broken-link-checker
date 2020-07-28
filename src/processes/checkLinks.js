@@ -20,7 +20,7 @@ let checkLinks = function(siteURL) {
 		process.env["NODE_TLS_REJECT_UNAUTHORIZED"] = 0;
 
 		let options = new Object();
-		options.maxSocketsPerHost = 15;
+		options.maxSocketsPerHost = 10;
 
 		let siteChecker = new SiteChecker(options, {
 			html: (tree, robots, response, pageUrl, customData) => {
