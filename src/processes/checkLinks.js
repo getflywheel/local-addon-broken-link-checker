@@ -34,24 +34,30 @@ let checkLinks = function(siteURL) {
 				try {
 					if (result.broken && (result.http.response.statusCode != 999)) {
 
-						// TODO: Work this in
-						// let statusCode = result.http.response && result.http.response.statusCode;
-
-						// /**
-						//  * Fallback to error code from response for things like bad domains.
-						//  */
-						// if (!statusCode && result.http.response && result.http.response.code) {
-						// 	statusCode = result.http.response.code;
-						// }
-
 						let statusCode = '';
+						let statusCodeCheck = result.http.response && result.http.response.statusCode;
+
 						if(result.brokenReason === "HTTP_undefined"){
 							statusCode = "Timeout";
 						} else if(containsPhpError(String(result.html.text))){
 							statusCode = "Error";
+						} else if(!statusCodeCheck && result.http.response && result.http.response.code) {
+							// Fallback to error code from response for things like bad domains.
+							statusCode = result.http.response.code;
 						} else {
-							statusCode = String(result.http.response.statusCode);
+							//statusCode = String(result.http.response.statusCode);
+							statusCode = statusCodeCheck;
 						}
+
+						// Old status code handling (remove after testing)
+						//let statusCode = '';
+						// if(result.brokenReason === "HTTP_undefined"){
+						// 	statusCode = "Timeout";
+						// } else if(containsPhpError(String(result.html.text))){
+						// 	statusCode = "Error";
+						// } else {
+						// 	statusCode = String(result.http.response.statusCode);
+						// }
 
 						let linkText = '';
 						if(result.html.text){
