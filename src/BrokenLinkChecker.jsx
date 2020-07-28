@@ -62,7 +62,7 @@ export default class BrokenLinkChecker extends Component {
 
 	addListeners() {
 		ipcRenderer.on('blc-async-message-from-process', (event, response) => {
-			console.log({ event, response});
+			//console.log({ event, response});
 
 			if(response[0]){
 				switch(response[0]) {
