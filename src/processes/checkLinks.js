@@ -15,8 +15,9 @@ process.on('message', (m) => {
 
 let checkLinks = function(siteURL) {
 	return new Promise(function(resolve, reject) {
-		//resolve("Stuff worked!");
-		//reject(Error("It broke"));
+
+		// TODO: Handle self-signed certificates more securely, like https://stackoverflow.com/questions/20433287/node-js-request-cert-has-expired#answer-29397100
+		process.env["NODE_TLS_REJECT_UNAUTHORIZED"] = 0;
 
 		let options = new Object();
 		options.maxSocketsPerHost = 15;
@@ -61,9 +62,6 @@ let checkLinks = function(siteURL) {
 							}
 						}
 
-						//console.log('Info about this ' + statusCode + ' broken link we already have (text: "' + linkText + '"):');
-						//console.log(result);
-
 						let brokenLinkScanResults = {
 							statusCode: String(statusCode),
 							linkURL: String(result.url.original),
@@ -102,6 +100,9 @@ let checkLinks = function(siteURL) {
 					// The "broken" link was missing critical fields (such as a status code), so we skip
 					reportError('caught-error-while-checking-broken-or-999-status-code', e);
 				}
+			},
+			site: (error, siteUrl, customData) => {
+				reportError('site-scan-threw-site-error', JSON.stringify(error));
 			},
 			end: (result, customData) => {
 				// At last the first run is done, so we update the state
@@ -175,7 +176,7 @@ function updateCurrentCheckingUri(pageUrl){
 
 function addBrokenLink(statusCode, linkURL, linkText, originURL, originURI, wpPostId){
 	// Needs to make addBrokenLink() and incrementNumberBrokenLinksFound() be called back in renderer
-	process.send( ["add-broken-link", [statusCode, linkURL, linkText, originURL, originURI, wpPostId], getRandomInt(10, 200)] );
+	process.send( ["add-broken-link", [statusCode, linkURL, linkText, originURL, originURI, wpPostId] ] );
 }
 
 function updateBrokenLinksFound(boolean){
@@ -199,11 +200,4 @@ function callScanFinished(boolean){
 
 function reportError(name, errorInfo){
 	process.send(["error-encountered", name, errorInfo]);
-}
-
-// Thank you to https://stackoverflow.com/a/1527820/8143105
-function getRandomInt(min, max) {
-    min = Math.ceil(min);
-    max = Math.floor(max);
-    return Math.floor(Math.random() * (max - min + 1)) + min;
 }

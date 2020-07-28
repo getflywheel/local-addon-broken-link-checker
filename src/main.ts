@@ -29,7 +29,6 @@ export default function (context) {
 	});
 
 	ipcMain.on("fork-process", async (event, replyChannel, command, siteURL) => {
-		logInfo(`FORKPROCESS Received request to fork the process`); // This gets logged
 		spawnChildProcess(command, siteURL)
 	});
 }
@@ -81,19 +80,13 @@ async function spawnChildProcess(command, siteURL) {
 
 	// When process sends a message, pass along to renderer
 	siteScanProcess.on('message', (message) => {
-		logInfo(`FORKPROCESS The process sent over this message ${message}`);
+		//logInfo(`FORKPROCESS The process sent over this message ${message}`);
 
 		if(message[0] === 'scan-finished'){
-
-			//siteScanProcess.kill('SIGKILL');
-			// siteScanProcess.stdin.write('stop\n');
-			// siteScanProcess.kill('SIGKILL');
-			// siteScanProcess = null;
-
-			// // Send SIGHUP to siteScanProcess.
 			siteScanProcess.kill();
+		} else if(message[0] === 'error-encountered'){
+			logWarn(`Link Checker encountered this error in its subprocess: ${message[1]} | ${message[2]}`);
 		}
-
 		sendIPCEvent('blc-async-message-from-process', message);
 	 });
 }
