@@ -9,6 +9,7 @@ const {
 } = require("broken-link-checker");
 
 import { TableListMultiDisplay, ProgressBar, PrimaryButton, Title, Tooltip, Banner, Text } from "@getflywheel/local-components";
+import { resolve } from "dns";
 
 export default class BrokenLinkChecker extends Component {
 	constructor(props) {
@@ -98,6 +99,11 @@ export default class BrokenLinkChecker extends Component {
 							this.updateBrokenLinksFound(false);
 						}
 						break;
+					case 'debug-data':
+						if(localVersionName === "Local Beta"){
+							console.log("Debug data: ");
+							console.log(response[1]);
+						}
 					default:
 					//
 				}
@@ -380,6 +386,15 @@ export default class BrokenLinkChecker extends Component {
 		});
 	};
 
+	cancelScan = () => {
+		console.log("renderer speaking: cancel scan was clicked");
+		ipcAsync("fork-process", "cancel-scan", '').then((result) => {
+			// first thing heard back
+			resolve();
+		});
+		return true;
+	};
+
 	checkLinks(siteURL) {
 		// Call the process
 		ipcAsync("fork-process", "start-scan", siteURL).then((result) => {
@@ -396,8 +411,18 @@ export default class BrokenLinkChecker extends Component {
 		}
 
 		if (this.state.scanInProgress){
-			buttonText = "Scanning";
-			messageLeftOfActionButtonText = "";
+			buttonText = "Cancel";
+			messageLeftOfActionButtonText = "Scanning";
+			return (<div>
+					<Banner style={{backgroundColor: "#fff"}} icon={false} buttonText={buttonText} buttonOnClick={this.cancelScan}>
+					<div style={{ flex: "1", display: "flex", flexDirection: "row", justifyContent: "space-between", alignItems: "center", padding: "0 10px" }}>
+					<Title size="s" style={{marginTop: 14, marginBottom: 14}}>{ (this.state.scanInProgress && this.state.numberBrokenLinksFound != null) ? (<span>Broken Links <strong>{this.state.numberBrokenLinksFound}</strong></span>) : (<span>Link Checker</span>) }</Title>
+
+						<Text size="caption">{messageLeftOfActionButtonText}</Text>
+					</div>
+				</Banner>
+				{this.renderProgressBarElements()}
+			</div>);
 		}
 
 		return (<div>
