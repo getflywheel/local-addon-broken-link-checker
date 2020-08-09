@@ -29,7 +29,8 @@ export default class BrokenLinkChecker extends Component {
 			numberBrokenLinksFound: 0,
 			totalSitePosts: null,
 			getTotalSitePostsInProgress: false,
-			currentCheckingUri: ''
+			currentCheckingUri: '',
+			localVersionName: "Local"
 		};
 
 		this.checkLinks = this.checkLinks.bind(this);
@@ -42,10 +43,9 @@ export default class BrokenLinkChecker extends Component {
 		let site = routeChildrenProps.site;
 		let siteDomain = site.domain;
 		let localVersionNumber = site.localVersion;
-		let localVersionName = "Local";
 
 		if (localVersionNumber.includes("beta")) {
-			localVersionName = "Local Beta";
+			this.updateLocalVersionName("Local Beta");
 		}
 
 		let siteId = routeChildrenProps.site.id;
@@ -100,7 +100,7 @@ export default class BrokenLinkChecker extends Component {
 						}
 						break;
 					case 'debug-data':
-						if(localVersionName === "Local Beta"){
+						if(this.state.localVersionName === "Local Beta"){
 							console.log("Debug data: ");
 							console.log(response[1]);
 						}
@@ -276,6 +276,12 @@ export default class BrokenLinkChecker extends Component {
 	updateSiteId(siteId) {
 		this.setState((prevState) => ({
 			siteId: siteId,
+		}));
+	}
+
+	updateLocalVersionName(localVersionName) {
+		this.setState((prevState) => ({
+			localVersionName: localVersionName,
 		}));
 	}
 

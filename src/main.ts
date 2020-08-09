@@ -63,30 +63,36 @@ async function getTablePrefix(siteId) {
 }
 
 async function spawnChildProcess(command, siteURL) {
-	/**
-	 * Kill existing site scan process if it exists.
-	 */
-	if (siteScanProcess) {
-		try {
-			siteScanProcess.kill();
-		} catch (e) {
-			logWarn('Unable to kill existing site scan process.');
+
+	if(command === "cancel-scan"){
+		siteScanProcess.send([command,siteURL]);
+	} else {
+
+		/**
+		 * Kill existing site scan process if it exists.
+		 */
+		if (siteScanProcess) {
+			try {
+				siteScanProcess.kill();
+			} catch (e) {
+				logWarn('Unable to kill existing site scan process.');
+			}
 		}
-	}
 
-	siteScanProcess = fork(path.join(__dirname, './processes', 'checkLinks.js'));
+		siteScanProcess = fork(path.join(__dirname, './processes', 'checkLinks.js'));
 
-	siteScanProcess.send([command,siteURL]);   // Pass the command along
+		siteScanProcess.send([command,siteURL]);   // Pass the command along
 
-	// When process sends a message, pass along to renderer
-	siteScanProcess.on('message', (message) => {
-		//logInfo(`FORKPROCESS The process sent over this message ${message}`);
+		// When process sends a message, pass along to renderer
+		siteScanProcess.on('message', (message) => {
+			//logInfo(`FORKPROCESS The process sent over this message ${message}`);
 
-		if(message[0] === 'scan-finished'){
-			siteScanProcess.kill();
-		} else if(message[0] === 'error-encountered'){
-			logWarn(`Link Checker encountered this error in its subprocess: ${message[1]} | ${message[2]}`);
-		}
-		sendIPCEvent('blc-async-message-from-process', message);
-	 });
+			if(message[0] === 'scan-finished'){
+				siteScanProcess.kill();
+			} else if(message[0] === 'error-encountered'){
+				logWarn(`Link Checker encountered this error in its subprocess: ${message[1]} | ${message[2]}`);
+			}
+			sendIPCEvent('blc-async-message-from-process', message);
+		});
+	}	
 }

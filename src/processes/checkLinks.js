@@ -2,17 +2,18 @@ const {
 	SiteChecker,
 	HtmlUrlChecker
 } = require("broken-link-checker");
+const { send } = require("process");
 let userCancelled = false;
 
 
 // receive message from master process
 process.on('message', (m) => {
-	sendDebugData('Test');
 
 	if( (m[0] === "start-scan") && (m[1] !== 'undefined')) {
 		checkLinks(m[1]).then((data) => process.send(["scan-finished", data]));
 	} else if ( (m[0] === "cancel-scan") && (m[1] !== 'undefined')) {
 		userCancelled = true;
+		sendDebugData('We just cancelled it');
 	}
 
 });
@@ -28,20 +29,32 @@ let checkLinks = function(siteURL) {
 
 		let siteChecker = new SiteChecker(options, {
 			html: (tree, robots, response, pageUrl, customData) => {
-				// Apparently this freezes things
-				// if(userCancelled){
-				// 	// User cancelled the scan
-				// 	//siteChecker.pause();
-				// 	sendDebugData('This is the  total number of sites in the queue.');
-				// 	sendDebugData(siteChecker.numSites());
-				// 	sendDebugData('This is the  number of links with active requests.');
-				// 	sendDebugData(siteChecker.numActiveLinks());
-				// 	sendDebugData('This is the  total number of pages in the queue.');
-				// 	sendDebugData(siteChecker.numPages());
-				// 	sendDebugData('This is the  number of links that currently have no active requests.');
-				// 	sendDebugData(siteChecker.numQueuedLinks());
-				// 	//.numSites()
-				// }
+
+				sendDebugData(`We are checking this URL ${pageUrl}`);
+
+				if(userCancelled){
+					// User cancelled the scan
+					sendDebugData('This is the  total number of sites in the queue.');
+					sendDebugData(siteChecker.numSites());
+
+					try {
+						if(siteChecker.dequeue(siteURL)){
+							sendDebugData('just dequeued, so this is the new number of queued sites');
+							sendDebugData(siteChecker.numSites());
+						}
+					} catch(e){
+						sendDebugData("error in dequeueing the site");
+					}
+					// sendDebugData('This is the  number of links with active requests.');
+					// sendDebugData(siteChecker.numActiveLinks());
+					// sendDebugData('This is the  total number of pages in the queue.');
+					// sendDebugData(siteChecker.numPages());
+					// sendDebugData('This is the  number of links that currently have no active requests.');
+					// sendDebugData(siteChecker.numQueuedLinks());
+
+					siteChecker.pause();
+					//.numSites()
+				}
 
 
 				// This code is used to increment the number of WP posts we traverse in our scan
@@ -129,6 +142,9 @@ let checkLinks = function(siteURL) {
 			},
 			site: (error, siteUrl, customData) => {
 				reportError('site-scan-threw-site-error', JSON.stringify(error));
+				sendDebugData(`This URL was involved in the error: ${siteUrl}`);
+				sendDebugData('Oh and this was the error');
+				sendDebugData(error);
 			},
 			end: (result, customData) => {
 				// At last the first run is done, so we update the state
