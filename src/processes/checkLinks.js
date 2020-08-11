@@ -21,6 +21,8 @@ process.on('message', (m) => {
 let checkLinks = function(siteURL) {
 	return new Promise(function(resolve, reject) {
 
+		let siteCheckerSiteId = null;
+
 		// TODO: Handle self-signed certificates more securely, like https://stackoverflow.com/questions/20433287/node-js-request-cert-has-expired#answer-29397100
 		process.env["NODE_TLS_REJECT_UNAUTHORIZED"] = 0;
 
@@ -37,8 +39,10 @@ let checkLinks = function(siteURL) {
 					sendDebugData('This is the  total number of sites in the queue.');
 					sendDebugData(siteChecker.numSites());
 
+					sendDebugData(`The site ID I now have is ${siteCheckerSiteId}`);
+
 					try {
-						if(siteChecker.dequeue(siteURL)){
+						if(siteChecker.dequeue(siteCheckerSiteId)){
 							sendDebugData('just dequeued, so this is the new number of queued sites');
 							sendDebugData(siteChecker.numSites());
 						}
@@ -138,6 +142,8 @@ let checkLinks = function(siteURL) {
 				} catch(e){
 					// The "broken" link was missing critical fields (such as a status code), so we skip
 					reportError('caught-error-while-checking-broken-or-999-status-code', e);
+					sendDebugData('caught-error-while-checking-broken-or-999-status-code');
+					sendDebugData(e);
 				}
 			},
 			site: (error, siteUrl, customData) => {
@@ -155,7 +161,7 @@ let checkLinks = function(siteURL) {
 				resolve('finished');
 			},
 		});
-		siteChecker.enqueue(siteURL);
+		siteCheckerSiteId = siteChecker.enqueue(siteURL);
 
 	});
 }
