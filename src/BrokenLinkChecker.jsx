@@ -539,6 +539,17 @@ export default class BrokenLinkChecker extends Component {
 		return strTime;
 	}
 
+	formatUrlToPath(url) {
+		if(url){
+			let urlObject = new URL(url);
+			if(urlObject.pathname === '/'){
+				return url;
+			}
+			return urlObject.pathname;
+		}
+		return '';
+	}
+
 	renderFixInAdminButton(currentBrokenLink){
 
 		if(currentBrokenLink.statusCode === "Error") {
@@ -580,7 +591,7 @@ export default class BrokenLinkChecker extends Component {
 			this.state.siteStatus === "running" &&
 			this.state.scanInProgress
 		) {
-			message = "Checking:\n" + String(this.state.currentCheckingUri);
+			message = "Checking:\n" + this.formatUrlToPath(String(this.state.currentCheckingUri));
 		}
 
 		if (
