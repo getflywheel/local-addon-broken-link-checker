@@ -507,6 +507,9 @@ export default class BrokenLinkChecker extends Component {
 	formatUrlToPath(url) {
 		if(url){
 			let urlObject = new URL(url);
+			if(urlObject.pathname === '/'){
+				return url;
+			}
 			return urlObject.pathname;
 		}
 		return '';
