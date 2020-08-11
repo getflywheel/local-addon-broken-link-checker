@@ -87,7 +87,9 @@ async function spawnChildProcess(command, siteURL) {
 		siteScanProcess.on('message', (message) => {
 			//logInfo(`FORKPROCESS The process sent over this message ${message}`);
 
-			if(message[0] === 'scan-finished'){
+			if(message[0] === 'scan-cancelled-success'){
+				siteScanProcess.kill();
+			} else if(message[0] === 'scan-finished'){
 				siteScanProcess.kill();
 			} else if(message[0] === 'error-encountered'){
 				logWarn(`Link Checker encountered this error in its subprocess: ${message[1]} | ${message[2]}`);
