@@ -422,7 +422,7 @@ export default class BrokenLinkChecker extends Component {
 
 		if (this.state.scanInProgress){
 			buttonText = "Cancel";
-			messageLeftOfActionButtonText = "Scanning";
+			messageLeftOfActionButtonText = "";
 			return (<div>
 					<Banner style={{backgroundColor: "#fff"}} icon={false} buttonText={buttonText} buttonOnClick={this.cancelScan}>
 					<div style={{ flex: "1", display: "flex", flexDirection: "row", justifyContent: "space-between", alignItems: "center", padding: "0 10px" }}>
