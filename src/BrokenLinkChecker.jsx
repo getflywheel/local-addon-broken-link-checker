@@ -91,6 +91,10 @@ export default class BrokenLinkChecker extends Component {
 					case 'update-current-checking-uri':
 						this.updateCurrentCheckingUri(response[1]);
 						break;
+					case 'scan-cancelled-success':
+						this.updateScanInProgress(false);
+						this.updateCurrentCheckingUri('');
+						break;
 					case 'scan-finished':
 						if (
 							this.state.brokenLinks === null ||

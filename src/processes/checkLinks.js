@@ -32,19 +32,12 @@ let checkLinks = function(siteURL) {
 		let siteChecker = new SiteChecker(options, {
 			html: (tree, robots, response, pageUrl, customData) => {
 
-				sendDebugData(`We are checking this URL ${pageUrl}`);
-
 				if(userCancelled){
 					// User cancelled the scan
-					sendDebugData('This is the  total number of sites in the queue.');
-					sendDebugData(siteChecker.numSites());
-
-					sendDebugData(`The site ID I now have is ${siteCheckerSiteId}`);
 
 					try {
 						if(siteChecker.dequeue(siteCheckerSiteId)){
-							sendDebugData('just dequeued, so this is the new number of queued sites');
-							sendDebugData(siteChecker.numSites());
+							callCancelSuccess();
 						}
 					} catch(e){
 						sendDebugData("error in dequeueing the site");
@@ -244,6 +237,10 @@ function updateScanInProgress(boolean){
 
 function callScanFinished(boolean){
 	process.send(["scan-finished", boolean]);
+}
+
+function callCancelSuccess(){
+	process.send(["scan-cancelled-success", true]);
 }
 
 function reportError(name, errorInfo){
