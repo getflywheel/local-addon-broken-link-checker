@@ -10,7 +10,6 @@
 }
 
 .brokenLinkCheckWrap [class*=Banner] {
-	background: #fff !important;
 	padding-left: 10px !important;
 }
 
@@ -19,7 +18,7 @@
 }
 
 .brokenLinkCheckWrap .blcTooltipWrapper {
-	line-height: 1.3em; 
+	line-height: 1.3em;
 	white-space: normal;
 	overflow-wrap: break-word;
 }
