@@ -3,6 +3,7 @@ const { fork } = require('child_process');
 import path from 'path';
 
 let siteScanProcess;
+let killCommandIssued = false;
 
 const { localLogger, sendIPCEvent, siteDatabase, siteData } = LocalMain.getServiceContainer().cradle;
 const { info: logInfo, warn: logWarn } = localLogger;
@@ -30,6 +31,14 @@ export default function (context) {
 
 	ipcMain.on("fork-process", async (event, replyChannel, command, siteURL) => {
 		spawnChildProcess(command, siteURL)
+	});
+
+	ipcMain.on("scanning-process-life-or-death", async (event, replyChannel) => {
+		if(siteScanProcess && !killCommandIssued) {
+			event.reply(replyChannel, true);
+		} else {
+			event.reply(replyChannel, false);
+		}
 	});
 }
 
@@ -65,21 +74,20 @@ async function getTablePrefix(siteId) {
 async function spawnChildProcess(command, siteURL) {
 
 	if(command === "cancel-scan"){
-		siteScanProcess.send([command,siteURL]);
+		//siteScanProcess.send([command,siteURL]);
+		killSubProcess();
+		sendIPCEvent('blc-async-message-from-process', ["scan-cancelled-success", true]);
 	} else {
 
 		/**
 		 * Kill existing site scan process if it exists.
 		 */
 		if (siteScanProcess) {
-			try {
-				siteScanProcess.kill();
-			} catch (e) {
-				logWarn('Unable to kill existing site scan process.');
-			}
+			killSubProcess();
 		}
 
 		siteScanProcess = fork(path.join(__dirname, './processes', 'checkLinks.js'));
+		killCommandIssued = false;
 
 		siteScanProcess.send([command,siteURL]);   // Pass the command along
 
@@ -88,13 +96,22 @@ async function spawnChildProcess(command, siteURL) {
 			//logInfo(`FORKPROCESS The process sent over this message ${message}`);
 
 			if(message[0] === 'scan-cancelled-success'){
-				siteScanProcess.kill();
+				killSubProcess();
 			} else if(message[0] === 'scan-finished'){
-				siteScanProcess.kill();
+				killSubProcess();
 			} else if(message[0] === 'error-encountered'){
 				logWarn(`Link Checker encountered this error in its subprocess: ${message[1]} | ${message[2]}`);
 			}
 			sendIPCEvent('blc-async-message-from-process', message);
 		});
 	}	
+}
+
+async function killSubProcess(){
+	try {
+		siteScanProcess.kill();
+	} catch (e) {
+		logWarn('Unable to kill existing site scan process.');
+	}
+	killCommandIssued = true;
 }
