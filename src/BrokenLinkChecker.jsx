@@ -141,7 +141,7 @@ export default class BrokenLinkChecker extends Component {
 			if(this.state.brokenLinks.length) {
 				// Return true if the originURI field is not found in the first element
 				// Can add more checks to this if statement for future array changes
-				if ( !this.state.brokenLinks[0].hasOwnProperty('originURI') || !this.state.brokenLinks[0].hasOwnProperty('dateAdded') || !this.state.brokenLinks[0].hasOwnProperty('scanStatus') ) {
+				if ( !this.state.brokenLinks[0].hasOwnProperty('originURI') || !this.state.brokenLinks[0].hasOwnProperty('dateAdded')) {
 					return true;
 				}
 			}
@@ -152,29 +152,22 @@ export default class BrokenLinkChecker extends Component {
 
 	addBrokenLink(statusCode, linkURL, linkText, originURL, originURI, wpPostId) {
 
-		let newBrokenLink = {
-			dateAdded: Date.now(),
-			statusCode: statusCode,
-			linkURL: linkURL,
-			linkText: linkText,
-			originURL: originURL,
-			originURI: originURI,
-			wpPostId: wpPostId,
-			scanStatus: {
-				numberPostsFound: this.state.numberPostsFound,
-				siteRootUrl: this.state.siteRootUrl,
-				tablePrefix: this.state.tablePrefix,
-				totalSitePosts: this.state.totalSitePosts
-			}
-		};
+		// let newBrokenLink = {
+		// 	dateAdded: Date.now(),
+		// 	statusCode: statusCode,
+		// 	linkURL: linkURL,
+		// 	linkText: linkText,
+		// 	originURL: originURL,
+		// 	originURI: originURI,
+		// 	wpPostId: wpPostId
+		// };
 
 		this.updateResultsOnScreen(true);
 
 		this.setState(
 			(prevState) => ({
-				brokenLinks: [...prevState.brokenLinks, newBrokenLink],
+				brokenLinks: this.fetchBrokenLinks(),
 			}),
-			this.syncBrokenLinks
 		);
 	}
 

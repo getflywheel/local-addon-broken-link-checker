@@ -4,6 +4,7 @@ import path from 'path';
 
 let siteScanProcess;
 let killCommandIssued = false;
+let theSiteId = null;
 
 const { localLogger, sendIPCEvent, siteDatabase, siteData } = LocalMain.getServiceContainer().cradle;
 const { info: logInfo, warn: logWarn } = localLogger;
@@ -11,7 +12,6 @@ const { info: logInfo, warn: logWarn } = localLogger;
 export default function (context) {
 	const { electron } = context;
 	const { ipcMain } = electron;
-	let theSiteId = null;
 
 	ipcMain.on("store-broken-links", (event, siteId, brokenLinks) => {
 		LocalMain.SiteData.updateSite(siteId, {
@@ -47,6 +47,36 @@ export default function (context) {
 			event.reply(replyChannel, false);
 		}
 	});
+}
+
+async function addBrokenLink(brokenLinkInfo){
+	let siteData = LocalMain.SiteData.getSite(theSiteId);
+	let siteDataJson = siteData.toJSON();
+	let brokenLinks = siteDataJson.brokenLinks;
+	logInfo("STOREBROKEN2 Broken links before add:");
+	logInfo(brokenLinks);
+	brokenLinks.push({
+		"dateAdded": Date.now(),
+		"linkText": brokenLinkInfo[2],
+		"linkURL": brokenLinkInfo[1],
+		"originURI": brokenLinkInfo[4],
+		"originURL": brokenLinkInfo[3],
+		"statusCode": brokenLinkInfo[0],
+		"wpPostId": brokenLinkInfo[5]
+	});
+	logInfo("STOREBROKEN2 Broken links after add:");
+	logInfo(brokenLinks);
+
+
+	logInfo(`STOREBROKEN2 This is our site ID: ${theSiteId}`);
+
+	LocalMain.SiteData.updateSite(theSiteId, {
+		id: theSiteId,
+		brokenLinks,
+	});
+
+	logInfo("STOREBROKEN2 Site data with Broken links after add from the site store:");
+	logInfo(LocalMain.SiteData.getSite(theSiteId));
 }
 
 async function getTotalPosts(siteId, prefix) {
@@ -108,6 +138,9 @@ async function spawnChildProcess(command, siteURL) {
 				killSubProcess();
 			} else if(message[0] === 'error-encountered'){
 				logWarn(`Link Checker encountered this error in its subprocess: ${message[1]} | ${message[2]}`);
+			} else if(message[0] === 'add-broken-link'){
+				// We need to get the existing array of broken links, add this one, then store it in persistent storage, then notify the renderer to re-fetch
+				addBrokenLink(message[1]);
 			}
 			sendIPCEvent('blc-async-message-from-process', message);
 		});
