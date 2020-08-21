@@ -188,6 +188,22 @@ export default class BrokenLinkChecker extends Component {
 			this.state.brokenLinks
 		);
 	}
+	
+	syncGeneralLinkCheckerData() {
+		// Data to store: 
+		let scanStatus = {
+			numberPostsFound: this.state.numberPostsFound,
+			siteRootUrl: this.state.siteRootUrl,
+			tablePrefix: this.state.tablePrefix,
+			totalSitePosts: this.state.totalSitePosts
+		};
+
+		ipcRenderer.send(
+			"store-link-checker-data",
+			this.state.siteId,
+			scanStatus
+		);
+	}
 
 	fetchBrokenLinks() {
 		const brokenLinks = this.props.routeChildrenProps.site.brokenLinks;
@@ -197,6 +213,16 @@ export default class BrokenLinkChecker extends Component {
 		}
 
 		return brokenLinks;
+	}
+
+	fetchGeneralLinkCheckerData() {
+		const scanStatus = this.props.routeChildrenProps.site.scanStatus;
+
+		if (!ScanStatus) {
+			return false;
+		}
+
+		return scanStatus;
 	}
 
 	ifBrokenLinksFetched() {
@@ -229,11 +255,15 @@ export default class BrokenLinkChecker extends Component {
 		if(this.state.brokenLinks.length) {
 			this.updateBrokenLinksFound(true);
 			this.updateNumberBrokenLinksFound(this.state.brokenLinks.length);
-			this.updateNumberPostsFound(this.state.brokenLinks[this.state.brokenLinks.length - 1].scanStatus.numberPostsFound);
-			this.updateSiteRootUrl(this.state.brokenLinks[this.state.brokenLinks.length - 1].scanStatus.siteRootUrl);
-			this.setTablePrefix(this.state.brokenLinks[this.state.brokenLinks.length - 1].scanStatus.tablePrefix);
-			this.setTotalSitePosts(this.state.brokenLinks[this.state.brokenLinks.length - 1].scanStatus.totalSitePosts);
 		}
+		if(fetchGeneralLinkCheckerData()){
+			let scanStatus = fetchGeneralLinkCheckerData();
+			this.updateNumberPostsFound(scanStatus.numberPostsFound);
+			this.updateSiteRootUrl(scanStatus.siteRootUrl);
+			this.setTablePrefix(scanStatus.tablePrefix);
+			this.setTotalSitePosts(scanStatus.totalSitePosts);
+		}
+		
 
 		console.log('Reload should be done by now');
 		console.log(this.state);

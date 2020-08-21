@@ -20,6 +20,13 @@ export default function (context) {
 		});
 	});
 
+	ipcMain.on("store-link-checker-data", (event, siteId, scanStatus) => {
+		LocalMain.SiteData.updateSite(siteId, {
+			id: siteId,
+			scanStatus,
+		});
+	});
+
 	ipcMain.on("get-total-posts", async (event, replyChannel, siteId, prefix) => {
 		event.reply(replyChannel, await getTotalPosts(siteId, prefix));
 	});
