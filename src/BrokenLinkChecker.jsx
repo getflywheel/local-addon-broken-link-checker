@@ -74,6 +74,7 @@ export default class BrokenLinkChecker extends Component {
 					case 'increment-number-posts-found':
 						// Needs to call incrementNumberPostsFound() back in the renderer
 						this.incrementNumberPostsFound();
+						this.syncGeneralLinkCheckerData();
 						break;
 					case 'add-broken-link':
 						// Needs to make addBrokenLink() and incrementNumberBrokenLinksFound() be called back in renderer
@@ -188,9 +189,9 @@ export default class BrokenLinkChecker extends Component {
 			this.state.brokenLinks
 		);
 	}
-	
+
 	syncGeneralLinkCheckerData() {
-		// Data to store: 
+		// Data to store:
 		let scanStatus = {
 			numberPostsFound: this.state.numberPostsFound,
 			siteRootUrl: this.state.siteRootUrl,
@@ -218,7 +219,7 @@ export default class BrokenLinkChecker extends Component {
 	fetchGeneralLinkCheckerData() {
 		const scanStatus = this.props.routeChildrenProps.site.scanStatus;
 
-		if (!ScanStatus) {
+		if (!scanStatus) {
 			return false;
 		}
 
@@ -249,34 +250,26 @@ export default class BrokenLinkChecker extends Component {
 	};
 
 	reloadScanInProgress() {
-		console.log('We are reloading');
 		this.updateScanInProgress(true);
 
-		if(this.state.brokenLinks.length) {
+		if (this.state.brokenLinks.length > 0) {
 			this.updateBrokenLinksFound(true);
 			this.updateNumberBrokenLinksFound(this.state.brokenLinks.length);
 		}
-		if(fetchGeneralLinkCheckerData()){
-			let scanStatus = fetchGeneralLinkCheckerData();
+
+		try{
+		if(this.fetchGeneralLinkCheckerData()){
+			let scanStatus = this.fetchGeneralLinkCheckerData();
 			this.updateNumberPostsFound(scanStatus.numberPostsFound);
 			this.updateSiteRootUrl(scanStatus.siteRootUrl);
 			this.setTablePrefix(scanStatus.tablePrefix);
 			this.setTotalSitePosts(scanStatus.totalSitePosts);
+		} else {
+			//console.log('Had trouble fetching');
 		}
-		
-
-		console.log('Reload should be done by now');
-		console.log(this.state);
-
-		// Variables that need to be put back into state on reload:
-		// ###brokenLinksFound: true
-		// ###numberBrokenLinksFound: 3
-		// ##scanInProgress: true
-
-		// ##numberPostsFound: 11
-		// ##siteRootUrl: "http://takeactionmn-072120.local/"
-		// ##tablePrefix: "wp_wdma5ckwln_"
-		// #totalSitePosts: 1205
+		} catch(e){
+			//console.log(`This was error ${e}`);
+		}
 	}
 
 	testSiteRootUrlVariantsAndUpdate = (siteDomain) => {
@@ -729,6 +722,7 @@ export default class BrokenLinkChecker extends Component {
 	}
 
 	render() {
+		console.log(this.state);
 		if(this.legacyPluginDataDetected()) {
 			this.clearBrokenLinks();
 			return(<div></div>);
