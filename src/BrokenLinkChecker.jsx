@@ -110,8 +110,8 @@ export default class BrokenLinkChecker extends Component {
 						break;
 					case 'debug-data':
 						if(this.state.localVersionName === "Local Beta"){
-							console.log("Debug data: ");
-							console.log(response[1]);
+							// console.log("Debug data: ");
+							// console.log(response[1]);
 						}
 					default:
 					//
@@ -152,6 +152,7 @@ export default class BrokenLinkChecker extends Component {
 
 	addBrokenLink(statusCode, linkURL, linkText, originURL, originURI, wpPostId) {
 
+		// Broken links are now intercepted in main.ts and added to persistent storage there
 		// let newBrokenLink = {
 		// 	dateAdded: Date.now(),
 		// 	statusCode: statusCode,
@@ -232,7 +233,6 @@ export default class BrokenLinkChecker extends Component {
 	isScanningProcessAlive = () => {
 		return new Promise((resolve, reject) => {
 			ipcAsync("scanning-process-life-or-death").then((result) => {
-				console.log(`It is alive?: ${result}`);
 				if(result){
 					resolve(result);
 				} else {
@@ -715,7 +715,6 @@ export default class BrokenLinkChecker extends Component {
 	}
 
 	render() {
-		console.log(this.state);
 		if(this.legacyPluginDataDetected()) {
 			this.clearBrokenLinks();
 			return(<div></div>);

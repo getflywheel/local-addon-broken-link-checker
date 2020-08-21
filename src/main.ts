@@ -53,8 +53,6 @@ async function addBrokenLink(brokenLinkInfo){
 	let siteData = LocalMain.SiteData.getSite(theSiteId);
 	let siteDataJson = siteData.toJSON();
 	let brokenLinks = siteDataJson.brokenLinks;
-	logInfo("STOREBROKEN2 Broken links before add:");
-	logInfo(brokenLinks);
 	brokenLinks.push({
 		"dateAdded": Date.now(),
 		"linkText": brokenLinkInfo[2],
@@ -64,19 +62,11 @@ async function addBrokenLink(brokenLinkInfo){
 		"statusCode": brokenLinkInfo[0],
 		"wpPostId": brokenLinkInfo[5]
 	});
-	logInfo("STOREBROKEN2 Broken links after add:");
-	logInfo(brokenLinks);
-
-
-	logInfo(`STOREBROKEN2 This is our site ID: ${theSiteId}`);
 
 	LocalMain.SiteData.updateSite(theSiteId, {
 		id: theSiteId,
 		brokenLinks,
 	});
-
-	logInfo("STOREBROKEN2 Site data with Broken links after add from the site store:");
-	logInfo(LocalMain.SiteData.getSite(theSiteId));
 }
 
 async function getTotalPosts(siteId, prefix) {
