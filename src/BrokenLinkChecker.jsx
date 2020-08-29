@@ -650,7 +650,7 @@ export default class BrokenLinkChecker extends Component {
 							</div>
 
 							<div style={{ lineHeight: "1.3em" }}>
-								<p style={{ flexShrink: 1 }}>{item.linkText}</p>
+								<p style={{ flexShrink: 1 }} className="blcTruncate">{item.linkText}</p>
 							</div>
 
 							<div style={{ lineHeight: "1.3em" }}>
