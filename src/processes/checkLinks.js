@@ -31,6 +31,7 @@ let checkLinks = function(siteURL) {
 
 		let options = new Object();
 		options.maxSocketsPerHost = 10;
+		options.userAgent = "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_6) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/85.0.4183.83 Safari/537.36";
 
 		let siteChecker = new SiteChecker(options, {
 			html: (tree, robots, response, pageUrl, customData) => {
@@ -87,7 +88,10 @@ let checkLinks = function(siteURL) {
 							resultDump: result
 						};
 
-						let singlePageChecker = new HtmlUrlChecker(null, {
+						let singlePageCheckerOptions = new Object();
+						singlePageCheckerOptions.userAgent = "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_6) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/85.0.4183.83 Safari/537.36";				
+
+						let singlePageChecker = new HtmlUrlChecker(singlePageCheckerOptions, {
 							html: (tree, robots, response, pageUrl, customData) => {
 
 								let wpPostId = findWpPostIdInMarkup(tree);

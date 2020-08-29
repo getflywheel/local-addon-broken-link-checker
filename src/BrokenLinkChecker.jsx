@@ -275,6 +275,7 @@ export default class BrokenLinkChecker extends Component {
 			let options = new Object();
 			options.cacheResponses = false;
 			options.rateLimit = 500; // Give the local website time to start, so we avoid the 500 errors
+			options.userAgent = "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_6) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/85.0.4183.83 Safari/537.36";
 			let workingUrl = null;
 
 			let isUrlBrokenChecker = new UrlChecker(options, {
