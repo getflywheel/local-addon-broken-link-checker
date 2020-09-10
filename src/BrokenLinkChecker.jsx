@@ -344,13 +344,13 @@ export default class BrokenLinkChecker extends Component {
 	}
 
 	startScan = () => {
+		ipcRenderer.send('analyticsV2:trackEvent', 'v2_pro_link_checker_run_start');
 
 		let routeChildrenProps = this.props.routeChildrenProps;
 		let site = routeChildrenProps.site;
 		let siteDomain = site.domain;
 
 		this.testSiteRootUrlVariantsAndUpdate(siteDomain).then((rootUrl) => {
-
 			// Update total site posts count
 			if (
 				this.state.getTotalSitePostsInProgress === false
@@ -368,6 +368,10 @@ export default class BrokenLinkChecker extends Component {
 							String(this.state.siteStatus) !== "halted" &&
 							this.state.siteStatus != null
 						) {
+							ipcRenderer.send('analyticsV2:trackEvent', 'v2_pro_link_checker_run_success', {
+								linksScanned: this.state.numberPostsFound,
+								linksBroken: this.state.brokenLinks.length,
+							});
 
 							// Clear the existing broken links on screen if some have been rendered already
 							this.clearBrokenLinks();
@@ -384,6 +388,7 @@ export default class BrokenLinkChecker extends Component {
 						} else {
 							this.updateSiteState(siteStatus);
 						}
+
 					}).catch((err) => console.log("Error getting total site posts: " + err));
 				});
 			}
@@ -393,10 +398,14 @@ export default class BrokenLinkChecker extends Component {
 			let routeChildrenProps = this.props.routeChildrenProps;
 			let siteStatus = routeChildrenProps.siteStatus;
 			this.updateSiteState(siteStatus);
+
+			ipcRenderer.send('analyticsV2:trackEvent', 'v2_pro_link_checker_run_failure');
 		});
 	};
 
 	cancelScan = () => {
+		ipcRenderer.send('analyticsV2:trackEvent', 'v2_pro_link_checker_run_cancel');
+
 		console.log("renderer speaking: cancel scan was clicked");
 		ipcAsync("fork-process", "cancel-scan", '').then((result) => {
 			// first thing heard back
@@ -563,6 +572,10 @@ export default class BrokenLinkChecker extends Component {
 					currentBrokenLink.wpPostId +
 					"&action=edit"
 					}
+					onClick={e => {
+						e.preventDefault()
+						ipcRenderer.send('analyticsV2:trackEvent', 'v2_pro_link_checker_open_admin_link');
+					}}
 				>
 				Fix in Admin
 				</a>
@@ -570,7 +583,7 @@ export default class BrokenLinkChecker extends Component {
 		}
 	}
 
-	
+
 
 	renderFooterMessage() {
 
