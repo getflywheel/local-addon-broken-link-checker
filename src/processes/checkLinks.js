@@ -35,6 +35,22 @@ let checkLinks = function(siteURL) {
 
 		let siteChecker = new SiteChecker(options, {
 			html: (tree, robots, response, pageUrl, customData) => {
+
+				if(userCancelled){
+					// User cancelled the scan
+
+					try {
+						if(siteChecker.dequeue(siteCheckerSiteId)){
+							callCancelSuccess();
+						}
+					} catch(e){
+						sendDebugData("error in dequeueing the site");
+					}
+
+					siteChecker.pause();
+				}
+
+
 				// This code is used to increment the number of WP posts we traverse in our scan
 				if (findWpPostIdInMarkup(tree)) {
 					incrementNumberPostsFound();
@@ -60,15 +76,10 @@ let checkLinks = function(siteURL) {
 							statusCode = statusCodeCheck;
 						}
 
-						// Old status code handling (remove after testing)
-						//let statusCode = '';
-						// if(result.brokenReason === "HTTP_undefined"){
-						// 	statusCode = "Timeout";
-						// } else if(containsPhpError(String(result.html.text))){
-						// 	statusCode = "Error";
-						// } else {
-						// 	statusCode = String(result.http.response.statusCode);
-						// }
+						let skipThisLink = false;
+						if (statusCode == 403){
+							skipThisLink = true;
+						}
 
 						let linkText = '';
 						if(result.html.text){
@@ -88,62 +99,35 @@ let checkLinks = function(siteURL) {
 							resultDump: result
 						};
 
-						let singlePageCheckerOptions = new Object();
-						singlePageCheckerOptions.userAgent = "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_6) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/85.0.4183.83 Safari/537.36";				
+						if(!skipThisLink) {
+							let singlePageCheckerOptions = new Object();
+							singlePageCheckerOptions.userAgent = "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_6) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/85.0.4183.83 Safari/537.36";
 
-						let singlePageChecker = new HtmlUrlChecker(singlePageCheckerOptions, {
-							html: (tree, robots, response, pageUrl, customData) => {
+							let singlePageChecker = new HtmlUrlChecker(singlePageCheckerOptions, {
+								html: (tree, robots, response, pageUrl, customData) => {
 
-								let wpPostId = findWpPostIdInMarkup(tree);
+									let wpPostId = findWpPostIdInMarkup(tree);
 
-								if (wpPostId !== null) {
-									// This page has a post ID and contains a broken link - we should log this link right away
+									if (wpPostId !== null) {
+										addBrokenLink(
+											customData["statusCode"],
+											customData["linkURL"],
+											customData["linkText"],
+											customData["originURL"],
+											customData["originURI"],
+											wpPostId
+										);
 
-									addBrokenLink(
-										customData["statusCode"],
-										customData["linkURL"],
-										customData["linkText"],
-										customData["originURL"],
-										customData["originURI"],
-										wpPostId
-									);
-
-									// Add to a key-value array of logged links and include the details of the link
-									noteDisplayedBrokenLink(
-										(customData["statusCode"] + customData["linkURL"] + customData["linkText"]).hashCode(),
-										customData["statusCode"],
-										customData["linkURL"],
-										customData["linkText"],
-										customData["originURL"],
-										customData["originURI"],
-										wpPostId
-									);
-
-									updateBrokenLinksFound(true);
-								} else {
-									// This page does not have a post ID, however if it hasn't been logged yet at the end of the scan, we will display it
-
-									// Add this to an array that will be checked after the scan
-									noteLinkToBeCheckedAfterMainScan(
-										(customData["statusCode"] + customData["linkURL"] + customData["linkText"]).hashCode(),
-										customData["statusCode"],
-										customData["linkURL"],
-										customData["linkText"],
-										customData["originURL"],
-										customData["originURI"],
-										wpPostId
-									);
-
-									// TODO: Determine if this link has been logged already by checking the logged array
-									//          if it hasn't then display, if it has then skip
+										updateBrokenLinksFound(true);
+									}
 								}
-							}
-						});
+							});
 
-						singlePageChecker.enqueue(
-							brokenLinkScanResults["originURL"],
-							brokenLinkScanResults
-						);
+							singlePageChecker.enqueue(
+								brokenLinkScanResults["originURL"],
+								brokenLinkScanResults
+							);
+						}
 					}
 				} catch(e){
 					// The "broken" link was missing critical fields (such as a status code), so we skip
@@ -159,15 +143,12 @@ let checkLinks = function(siteURL) {
 				sendDebugData(error);
 			},
 			end: (result, customData) => {
-				// Check to see if there were any non-post-id results that need to be rendered
-				determineMissedLinksAndDisplayThem().then(() => {
-					// At last the first run is done, so we update the state
-					updateFirstRunComplete(true);
-					updateScanInProgress(false);
-					callScanFinished(true);
+				// At last the first run is done, so we update the state
+				updateFirstRunComplete(true);
+				updateScanInProgress(false);
+				callScanFinished(true);
 
-					resolve('finished');
-				});
+				resolve('finished');
 			},
 		});
 		siteCheckerSiteId = siteChecker.enqueue(siteURL);
