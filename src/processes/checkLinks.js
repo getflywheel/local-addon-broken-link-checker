@@ -86,6 +86,9 @@ let checkLinks = function(siteURL) {
 								let wpPostId = findWpPostIdInMarkup(tree);
 
 								if (wpPostId !== null) {
+									// This page has a post ID and contains a broken link - we should log this link right away
+
+									// TODO: Add to a key-value array of logged links and include the details of the link
 									addBrokenLink(
 										customData["statusCode"],
 										customData["linkURL"],
@@ -96,6 +99,13 @@ let checkLinks = function(siteURL) {
 									);
 
 									updateBrokenLinksFound(true);
+								} else {
+									// This page does not have a post ID, however if it hasn't been logged yet at the end of the scan, we will display it
+
+									// TODO: Add this to an array called something like "check at the end"
+
+									// TODO: Determine if this link has been logged already by checking the logged array
+									//          if it hasn't then display, if it has then skip
 								}
 							}
 						});
