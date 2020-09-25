@@ -3,8 +3,9 @@ const {
 	HtmlUrlChecker
 } = require("broken-link-checker");
 const { send } = require("process");
+const constants = require('../constants');
 let userCancelled = false;
-let notedDisplayedBrokenLinks = {}, notedLinksToBeCheckedAfterMainScan = {};
+
 
 // receive message from master process
 process.on('message', (m) => {
@@ -31,7 +32,7 @@ let checkLinks = function(siteURL) {
 
 		let options = new Object();
 		options.maxSocketsPerHost = 10;
-		options.userAgent = "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_6) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/85.0.4183.83 Safari/537.36";
+		options.userAgent = constants.SCAN_USER_AGENT;
 
 		let siteChecker = new SiteChecker(options, {
 			html: (tree, robots, response, pageUrl, customData) => {
