@@ -77,9 +77,8 @@ let checkLinks = function(siteURL) {
 							statusCode = statusCodeCheck;
 						}
 
-						let skipThisLink = false;
 						if (statusCode == 403){
-							skipThisLink = true;
+							return;
 						}
 
 						let linkText = '';
@@ -100,35 +99,33 @@ let checkLinks = function(siteURL) {
 							resultDump: result
 						};
 
-						if(!skipThisLink) {
-							let singlePageCheckerOptions = new Object();
-							singlePageCheckerOptions.userAgent = "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_6) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/85.0.4183.83 Safari/537.36";
+						let singlePageCheckerOptions = new Object();
+						singlePageCheckerOptions.userAgent = "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_6) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/85.0.4183.83 Safari/537.36";
 
-							let singlePageChecker = new HtmlUrlChecker(singlePageCheckerOptions, {
-								html: (tree, robots, response, pageUrl, customData) => {
+						let singlePageChecker = new HtmlUrlChecker(singlePageCheckerOptions, {
+							html: (tree, robots, response, pageUrl, customData) => {
 
-									let wpPostId = findWpPostIdInMarkup(tree);
+								let wpPostId = findWpPostIdInMarkup(tree);
 
-									if (wpPostId !== null) {
-										addBrokenLink(
-											customData["statusCode"],
-											customData["linkURL"],
-											customData["linkText"],
-											customData["originURL"],
-											customData["originURI"],
-											wpPostId
-										);
+								if (wpPostId !== null) {
+									addBrokenLink(
+										customData["statusCode"],
+										customData["linkURL"],
+										customData["linkText"],
+										customData["originURL"],
+										customData["originURI"],
+										wpPostId
+									);
 
-										updateBrokenLinksFound(true);
-									}
+									updateBrokenLinksFound(true);
 								}
-							});
+							}
+						});
 
-							singlePageChecker.enqueue(
-								brokenLinkScanResults["originURL"],
-								brokenLinkScanResults
-							);
-						}
+						singlePageChecker.enqueue(
+							brokenLinkScanResults["originURL"],
+							brokenLinkScanResults
+						);
 					}
 				} catch(e){
 					// The "broken" link was missing critical fields (such as a status code), so we skip
