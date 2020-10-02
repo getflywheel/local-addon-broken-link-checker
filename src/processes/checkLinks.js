@@ -155,6 +155,9 @@ let checkLinks = function(siteURL) {
 				sendDebugData(error);
 			},
 			end: (result, customData) => {
+				// Check to see if there were any non-post-id results that need to be rendered
+				determineMissedLinksAndDisplayThem();
+
 				// At last the first run is done, so we update the state
 				updateFirstRunComplete(true);
 				updateScanInProgress(false);
@@ -204,31 +207,49 @@ function findWpPostIdInMarkup(tree) {
 
 function noteDisplayedBrokenLink(hashKey,statusCode,linkURL,linkText,originURL,originURI,wpPostId){
 	notedDisplayedBrokenLinks[hashKey] = {
-		statusCode,
-		linkURL,
-		linkText,
-		originURL,
-		originURI,
-		wpPostId
+		statusCode: statusCode,
+		linkURL: linkURL,
+		linkText: linkText,
+		originURL: originURL,
+		originURI: originURI,
+		wpPostId: wpPostId
 	};
+
 	// sendDebugData('Links that were displayed:');
 	// sendDebugData(notedDisplayedBrokenLinks);
 }
 
 function noteLinkToBeCheckedAfterMainScan(hashKey,statusCode,linkURL,linkText,originURL,originURI,wpPostId){
 	notedLinksToBeCheckedAfterMainScan[hashKey] = {
-		statusCode,
-		linkURL,
-		linkText,
-		originURL,
-		originURI,
-		wpPostId
+		statusCode: statusCode,
+		linkURL: linkURL,
+		linkText: linkText,
+		originURL: originURL,
+		originURI: originURI,
+		wpPostId: wpPostId
 	};
 	// sendDebugData('Links saved for after the scan:');
 	// sendDebugData(notedLinksToBeCheckedAfterMainScan);
 }
 
-function determineMissedLinksAndDisplayThem() {}
+// Todo: turn into a promise function
+function determineMissedLinksAndDisplayThem() {
+	for (const [key, value] of Object.entries(notedLinksToBeCheckedAfterMainScan)) {
+		// The key is the hash value of statusCode + LinkUrl + LinkText. The Value is an object with details about that link
+
+		if (!(key in notedDisplayedBrokenLinks)){
+			// This broken link was not logged before, so we will log it now
+			addBrokenLink(
+				value["statusCode"],
+				value["linkURL"],
+				value["linkText"],
+				value["originURL"],
+				value["originURI"],
+				value["wpPostId"]
+			);
+		}
+	}
+}
 
 function containsPhpError(string){
 	let subString = '';
