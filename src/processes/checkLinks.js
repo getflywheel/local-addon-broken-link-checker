@@ -3,13 +3,20 @@ const {
 	HtmlUrlChecker
 } = require("broken-link-checker");
 const { send } = require("process");
-
+let userCancelled = false;
+let notedDisplayedBrokenLinks = {}, notedLinksToBeCheckedAfterMainScan = {};
 
 // receive message from master process
 process.on('message', (m) => {
 
 	if( (m[0] === "start-scan") && (m[1] !== 'undefined')) {
+		// Empty the temp arrays of links
+		notedDisplayedBrokenLinks = {};
+		notedLinksToBeCheckedAfterMainScan = {};
+		// Start the new scan
 		checkLinks(m[1]).then((data) => process.send(["scan-finished", data]));
+	} else if ( (m[0] === "cancel-scan") && (m[1] !== 'undefined')) {
+		userCancelled = true;
 	}
 
 });
@@ -88,8 +95,18 @@ let checkLinks = function(siteURL) {
 								if (wpPostId !== null) {
 									// This page has a post ID and contains a broken link - we should log this link right away
 
-									// TODO: Add to a key-value array of logged links and include the details of the link
 									addBrokenLink(
+										customData["statusCode"],
+										customData["linkURL"],
+										customData["linkText"],
+										customData["originURL"],
+										customData["originURI"],
+										wpPostId
+									);
+
+									// Add to a key-value array of logged links and include the details of the link
+									noteDisplayedBrokenLink(
+										(customData["statusCode"] + customData["linkURL"] + customData["linkText"]).hashCode(),
 										customData["statusCode"],
 										customData["linkURL"],
 										customData["linkText"],
@@ -102,7 +119,16 @@ let checkLinks = function(siteURL) {
 								} else {
 									// This page does not have a post ID, however if it hasn't been logged yet at the end of the scan, we will display it
 
-									// TODO: Add this to an array called something like "check at the end"
+									// Add this to an array that will be checked after the scan
+									noteLinkToBeCheckedAfterMainScan(
+										(customData["statusCode"] + customData["linkURL"] + customData["linkText"]).hashCode(),
+										customData["statusCode"],
+										customData["linkURL"],
+										customData["linkText"],
+										customData["originURL"],
+										customData["originURI"],
+										wpPostId
+									);
 
 									// TODO: Determine if this link has been logged already by checking the logged array
 									//          if it hasn't then display, if it has then skip
@@ -133,7 +159,7 @@ let checkLinks = function(siteURL) {
 				updateFirstRunComplete(true);
 				updateScanInProgress(false);
 				callScanFinished(true);
-				
+
 				resolve('finished');
 			},
 		});
@@ -175,6 +201,34 @@ function findWpPostIdInMarkup(tree) {
 
 	return wpPostId;
 }
+
+function noteDisplayedBrokenLink(hashKey,statusCode,linkURL,linkText,originURL,originURI,wpPostId){
+	notedDisplayedBrokenLinks[hashKey] = {
+		statusCode,
+		linkURL,
+		linkText,
+		originURL,
+		originURI,
+		wpPostId
+	};
+	// sendDebugData('Links that were displayed:');
+	// sendDebugData(notedDisplayedBrokenLinks);
+}
+
+function noteLinkToBeCheckedAfterMainScan(hashKey,statusCode,linkURL,linkText,originURL,originURI,wpPostId){
+	notedLinksToBeCheckedAfterMainScan[hashKey] = {
+		statusCode,
+		linkURL,
+		linkText,
+		originURL,
+		originURI,
+		wpPostId
+	};
+	// sendDebugData('Links saved for after the scan:');
+	// sendDebugData(notedLinksToBeCheckedAfterMainScan);
+}
+
+function determineMissedLinksAndDisplayThem() {}
 
 function containsPhpError(string){
 	let subString = '';
@@ -229,3 +283,17 @@ function reportError(name, errorInfo){
 function sendDebugData(data){
 	process.send(["debug-data", data]);
 }
+
+// Start thank you to https://stackoverflow.com/a/7616484
+Object.defineProperty(String.prototype, 'hashCode', {
+	value: function() {
+	  var hash = 0, i, chr;
+	  for (i = 0; i < this.length; i++) {
+		chr   = this.charCodeAt(i);
+		hash  = ((hash << 5) - hash) + chr;
+		hash |= 0; // Convert to 32bit integer
+	  }
+	  return hash;
+	}
+  });
+// End thank you to https://stackoverflow.com/a/7616484
