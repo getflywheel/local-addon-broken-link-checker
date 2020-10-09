@@ -156,14 +156,14 @@ let checkLinks = function(siteURL) {
 			},
 			end: (result, customData) => {
 				// Check to see if there were any non-post-id results that need to be rendered
-				determineMissedLinksAndDisplayThem();
+				determineMissedLinksAndDisplayThem().then(() => {
+					// At last the first run is done, so we update the state
+					updateFirstRunComplete(true);
+					updateScanInProgress(false);
+					callScanFinished(true);
 
-				// At last the first run is done, so we update the state
-				updateFirstRunComplete(true);
-				updateScanInProgress(false);
-				callScanFinished(true);
-
-				resolve('finished');
+					resolve('finished');
+				});
 			},
 		});
 		siteCheckerSiteId = siteChecker.enqueue(siteURL);
@@ -232,23 +232,25 @@ function noteLinkToBeCheckedAfterMainScan(hashKey,statusCode,linkURL,linkText,or
 	// sendDebugData(notedLinksToBeCheckedAfterMainScan);
 }
 
-// Todo: turn into a promise function
-function determineMissedLinksAndDisplayThem() {
-	for (const [key, value] of Object.entries(notedLinksToBeCheckedAfterMainScan)) {
-		// The key is the hash value of statusCode + LinkUrl + LinkText. The Value is an object with details about that link
+let determineMissedLinksAndDisplayThem = function() {
+	return new Promise(function(resolve, reject) {
+		for (const [key, value] of Object.entries(notedLinksToBeCheckedAfterMainScan)) {
+			// The key is the hash value of statusCode + LinkUrl + LinkText. The Value is an object with details about that link
 
-		if (!(key in notedDisplayedBrokenLinks)){
-			// This broken link was not logged before, so we will log it now
-			addBrokenLink(
-				value["statusCode"],
-				value["linkURL"],
-				value["linkText"],
-				value["originURL"],
-				value["originURI"],
-				value["wpPostId"]
-			);
+			if (!(key in notedDisplayedBrokenLinks)){
+				// This broken link was not logged before, so we will log it now
+				addBrokenLink(
+					value["statusCode"],
+					value["linkURL"],
+					value["linkText"],
+					value["originURL"],
+					value["originURI"],
+					value["wpPostId"]
+				);
+			}
 		}
-	}
+		resolve();
+	});
 }
 
 function containsPhpError(string){
