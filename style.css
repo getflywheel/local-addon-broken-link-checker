@@ -1,5 +1,9 @@
 /* START BROKEN LINK CHECKER STYLES */
 
+.brokenLinkCheckWrap {
+	max-height: 100%;
+}
+
 .brokenLinkCheckWrap .TableListRepeaterAdd_1_fxd_v11-2-0 {
 	display: none;
 }
