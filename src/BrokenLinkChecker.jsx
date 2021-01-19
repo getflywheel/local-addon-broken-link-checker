@@ -348,7 +348,7 @@ export default class BrokenLinkChecker extends Component {
 
 		let routeChildrenProps = this.props.routeChildrenProps;
 		let site = routeChildrenProps.site;
-		let siteDomain = site.domain;
+		let siteDomain = routeChildrenProps.host;
 
 		this.testSiteRootUrlVariantsAndUpdate(siteDomain).then((rootUrl) => {
 			// Update total site posts count
