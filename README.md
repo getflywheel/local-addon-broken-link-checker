@@ -34,6 +34,10 @@ All files in `/src` will be transpiled to `/lib` using [Babel](https://github.co
 
 - Aside from the developer console, Local logs can be found (on Mac) at /Users/username/Library/Logs/local-beta.log
 
+### Testing with Local
+
+- Import site `/docs/LinkChecker_TestSite.zip` into Local and run Link Checker. This should result in several expected errors to occur.
+
 ## License
 
 MIT
