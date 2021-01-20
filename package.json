@@ -2,7 +2,7 @@
 	"name": "@getflywheel/local-addon-broken-link-checker",
 	"productName": "Broken Link Checker",
 	"local": { "hidden": true },
-	"version": "1.0.13",
+	"version": "1.0.14",
 	"author": "Coulter Peterson",
 	"keywords": [
 		"local-addon"
