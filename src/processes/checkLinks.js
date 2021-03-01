@@ -3,8 +3,9 @@ const {
 	HtmlUrlChecker
 } = require("broken-link-checker");
 const { send } = require("process");
+const constants = require('../constants');
 let userCancelled = false;
-let notedDisplayedBrokenLinks = {}, notedLinksToBeCheckedAfterMainScan = {};
+
 
 // receive message from master process
 process.on('message', (m) => {
@@ -31,9 +32,26 @@ let checkLinks = function(siteURL) {
 
 		let options = new Object();
 		options.maxSocketsPerHost = 10;
+		options.userAgent = constants.SCAN_USER_AGENT;
 
 		let siteChecker = new SiteChecker(options, {
 			html: (tree, robots, response, pageUrl, customData) => {
+
+				if(userCancelled){
+					// User cancelled the scan
+
+					try {
+						if(siteChecker.dequeue(siteCheckerSiteId)){
+							callCancelSuccess();
+						}
+					} catch(e){
+						sendDebugData("error in dequeueing the site");
+					}
+
+					siteChecker.pause();
+				}
+
+
 				// This code is used to increment the number of WP posts we traverse in our scan
 				if (findWpPostIdInMarkup(tree)) {
 					incrementNumberPostsFound();
@@ -59,15 +77,9 @@ let checkLinks = function(siteURL) {
 							statusCode = statusCodeCheck;
 						}
 
-						// Old status code handling (remove after testing)
-						//let statusCode = '';
-						// if(result.brokenReason === "HTTP_undefined"){
-						// 	statusCode = "Timeout";
-						// } else if(containsPhpError(String(result.html.text))){
-						// 	statusCode = "Error";
-						// } else {
-						// 	statusCode = String(result.http.response.statusCode);
-						// }
+						if (statusCode == 403){
+							return;
+						}
 
 						let linkText = '';
 						if(result.html.text){
@@ -87,14 +99,15 @@ let checkLinks = function(siteURL) {
 							resultDump: result
 						};
 
-						let singlePageChecker = new HtmlUrlChecker(null, {
+						let singlePageCheckerOptions = new Object();
+						singlePageCheckerOptions.userAgent = "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_6) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/85.0.4183.83 Safari/537.36";
+
+						let singlePageChecker = new HtmlUrlChecker(singlePageCheckerOptions, {
 							html: (tree, robots, response, pageUrl, customData) => {
 
 								let wpPostId = findWpPostIdInMarkup(tree);
 
 								if (wpPostId !== null) {
-									// This page has a post ID and contains a broken link - we should log this link right away
-
 									addBrokenLink(
 										customData["statusCode"],
 										customData["linkURL"],
@@ -104,34 +117,7 @@ let checkLinks = function(siteURL) {
 										wpPostId
 									);
 
-									// Add to a key-value array of logged links and include the details of the link
-									noteDisplayedBrokenLink(
-										(customData["statusCode"] + customData["linkURL"] + customData["linkText"]).hashCode(),
-										customData["statusCode"],
-										customData["linkURL"],
-										customData["linkText"],
-										customData["originURL"],
-										customData["originURI"],
-										wpPostId
-									);
-
 									updateBrokenLinksFound(true);
-								} else {
-									// This page does not have a post ID, however if it hasn't been logged yet at the end of the scan, we will display it
-
-									// Add this to an array that will be checked after the scan
-									noteLinkToBeCheckedAfterMainScan(
-										(customData["statusCode"] + customData["linkURL"] + customData["linkText"]).hashCode(),
-										customData["statusCode"],
-										customData["linkURL"],
-										customData["linkText"],
-										customData["originURL"],
-										customData["originURI"],
-										wpPostId
-									);
-
-									// TODO: Determine if this link has been logged already by checking the logged array
-									//          if it hasn't then display, if it has then skip
 								}
 							}
 						});
@@ -155,15 +141,12 @@ let checkLinks = function(siteURL) {
 				sendDebugData(error);
 			},
 			end: (result, customData) => {
-				// Check to see if there were any non-post-id results that need to be rendered
-				determineMissedLinksAndDisplayThem().then(() => {
-					// At last the first run is done, so we update the state
-					updateFirstRunComplete(true);
-					updateScanInProgress(false);
-					callScanFinished(true);
+				// At last the first run is done, so we update the state
+				updateFirstRunComplete(true);
+				updateScanInProgress(false);
+				callScanFinished(true);
 
-					resolve('finished');
-				});
+				resolve('finished');
 			},
 		});
 		siteCheckerSiteId = siteChecker.enqueue(siteURL);

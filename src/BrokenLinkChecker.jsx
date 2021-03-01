@@ -7,6 +7,7 @@ const {
 	HtmlUrlChecker,
 	UrlChecker,
 } = require("broken-link-checker");
+const constants = require('./constants');
 
 import { TableListMultiDisplay, ProgressBar, PrimaryButton, Title, Tooltip, Banner, Text } from "@getflywheel/local-components";
 import { resolve } from "dns";
@@ -275,6 +276,7 @@ export default class BrokenLinkChecker extends Component {
 			let options = new Object();
 			options.cacheResponses = false;
 			options.rateLimit = 500; // Give the local website time to start, so we avoid the 500 errors
+			options.userAgent = constants.SCAN_USER_AGENT;
 			let workingUrl = null;
 
 			let isUrlBrokenChecker = new UrlChecker(options, {
