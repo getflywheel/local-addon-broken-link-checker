@@ -3,13 +3,20 @@ const {
 	HtmlUrlChecker
 } = require("broken-link-checker");
 const { send } = require("process");
-
+let userCancelled = false;
+let notedDisplayedBrokenLinks = {}, notedLinksToBeCheckedAfterMainScan = {};
 
 // receive message from master process
 process.on('message', (m) => {
 
 	if( (m[0] === "start-scan") && (m[1] !== 'undefined')) {
+		// Empty the temp arrays of links
+		notedDisplayedBrokenLinks = {};
+		notedLinksToBeCheckedAfterMainScan = {};
+		// Start the new scan
 		checkLinks(m[1]).then((data) => process.send(["scan-finished", data]));
+	} else if ( (m[0] === "cancel-scan") && (m[1] !== 'undefined')) {
+		userCancelled = true;
 	}
 
 });
@@ -86,6 +93,8 @@ let checkLinks = function(siteURL) {
 								let wpPostId = findWpPostIdInMarkup(tree);
 
 								if (wpPostId !== null) {
+									// This page has a post ID and contains a broken link - we should log this link right away
+
 									addBrokenLink(
 										customData["statusCode"],
 										customData["linkURL"],
@@ -95,7 +104,34 @@ let checkLinks = function(siteURL) {
 										wpPostId
 									);
 
+									// Add to a key-value array of logged links and include the details of the link
+									noteDisplayedBrokenLink(
+										(customData["statusCode"] + customData["linkURL"] + customData["linkText"]).hashCode(),
+										customData["statusCode"],
+										customData["linkURL"],
+										customData["linkText"],
+										customData["originURL"],
+										customData["originURI"],
+										wpPostId
+									);
+
 									updateBrokenLinksFound(true);
+								} else {
+									// This page does not have a post ID, however if it hasn't been logged yet at the end of the scan, we will display it
+
+									// Add this to an array that will be checked after the scan
+									noteLinkToBeCheckedAfterMainScan(
+										(customData["statusCode"] + customData["linkURL"] + customData["linkText"]).hashCode(),
+										customData["statusCode"],
+										customData["linkURL"],
+										customData["linkText"],
+										customData["originURL"],
+										customData["originURI"],
+										wpPostId
+									);
+
+									// TODO: Determine if this link has been logged already by checking the logged array
+									//          if it hasn't then display, if it has then skip
 								}
 							}
 						});
@@ -119,12 +155,15 @@ let checkLinks = function(siteURL) {
 				sendDebugData(error);
 			},
 			end: (result, customData) => {
-				// At last the first run is done, so we update the state
-				updateFirstRunComplete(true);
-				updateScanInProgress(false);
-				callScanFinished(true);
-				
-				resolve('finished');
+				// Check to see if there were any non-post-id results that need to be rendered
+				determineMissedLinksAndDisplayThem().then(() => {
+					// At last the first run is done, so we update the state
+					updateFirstRunComplete(true);
+					updateScanInProgress(false);
+					callScanFinished(true);
+
+					resolve('finished');
+				});
 			},
 		});
 		siteCheckerSiteId = siteChecker.enqueue(siteURL);
@@ -164,6 +203,54 @@ function findWpPostIdInMarkup(tree) {
 	}
 
 	return wpPostId;
+}
+
+function noteDisplayedBrokenLink(hashKey,statusCode,linkURL,linkText,originURL,originURI,wpPostId){
+	notedDisplayedBrokenLinks[hashKey] = {
+		statusCode: statusCode,
+		linkURL: linkURL,
+		linkText: linkText,
+		originURL: originURL,
+		originURI: originURI,
+		wpPostId: wpPostId
+	};
+
+	// sendDebugData('Links that were displayed:');
+	// sendDebugData(notedDisplayedBrokenLinks);
+}
+
+function noteLinkToBeCheckedAfterMainScan(hashKey,statusCode,linkURL,linkText,originURL,originURI,wpPostId){
+	notedLinksToBeCheckedAfterMainScan[hashKey] = {
+		statusCode: statusCode,
+		linkURL: linkURL,
+		linkText: linkText,
+		originURL: originURL,
+		originURI: originURI,
+		wpPostId: wpPostId
+	};
+	// sendDebugData('Links saved for after the scan:');
+	// sendDebugData(notedLinksToBeCheckedAfterMainScan);
+}
+
+let determineMissedLinksAndDisplayThem = function() {
+	return new Promise(function(resolve, reject) {
+		for (const [key, value] of Object.entries(notedLinksToBeCheckedAfterMainScan)) {
+			// The key is the hash value of statusCode + LinkUrl + LinkText. The Value is an object with details about that link
+
+			if (!(key in notedDisplayedBrokenLinks)){
+				// This broken link was not logged before, so we will log it now
+				addBrokenLink(
+					value["statusCode"],
+					value["linkURL"],
+					value["linkText"],
+					value["originURL"],
+					value["originURI"],
+					value["wpPostId"]
+				);
+			}
+		}
+		resolve();
+	});
 }
 
 function containsPhpError(string){
@@ -219,3 +306,17 @@ function reportError(name, errorInfo){
 function sendDebugData(data){
 	process.send(["debug-data", data]);
 }
+
+// Start thank you to https://stackoverflow.com/a/7616484
+Object.defineProperty(String.prototype, 'hashCode', {
+	value: function() {
+	  var hash = 0, i, chr;
+	  for (i = 0; i < this.length; i++) {
+		chr   = this.charCodeAt(i);
+		hash  = ((hash << 5) - hash) + chr;
+		hash |= 0; // Convert to 32bit integer
+	  }
+	  return hash;
+	}
+  });
+// End thank you to https://stackoverflow.com/a/7616484
