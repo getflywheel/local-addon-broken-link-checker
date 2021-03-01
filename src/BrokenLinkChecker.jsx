@@ -59,6 +59,10 @@ export default class BrokenLinkChecker extends Component {
 		this.updateSiteId(siteId);
 		this.updateSiteState(siteStatus);
 		this.addListeners();
+
+		this.isScanningProcessAlive()
+			.then(() => {this.reloadScanInProgress();})
+			.catch((err) => {});
 	}
 
 	addListeners() {
@@ -70,6 +74,7 @@ export default class BrokenLinkChecker extends Component {
 					case 'increment-number-posts-found':
 						// Needs to call incrementNumberPostsFound() back in the renderer
 						this.incrementNumberPostsFound();
+						this.syncGeneralLinkCheckerData();
 						break;
 					case 'add-broken-link':
 						// Needs to make addBrokenLink() and incrementNumberBrokenLinksFound() be called back in renderer
@@ -105,8 +110,8 @@ export default class BrokenLinkChecker extends Component {
 						break;
 					case 'debug-data':
 						if(this.state.localVersionName === "Local Beta"){
-							console.log("Debug data: ");
-							console.log(response[1]);
+							// console.log("Debug data: ");
+							// console.log(response[1]);
 						}
 					default:
 					//
@@ -136,7 +141,7 @@ export default class BrokenLinkChecker extends Component {
 			if(this.state.brokenLinks.length) {
 				// Return true if the originURI field is not found in the first element
 				// Can add more checks to this if statement for future array changes
-				if ( !this.state.brokenLinks[0].hasOwnProperty('originURI') || !this.state.brokenLinks[0].hasOwnProperty('dateAdded') ) {
+				if ( !this.state.brokenLinks[0].hasOwnProperty('originURI') || !this.state.brokenLinks[0].hasOwnProperty('dateAdded')) {
 					return true;
 				}
 			}
@@ -146,23 +151,24 @@ export default class BrokenLinkChecker extends Component {
 	}
 
 	addBrokenLink(statusCode, linkURL, linkText, originURL, originURI, wpPostId) {
-		let newBrokenLink = {
-			dateAdded: Date.now(),
-			statusCode: statusCode,
-			linkURL: linkURL,
-			linkText: linkText,
-			originURL: originURL,
-			originURI: originURI,
-			wpPostId: wpPostId,
-		};
+
+		// Broken links are now intercepted in main.ts and added to persistent storage there
+		// let newBrokenLink = {
+		// 	dateAdded: Date.now(),
+		// 	statusCode: statusCode,
+		// 	linkURL: linkURL,
+		// 	linkText: linkText,
+		// 	originURL: originURL,
+		// 	originURI: originURI,
+		// 	wpPostId: wpPostId
+		// };
 
 		this.updateResultsOnScreen(true);
 
 		this.setState(
 			(prevState) => ({
-				brokenLinks: [...prevState.brokenLinks, newBrokenLink],
+				brokenLinks: this.fetchBrokenLinks(),
 			}),
-			this.syncBrokenLinks
 		);
 	}
 
@@ -178,6 +184,22 @@ export default class BrokenLinkChecker extends Component {
 		);
 	}
 
+	syncGeneralLinkCheckerData() {
+		// Data to store:
+		let scanStatus = {
+			numberPostsFound: this.state.numberPostsFound,
+			siteRootUrl: this.state.siteRootUrl,
+			tablePrefix: this.state.tablePrefix,
+			totalSitePosts: this.state.totalSitePosts
+		};
+
+		ipcRenderer.send(
+			"store-link-checker-data",
+			this.state.siteId,
+			scanStatus
+		);
+	}
+
 	fetchBrokenLinks() {
 		const brokenLinks = this.props.routeChildrenProps.site.brokenLinks;
 
@@ -188,6 +210,16 @@ export default class BrokenLinkChecker extends Component {
 		return brokenLinks;
 	}
 
+	fetchGeneralLinkCheckerData() {
+		const scanStatus = this.props.routeChildrenProps.site.scanStatus;
+
+		if (!scanStatus) {
+			return false;
+		}
+
+		return scanStatus;
+	}
+
 	ifBrokenLinksFetched() {
 		const brokenLinks = this.props.routeChildrenProps.site.brokenLinks;
 
@@ -196,6 +228,41 @@ export default class BrokenLinkChecker extends Component {
 		}
 
 		return true;
+	}
+
+	isScanningProcessAlive = () => {
+		return new Promise((resolve, reject) => {
+			ipcAsync("scanning-process-life-or-death").then((result) => {
+				if(result){
+					resolve(result);
+				} else {
+					reject(result);
+				}
+			}).catch((err) => reject("isScanningProcessAlive Error: " + err));
+		});
+	};
+
+	reloadScanInProgress() {
+		this.updateScanInProgress(true);
+
+		if (this.state.brokenLinks.length > 0) {
+			this.updateBrokenLinksFound(true);
+			this.updateNumberBrokenLinksFound(this.state.brokenLinks.length);
+		}
+
+		try{
+		if(this.fetchGeneralLinkCheckerData()){
+			let scanStatus = this.fetchGeneralLinkCheckerData();
+			this.updateNumberPostsFound(scanStatus.numberPostsFound);
+			this.updateSiteRootUrl(scanStatus.siteRootUrl);
+			this.setTablePrefix(scanStatus.tablePrefix);
+			this.setTotalSitePosts(scanStatus.totalSitePosts);
+		} else {
+			//console.log('Had trouble fetching');
+		}
+		} catch(e){
+			//console.log(`This was error ${e}`);
+		}
 	}
 
 	testSiteRootUrlVariantsAndUpdate = (siteDomain) => {
@@ -216,9 +283,7 @@ export default class BrokenLinkChecker extends Component {
 					if (!result.broken) {
 						workingUrl = result.url.original;
 
-						this.setState(prevState => ({
-							siteRootUrl: workingUrl
-						}));
+						this.updateSiteRootUrl(workingUrl);
 
 						// In case the first root URL variant is the winner, dequeue the later options
 						isUrlBrokenChecker.dequeue(1);
@@ -252,9 +317,9 @@ export default class BrokenLinkChecker extends Component {
 
 			ipcAsync("get-total-posts", this.state.siteId, prefix).then((result) => {
 				this.setState((prevState) => ({
-					totalSitePosts: parseInt(result),
 					getTotalSitePostsInProgress: false,
 				}));
+				this.setTotalSitePosts(result);
 				resolve(parseInt(result));
 			}).catch((err) => reject("updateTotalSitePosts Error: " + err));
 		});
@@ -263,9 +328,7 @@ export default class BrokenLinkChecker extends Component {
 	updateTablePrefix = () => {
 		return new Promise((resolve, reject) => {
 			ipcAsync("get-table-prefix", this.state.siteId).then((result) => {
-				this.setState((prevState) => ({
-					tablePrefix: result,
-				}));
+				this.setTablePrefix(result);
 				resolve(result);
 			}).catch((err) => reject("updateTablePrefix Error: " + err));
 		});
@@ -280,6 +343,18 @@ export default class BrokenLinkChecker extends Component {
 	updateSiteId(siteId) {
 		this.setState((prevState) => ({
 			siteId: siteId,
+		}));
+	}
+
+	setTablePrefix(prefix) {
+		this.setState((prevState) => ({
+			tablePrefix: prefix,
+		}));
+	}
+
+	updateSiteRootUrl(siteRootUrl){
+		this.setState((prevState) => ({
+			siteRootUrl: siteRootUrl,
 		}));
 	}
 
@@ -307,9 +382,23 @@ export default class BrokenLinkChecker extends Component {
 		}));
 	}
 
+	setTotalSitePosts(num){
+		this.setState((prevState) => ({
+			totalSitePosts: parseInt(num),
+		}));
+	}
+
+
+
 	incrementNumberBrokenLinksFound() {
 		this.setState((prevState) => ({
 			numberBrokenLinksFound: prevState.numberBrokenLinksFound + 1,
+		}));
+	}
+
+	updateNumberBrokenLinksFound(num) {
+		this.setState((prevState) => ({
+			numberBrokenLinksFound: num,
 		}));
 	}
 
@@ -334,6 +423,12 @@ export default class BrokenLinkChecker extends Component {
 	incrementNumberPostsFound() {
 		this.setState((prevState) => ({
 			numberPostsFound: prevState.numberPostsFound + 1,
+		}));
+	}
+
+	updateNumberPostsFound(num) {
+		this.setState((prevState) => ({
+			numberPostsFound: num,
 		}));
 	}
 
@@ -405,8 +500,6 @@ export default class BrokenLinkChecker extends Component {
 
 	cancelScan = () => {
 		ipcRenderer.send('analyticsV2:trackEvent', 'v2_pro_link_checker_run_cancel');
-
-		console.log("renderer speaking: cancel scan was clicked");
 		ipcAsync("fork-process", "cancel-scan", '').then((result) => {
 			// first thing heard back
 			resolve();
