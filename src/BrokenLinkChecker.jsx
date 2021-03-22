@@ -9,7 +9,16 @@ const {
 } = require("broken-link-checker");
 const constants = require('./constants');
 
-import { TableListMultiDisplay, ProgressBar, PrimaryButton, Title, Tooltip, Banner, Text } from "@getflywheel/local-components";
+import {
+	TableListMultiDisplay,
+	ProgressBar,
+	PrimaryButton,
+	Title,
+	Tooltip,
+	Banner,
+	Text,
+	VirtualTable,
+} from '@getflywheel/local-components';
 import { resolve } from "dns";
 
 export default class BrokenLinkChecker extends Component {
@@ -276,7 +285,7 @@ export default class BrokenLinkChecker extends Component {
 			let options = new Object();
 			options.cacheResponses = false;
 			options.rateLimit = 500; // Give the local website time to start, so we avoid the 500 errors
-			options.userAgent = constants.SCAN_USER_AGENT;
+			options.userAgent = constants.SCAN_USER_AGENT.DEFAULT;
 			let workingUrl = null;
 
 			let isUrlBrokenChecker = new UrlChecker(options, {
@@ -389,8 +398,6 @@ export default class BrokenLinkChecker extends Component {
 			totalSitePosts: parseInt(num),
 		}));
 	}
-
-
 
 	incrementNumberBrokenLinksFound() {
 		this.setState((prevState) => ({
@@ -654,34 +661,29 @@ export default class BrokenLinkChecker extends Component {
 		return '';
 	}
 
-	renderFixInAdminButton(currentBrokenLink){
-
-		if(currentBrokenLink.statusCode === "Error") {
+	renderFixInAdminButton (currentBrokenLink) {
+		if (currentBrokenLink.statusCode === "Error") {
 			return '';
-		} else {
-			return (
-				<a
-					href={
-					this.state.siteRootUrl +
-					"wp-admin/post.php?post=" +
-					currentBrokenLink.wpPostId +
-					"&action=edit"
-					}
-					onClick={e => {
-						e.preventDefault()
-						ipcRenderer.send('analyticsV2:trackEvent', 'v2_pro_link_checker_open_admin_link');
-					}}
-				>
-				Fix in Admin
-				</a>
-			);
 		}
+		return (
+			<a
+				href={
+				this.state.siteRootUrl +
+				"wp-admin/post.php?post=" +
+				currentBrokenLink.wpPostId +
+				"&action=edit"
+				}
+				onClick={e => {
+					e.preventDefault()
+					ipcRenderer.send('analyticsV2:trackEvent', 'v2_pro_link_checker_open_admin_link');
+				}}
+			>
+			Fix in Admin
+			</a>
+		);
 	}
 
-
-
 	renderFooterMessage() {
-
 		let message = "";
 		if (this.state.siteStatus === "halted") {
 			message = "Please start the site to begin a scan";
@@ -716,11 +718,79 @@ export default class BrokenLinkChecker extends Component {
 		}
 	}
 
-	render() {
-		if(this.legacyPluginDataDetected()) {
+
+	getHeaders = () => {
+		const TABLE_HEADERS = constants.TABLE_HEADERS;
+		const { STATUS, ORIGIN_URL, LINK_URL, LINK_TEXT, FILL } = TABLE_HEADERS;
+
+		return [
+			{ key: STATUS.KEY, value: STATUS.TEXT, className: 'LinkChecker_VirtualTable_Header_Status' },
+			{ key: ORIGIN_URL.KEY, value: ORIGIN_URL.TEXT, className: 'LinkChecker_VirtualTable_Header_OriginUrl' },
+			{ key: LINK_URL.KEY, value: LINK_URL.TEXT, className: 'LinkChecker_VirtualTable_Header_LinkUrl' },
+			{ key: LINK_TEXT.KEY, value: LINK_TEXT.TEXT, className: 'LinkChecker_VirtualTable_Header_LinkText' },
+			{ key: FILL.KEY, value: FILL.TEXT, className: 'LinkChecker_VirtualTable_Header_Fill' },
+		];
+	};
+
+	cellRenderer = (dataArgs) => {
+		const TABLE_HEADERS = constants.TABLE_HEADERS;
+		const { STATUS, ORIGIN_URL, ORIGIN_URI, LINK_URL, LINK_TEXT, FILL } = TABLE_HEADERS;
+		const { colKey } = dataArgs;
+		const { rowData } = dataArgs;
+
+		if (dataArgs.isHeader) {
+			return (<div>{dataArgs.cellData}</div>);
+		}
+
+		if (!dataArgs.isHeader && colKey === STATUS.KEY) {
+			const status = rowData[STATUS.KEY];
+			return (<div className='LinkChecker_VirtualTable_Column_Status'>
+				{status}
+			</div>);
+		}
+
+		if (!dataArgs.isHeader && colKey === ORIGIN_URL.KEY) {
+			const originURL = rowData[ORIGIN_URL.KEY];
+			const originURI = rowData[ORIGIN_URI.KEY];
+			return (<div className='LinkChecker_VirtualTable_Column_OriginUrl'>
+				<Tooltip content={<div>{originURL}</div>}>
+					<a href={originURL}>{originURI}</a>
+				</Tooltip>
+			</div>);
+		}
+
+		if (!dataArgs.isHeader && colKey === LINK_URL.KEY) {
+			const linkURL = rowData[LINK_URL.KEY];
+			return (<div className='LinkChecker_VirtualTable_Column_LinkUrl'>
+				<Tooltip
+					style={{ whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}
+					content={<div>{linkURL}</div>}
+				>
+					<a href={linkURL}>{linkURL}</a>
+				</Tooltip>
+			</div>);
+		}
+
+		if (!dataArgs.isHeader && colKey === LINK_TEXT.KEY) {
+			const linkText = rowData[LINK_TEXT.KEY];
+			return (<div className='LinkChecker_VirtualTable_Column_LinkText'>
+				<p>{linkText}</p>
+			</div>);
+		}
+
+		if (!dataArgs.isHeader && colKey === FILL.KEY) {
+			return (<div className='LinkChecker_VirtualTable_Column_Fill'>
+				{this.renderFixInAdminButton(rowData)}
+			</div>);
+		}
+	};
+
+	render () {
+		if (this.legacyPluginDataDetected()) {
 			this.clearBrokenLinks();
-			return(<div></div>);
-		} else {
+			return (<div></div>);
+		}
+
 		return (
 			<div
 				style={{ flex: "1", overflowY: "auto" }}
@@ -729,49 +799,18 @@ export default class BrokenLinkChecker extends Component {
 
 				{this.renderHeader()}
 
-				<TableListMultiDisplay
-					header={
-						<>
-							<strong style={{ width: "10%" }}>Status</strong>
-							<strong style={{ width: "20%" }}>Origin URL</strong>
-							<strong style={{ width: "30%" }}>Link URL</strong>
-							<strong style={{ width: "28%" }}>Link Text</strong>
-							<strong style={{ width: "12%" }}></strong>
-						</>
-					}
-					repeatingContent={(item, index, updateItem) => (
-						<>
-							<div style={{ lineHeight: "1.3em" }}>
-								{item.statusCode}
-							</div>
-
-							<div className="blcTooltipWrapper">
-								<Tooltip content={<div style={{ lineHeight: "1.3em" }}>{item.originURL}</div>}>
-									<a href={item.originURL} className="blcTruncate">{item.originURI}</a>
-								</Tooltip>
-							</div>
-
-							<div className="blcTooltipWrapper">
-								<Tooltip content={<div style={{ lineHeight: "1.3em" }}>{item.linkURL}</div>}>
-									<a href={item.linkURL} className="blcTruncate">{item.linkURL}</a>
-								</Tooltip>
-							</div>
-
-							<div style={{ lineHeight: "1.3em" }}>
-								<p style={{ flexShrink: 1 }} className="blcTruncate">{item.linkText}</p>
-							</div>
-
-							<div style={{ lineHeight: "1.3em" }}>
-								{this.renderFixInAdminButton(item)}
-							</div>
-						</>
-					)}
-					itemTemplate={{}}
+				<VirtualTable
+					striped
+					rowHeightSize="m"
+					rowHeaderHeightSize="m"
+					headersWeight={400}
+					headers={this.getHeaders()}
+					cellRenderer={this.cellRenderer}
 					data={this.state.brokenLinks}
 				/>
 
 				{this.renderFooterMessage()}
 			</div>
-		);}
+		);
 	}
 }
