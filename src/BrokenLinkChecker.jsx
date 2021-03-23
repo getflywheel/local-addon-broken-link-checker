@@ -9,10 +9,10 @@ import {
 	ProgressBar,
 	Title,
 	Tooltip,
-	Banner,
 	Text,
 	VirtualTable,
-	TableListRow,
+	TextButton,
+	CircleInfoIcon,
 } from '@getflywheel/local-components';
 import { resolve } from 'dns';
 
@@ -523,27 +523,65 @@ export default class BrokenLinkChecker extends Component {
 			messageLeftOfActionButtonText = '';
 			return (
 				<div>
-					<Banner style={{ backgroundColor: '#fff' }} icon={false} buttonText={buttonText} buttonOnClick={this.cancelScan}>
-						<div style={{ flex: '1', display: 'flex', flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', padding: '0 10px' }}>
-							<Title size="s" style={{ marginTop: 14, marginBottom: 14 }}>{ (this.state.scanInProgress && this.state.numberBrokenLinksFound !== null) ? (<span>Broken Links <strong>{this.state.numberBrokenLinksFound}</strong></span>) : (<span>Link Checker</span>) }</Title>
+					<div className="LinkChecker_StartScan_Header">
+						<Title size="s" style={{ marginTop: 14, marginBottom: 14 }}>{ (this.state.scanInProgress && this.state.numberBrokenLinksFound !== null) ? (<span>Broken Links <strong>{this.state.numberBrokenLinksFound}</strong></span>) : (<span>Link Checker</span>) }</Title>
 
-							<Text size="caption">{messageLeftOfActionButtonText}</Text>
-						</div>
-					</Banner>
+						<Text size="caption">{messageLeftOfActionButtonText}</Text>
+						<TextButton size='tiny' privateOptions={{ color: 'green', form: 'fill' }} onClick={this.cancelScan}>
+							{buttonText}
+						</TextButton>
+					</div>
 					{this.renderProgressBarElements()}
 				</div>
 			);
 		}
 
+		const renderStartScanButton = () => (
+			<TextButton
+				size='tiny'
+				privateOptions={{ color: 'green', form: 'fill' }}
+				onClick={this.state.scanInProgress ? {} : this.startScan}
+				disabled={this.state.siteStatus !== 'running'}
+			>
+				{buttonText}
+			</TextButton>
+		);
+
+
 		return (
 			<div>
-				{/* <Banner style={{backgroundColor: "#fff"}} icon={false} buttonText={this.state.siteStatus !== 'halted' ? buttonText : null} buttonOnClick={this.state.scanInProgress ?
-					{} :
-					this.state.siteStatus !== 'halted' ? this.startScan : null}> */}
-				<div style={{ flex: '1', display: 'flex', flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', padding: '0 10px' }}>
-					<Title size="s" style={{ marginTop: 14, marginBottom: 14 }}>{ (this.state.scanInProgress && this.state.numberBrokenLinksFound !== null) ? (<span>Broken Links <strong>{this.state.numberBrokenLinksFound}</strong></span>) : (<span>Link Checker</span>) }</Title>
+
+				<div className="LinkChecker_StartScan_Header">
+					<Title
+						size="s"
+						style={{ marginTop: 14, marginBottom: 14 }}
+					>
+						{ (this.state.scanInProgress && this.state.numberBrokenLinksFound !== null)
+							? (<span>Broken Links <strong>{this.state.numberBrokenLinksFound}</strong></span>)
+							: (<span>Link Checker</span>)}
+					</Title>
 
 					<Text size="caption">{messageLeftOfActionButtonText}</Text>
+					<div>
+						{this.state.siteStatus !== 'running'
+							? (
+								<div>
+									<Tooltip
+										content={
+											(
+												<div>
+													Start the site to begin a scan
+												</div>
+											)
+										}
+										position='left'
+									>
+										{renderStartScanButton()}
+									</Tooltip>
+								</div>
+							)
+							: renderStartScanButton()}
+					</div>
 				</div>
 				{this.renderProgressBarElements()}
 			</div>
@@ -675,9 +713,7 @@ export default class BrokenLinkChecker extends Component {
 
 	renderFooterMessage () {
 		let message = '';
-		if (this.state.siteStatus === 'halted') {
-			message = 'Please start the site to begin a scan';
-		} else if (
+		if (
 			this.state.firstRunComplete &&
 			!this.state.brokenLinksFound
 		) {
