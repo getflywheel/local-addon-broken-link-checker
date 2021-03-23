@@ -1,4 +1,4 @@
-import * as LocalMain from "@getflywheel/local/main";
+import * as LocalMain from '@getflywheel/local/main';
 const { fork } = require('child_process');
 import path from 'path';
 
@@ -13,35 +13,35 @@ export default function (context) {
 	const { electron } = context;
 	const { ipcMain } = electron;
 
-	ipcMain.on("store-broken-links", (event, siteId, brokenLinks) => {
+	ipcMain.on('store-broken-links', (event, siteId, brokenLinks) => {
 		LocalMain.SiteData.updateSite(siteId, {
 			id: siteId,
 			brokenLinks,
 		});
 	});
 
-	ipcMain.on("store-link-checker-data", (event, siteId, scanStatus) => {
+	ipcMain.on('store-link-checker-data', (event, siteId, scanStatus) => {
 		LocalMain.SiteData.updateSite(siteId, {
 			id: siteId,
 			scanStatus,
 		});
 	});
 
-	ipcMain.on("get-total-posts", async (event, replyChannel, siteId, prefix) => {
+	ipcMain.on('get-total-posts', async (event, replyChannel, siteId, prefix) => {
 		event.reply(replyChannel, await getTotalPosts(siteId, prefix));
 	});
 
-	ipcMain.on("get-table-prefix", async (event, replyChannel, siteId) => {
+	ipcMain.on('get-table-prefix', async (event, replyChannel, siteId) => {
 		theSiteId = siteId;
 		event.reply(replyChannel, await getTablePrefix(siteId));
 	});
 
-	ipcMain.on("fork-process", async (event, replyChannel, command, siteURL) => {
-		spawnChildProcess(command, siteURL)
+	ipcMain.on('fork-process', async (event, replyChannel, command, siteURL) => {
+		spawnChildProcess(command, siteURL);
 	});
 
-	ipcMain.on("scanning-process-life-or-death", async (event, replyChannel) => {
-		if(siteScanProcess && !killCommandIssued) {
+	ipcMain.on('scanning-process-life-or-death', async (event, replyChannel) => {
+		if (siteScanProcess && !killCommandIssued) {
 			event.reply(replyChannel, true);
 		} else {
 			event.reply(replyChannel, false);
@@ -49,18 +49,18 @@ export default function (context) {
 	});
 }
 
-async function addBrokenLink(brokenLinkInfo){
-	let siteData = LocalMain.SiteData.getSite(theSiteId);
-	let siteDataJson = siteData.toJSON();
-	let brokenLinks = siteDataJson.brokenLinks;
+async function addBrokenLink (brokenLinkInfo) {
+	const siteData = LocalMain.SiteData.getSite(theSiteId);
+	const siteDataJson = siteData.toJSON();
+	const brokenLinks = siteDataJson.brokenLinks;
 	brokenLinks.push({
-		"dateAdded": Date.now(),
-		"linkText": brokenLinkInfo[2],
-		"linkURL": brokenLinkInfo[1],
-		"originURI": brokenLinkInfo[4],
-		"originURL": brokenLinkInfo[3],
-		"statusCode": brokenLinkInfo[0],
-		"wpPostId": brokenLinkInfo[5]
+		'dateAdded': Date.now(),
+		'linkText': brokenLinkInfo[2],
+		'linkURL': brokenLinkInfo[1],
+		'originURI': brokenLinkInfo[4],
+		'originURL': brokenLinkInfo[3],
+		'statusCode': brokenLinkInfo[0],
+		'wpPostId': brokenLinkInfo[5],
 	});
 
 	LocalMain.SiteData.updateSite(theSiteId, {
@@ -69,41 +69,41 @@ async function addBrokenLink(brokenLinkInfo){
 	});
 }
 
-async function getTotalPosts(siteId, prefix) {
+async function getTotalPosts (siteId, prefix) {
 	const site = siteData.getSite(siteId);
 
-	let numberOfPostsDbCall = await siteDatabase.exec(
+	const numberOfPostsDbCall = await siteDatabase.exec(
 		site,
 		[
-			"local",
-			"--batch",
-			"--skip-column-names",
-			"-e",
-			"SELECT COUNT(ID) FROM " + prefix + "posts WHERE post_status = 'publish'",
+			'local',
+			'--batch',
+			'--skip-column-names',
+			'-e',
+			'SELECT COUNT(ID) FROM ' + prefix + "posts WHERE post_status = 'publish'",
 		]
 	).catch((error) => {
-		logInfo("STARTDEBUG encountered this error when calling DB: " + error);
+		logInfo('STARTDEBUG encountered this error when calling DB: ' + error);
 	});
 
 	return numberOfPostsDbCall;
 }
 
-async function getTablePrefix(siteId) {
+async function getTablePrefix (siteId) {
 	const site = LocalMain.SiteData.getSite(siteId);
 
-	let wpPrefixCall = await LocalMain.getServiceContainer().cradle.siteDatabase.getTablePrefix(site).catch((error) => {
-		logInfo("Encountered this error when getting table prefix: " + error);
+	const wpPrefixCall = await LocalMain.getServiceContainer().cradle.siteDatabase.getTablePrefix(site).catch((error) => {
+		logInfo('Encountered this error when getting table prefix: ' + error);
 	});
 
 	return wpPrefixCall;
 }
 
-async function spawnChildProcess(command, siteURL) {
+async function spawnChildProcess (command, siteURL) {
 
-	if(command === "cancel-scan"){
+	if (command === 'cancel-scan') {
 		//siteScanProcess.send([command,siteURL]);
 		killSubProcess();
-		sendIPCEvent('blc-async-message-from-process', ["scan-cancelled-success", true]);
+		sendIPCEvent('blc-async-message-from-process', ['scan-cancelled-success', true]);
 	} else {
 
 		/**
@@ -122,22 +122,22 @@ async function spawnChildProcess(command, siteURL) {
 		siteScanProcess.on('message', (message) => {
 			//logInfo(`FORKPROCESS The process sent over this message ${message}`);
 
-			if(message[0] === 'scan-cancelled-success'){
+			if (message[0] === 'scan-cancelled-success') {
 				killSubProcess();
-			} else if(message[0] === 'scan-finished'){
+			} else if (message[0] === 'scan-finished') {
 				killSubProcess();
-			} else if(message[0] === 'error-encountered'){
+			} else if (message[0] === 'error-encountered') {
 				logWarn(`Link Checker encountered this error in its subprocess: ${message[1]} | ${message[2]}`);
-			} else if(message[0] === 'add-broken-link'){
+			} else if (message[0] === 'add-broken-link') {
 				// We need to get the existing array of broken links, add this one, then store it in persistent storage, then notify the renderer to re-fetch
 				addBrokenLink(message[1]);
 			}
 			sendIPCEvent('blc-async-message-from-process', message);
 		});
-	}	
+	}
 }
 
-async function killSubProcess(){
+async function killSubProcess () {
 	try {
 		siteScanProcess.kill();
 	} catch (e) {
