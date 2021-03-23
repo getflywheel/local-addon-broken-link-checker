@@ -54,13 +54,13 @@ async function addBrokenLink (brokenLinkInfo) {
 	const siteDataJson = siteData.toJSON();
 	const brokenLinks = siteDataJson.brokenLinks;
 	brokenLinks.push({
-		'dateAdded': Date.now(),
-		'linkText': brokenLinkInfo[2],
-		'linkURL': brokenLinkInfo[1],
-		'originURI': brokenLinkInfo[4],
-		'originURL': brokenLinkInfo[3],
-		'statusCode': brokenLinkInfo[0],
-		'wpPostId': brokenLinkInfo[5],
+		dateAdded: Date.now(),
+		linkText: brokenLinkInfo[2],
+		linkURL: brokenLinkInfo[1],
+		originURI: brokenLinkInfo[4],
+		originURL: brokenLinkInfo[3],
+		statusCode: brokenLinkInfo[0],
+		wpPostId: brokenLinkInfo[5],
 	});
 
 	LocalMain.SiteData.updateSite(theSiteId, {
@@ -79,7 +79,7 @@ async function getTotalPosts (siteId, prefix) {
 			'--batch',
 			'--skip-column-names',
 			'-e',
-			'SELECT COUNT(ID) FROM ' + prefix + "posts WHERE post_status = 'publish'",
+			`SELECT COUNT(ID) FROM ${prefix}posts WHERE post_status = 'publish'`,
 		]
 	).catch((error) => {
 		logInfo('STARTDEBUG encountered this error when calling DB: ' + error);
