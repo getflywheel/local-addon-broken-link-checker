@@ -222,3 +222,12 @@
 	min-width: 80px;
 	margin-right: 20px;
 }
+
+.LinkChecker_StartScan_Header {
+	display: flex;
+	flex: 1;
+	flex-direction: row;
+	justify-content: space-between;
+	align-items: center;
+	padding: 10px;
+}
