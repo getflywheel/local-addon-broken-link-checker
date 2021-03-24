@@ -12,7 +12,6 @@ import {
 	Text,
 	VirtualTable,
 	TextButton,
-	CircleInfoIcon,
 } from '@getflywheel/local-components';
 import { resolve } from 'dns';
 
@@ -575,6 +574,7 @@ export default class BrokenLinkChecker extends Component {
 											)
 										}
 										position='left'
+										showDelay={300}
 									>
 										{renderStartScanButton()}
 									</Tooltip>
@@ -788,12 +788,7 @@ export default class BrokenLinkChecker extends Component {
 		if (!dataArgs.isHeader && colKey === LINK_URL.KEY) {
 			const linkURL = rowData[LINK_URL.KEY];
 			return (<div className='LinkChecker_VirtualTable_Column_LinkUrl'>
-				<Tooltip
-					style={{ whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}
-					content={<div>{linkURL}</div>}
-				>
-					<a href={linkURL}>{linkURL}</a>
-				</Tooltip>
+				<a href={linkURL}>{linkURL}</a>
 			</div>);
 		}
 
