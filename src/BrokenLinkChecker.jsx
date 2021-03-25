@@ -11,7 +11,7 @@ import {
 	Tooltip,
 	Text,
 	VirtualTable,
-	TextButton,
+	Button,
 } from '@getflywheel/local-components';
 import { resolve } from 'dns';
 
@@ -510,7 +510,7 @@ export default class BrokenLinkChecker extends Component {
 	}
 
 	renderHeader () {
-		let buttonText = 'Start Scan';
+		let buttonText = 'Scan for Links';
 		let messageLeftOfActionButtonText = 'Last updated ' + this.renderLastUpdatedTimestamp();
 
 		if (this.renderLastUpdatedTimestamp() === '') {
@@ -523,12 +523,12 @@ export default class BrokenLinkChecker extends Component {
 			return (
 				<div>
 					<div className="LinkChecker_StartScan_Header">
-						<Title size="s" style={{ marginTop: 14, marginBottom: 14 }}>{ (this.state.scanInProgress && this.state.numberBrokenLinksFound !== null) ? (<span>Broken Links <strong>{this.state.numberBrokenLinksFound}</strong></span>) : (<span>Link Checker</span>) }</Title>
-
-						<Text size="caption">{messageLeftOfActionButtonText}</Text>
-						<TextButton size='tiny' privateOptions={{ color: 'green', form: 'fill' }} onClick={this.cancelScan}>
+						{this.state.scanInProgress && this.state.numberBrokenLinksFound !== null
+							&& <Title size="s">{<span>Broken Links: <strong>{this.state.numberBrokenLinksFound}</strong></span>}</Title>}
+						<Text privateOptions={{ fontWeight: 'bold' }}>{messageLeftOfActionButtonText}</Text>
+						<Button size='default' privateOptions={{ color: 'green', form: 'fill' }} onClick={this.cancelScan}>
 							{buttonText}
-						</TextButton>
+						</Button>
 					</div>
 					{this.renderProgressBarElements()}
 				</div>
@@ -536,14 +536,14 @@ export default class BrokenLinkChecker extends Component {
 		}
 
 		const renderStartScanButton = () => (
-			<TextButton
+			<Button
 				size='tiny'
 				privateOptions={{ color: 'green', form: 'fill' }}
 				onClick={this.state.scanInProgress ? {} : this.startScan}
 				disabled={this.state.siteStatus !== 'running'}
 			>
 				{buttonText}
-			</TextButton>
+			</Button>
 		);
 
 
@@ -551,16 +551,16 @@ export default class BrokenLinkChecker extends Component {
 			<div>
 
 				<div className="LinkChecker_StartScan_Header">
-					<Title
-						size="s"
-						style={{ marginTop: 14, marginBottom: 14 }}
-					>
-						{ (this.state.scanInProgress && this.state.numberBrokenLinksFound !== null)
-							? (<span>Broken Links <strong>{this.state.numberBrokenLinksFound}</strong></span>)
-							: (<span>Link Checker</span>)}
-					</Title>
+					{this.state.scanInProgress && this.state.numberBrokenLinksFound !== null
+					&& (
+						<Title
+							size="s"
+						>
+							{<span>Broken Links <strong>{this.state.numberBrokenLinksFound}</strong></span>}
+						</Title>
+					)}
 
-					<Text size="caption">{messageLeftOfActionButtonText}</Text>
+					<Text privateOptions={{ fontWeight: 'bold' }}>{messageLeftOfActionButtonText}</Text>
 					<div>
 						{this.state.siteStatus !== 'running'
 							? (
