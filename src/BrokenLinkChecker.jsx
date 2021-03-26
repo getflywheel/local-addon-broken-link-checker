@@ -744,7 +744,6 @@ export default class BrokenLinkChecker extends Component {
 
 	}
 
-
 	getHeaders = () => {
 		const TABLE_HEADERS = constants.TABLE_HEADERS;
 		const { STATUS, ORIGIN_URL, LINK_URL, LINK_TEXT, FILL } = TABLE_HEADERS;
@@ -795,7 +794,7 @@ export default class BrokenLinkChecker extends Component {
 		if (!dataArgs.isHeader && colKey === LINK_TEXT.KEY) {
 			const linkText = rowData[LINK_TEXT.KEY];
 			return (<div className='LinkChecker_VirtualTable_Column_LinkText'>
-				<p>{linkText}</p>
+				<div>{linkText}</div>
 			</div>);
 		}
 
