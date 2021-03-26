@@ -172,7 +172,7 @@
 
 .LinkChecker_VirtualTable_Header_Fill {
 	display: flex;
-	justify-content: flex-end;
+	justify-content: flex-start;
 	align-items: center;
 	min-width: 80px;
 }
