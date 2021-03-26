@@ -813,22 +813,20 @@ export default class BrokenLinkChecker extends Component {
 		}
 
 		return (
-			<div
-				style={{ flex: '1', overflowY: 'auto' }}
-				className="brokenLinkCheckWrap"
-			>
+			<div className="brokenLinkCheckWrap">
 
 				{this.renderHeader()}
-
-				<VirtualTable
-					striped
-					rowHeightSize="m"
-					rowHeaderHeightSize="m"
-					headersWeight={400}
-					headers={this.getHeaders()}
-					cellRenderer={this.cellRenderer}
-					data={this.state.brokenLinks}
-				/>
+				{this.state.brokenLinks && this.state.brokenLinks.length > 0 &&
+					<VirtualTable
+						striped
+						rowHeightSize="m"
+						rowHeaderHeightSize="m"
+						headersWeight={400}
+						headers={this.getHeaders()}
+						cellRenderer={this.cellRenderer}
+						data={this.state.brokenLinks}
+					/>
+				}
 
 				{this.renderFooterMessage()}
 			</div>
