@@ -163,7 +163,7 @@
 	max-width: 300px;
 	overflow: hidden;
 	padding-right: 20px;
-	min-width: 175px;
+	min-width: 165px;
 }
 
 .LinkChecker_VirtualTable_Header_LinkText {
@@ -187,4 +187,9 @@
 	justify-content: space-between;
 	align-items: center;
 	padding: 20px;
+}
+
+.LinkChecker_Button_Text {
+	text-transform: uppercase;
+	font-weight: 700;
 }

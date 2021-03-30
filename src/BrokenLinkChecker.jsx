@@ -695,18 +695,19 @@ export default class BrokenLinkChecker extends Component {
 		}
 		return (
 			<a
+				className="LinkChecker_Button_Text"
 				href={
 					this.state.siteRootUrl +
-				'wp-admin/post.php?post=' +
-				currentBrokenLink.wpPostId +
-				'&action=edit'
+					'wp-admin/post.php?post=' +
+					currentBrokenLink.wpPostId +
+					'&action=edit'
 				}
 				onClick={(e) => {
 					e.preventDefault();
 					ipcRenderer.send('analyticsV2:trackEvent', 'v2_pro_link_checker_open_admin_link');
 				}}
 			>
-			Fix in Admin
+				Fix in Admin
 			</a>
 		);
 	}
