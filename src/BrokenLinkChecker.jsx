@@ -767,14 +767,14 @@ export default class BrokenLinkChecker extends Component {
 			return (<div>{dataArgs.cellData}</div>);
 		}
 
-		if (!dataArgs.isHeader && colKey === STATUS.KEY) {
+		if (colKey === STATUS.KEY) {
 			const status = rowData[STATUS.KEY];
 			return (<div className='LinkChecker_VirtualTable_Column_Status'>
 				{status}
 			</div>);
 		}
 
-		if (!dataArgs.isHeader && colKey === ORIGIN_URL.KEY) {
+		if (colKey === ORIGIN_URL.KEY) {
 			const originURL = rowData[ORIGIN_URL.KEY];
 			const originURI = rowData[ORIGIN_URI.KEY];
 			return (<div className='LinkChecker_VirtualTable_Column_OriginUrl'>
@@ -784,21 +784,27 @@ export default class BrokenLinkChecker extends Component {
 			</div>);
 		}
 
-		if (!dataArgs.isHeader && colKey === LINK_URL.KEY) {
+		if (colKey === LINK_URL.KEY) {
 			const linkURL = rowData[LINK_URL.KEY];
-			return (<div className='LinkChecker_VirtualTable_Column_LinkUrl'>
-				<a href={linkURL}>{linkURL}</a>
-			</div>);
+			return (
+				<Tooltip
+					style={{ whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', color: '#51bb7b' }}
+					content={<div>{linkURL}</div>}
+					showDelay={300}
+				>
+					<a href={linkURL}>{linkURL}</a>
+				</Tooltip>
+			);
 		}
 
-		if (!dataArgs.isHeader && colKey === LINK_TEXT.KEY) {
+		if (colKey === LINK_TEXT.KEY) {
 			const linkText = rowData[LINK_TEXT.KEY];
 			return (<div className='LinkChecker_VirtualTable_Column_LinkText'>
 				<div>{linkText}</div>
 			</div>);
 		}
 
-		if (!dataArgs.isHeader && colKey === FILL.KEY) {
+		if (colKey === FILL.KEY) {
 			return (<div className='LinkChecker_VirtualTable_Column_Fill'>
 				{this.renderFixInAdminButton(rowData)}
 			</div>);
