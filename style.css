@@ -143,32 +143,14 @@
 
 .LinkChecker_VirtualTable_Header_Status {
 	display: flex;
-	flex: 1 1 auto;
 	justify-content: flex-start;
 	align-items: center;
 	max-width: 110px;
 	margin-left: 20px;
 }
 
-.LinkChecker_VirtualTable_Column_Status {
-	display: flex;
-	flex: 1 1 auto;
-	justify-content: flex-start;
-	align-items: center;
-	max-width: 110px;
-}
-
 .LinkChecker_VirtualTable_Header_OriginUrl {
 	display: flex;
-	flex: 1 1 auto;
-	justify-content: flex-start;
-	align-items: center;
-	max-width: 125px;
-}
-
-.LinkChecker_VirtualTable_Column_OriginUrl {
-	display: flex;
-	flex: 1 1 auto;
 	justify-content: flex-start;
 	align-items: center;
 	max-width: 125px;
@@ -176,31 +158,16 @@
 
 .LinkChecker_VirtualTable_Header_LinkUrl {
 	display: flex;
-	flex: 1 1 auto;
 	justify-content: flex-start;
 	align-items: center;
 	max-width: 300px;
-}
-
-.LinkChecker_VirtualTable_Column_LinkUrl {
-	display: flex;
-	flex: 1 1 auto;
-	justify-content: flex-start;
-	align-items: center;
-	max-width: 300px;
+	overflow: hidden;
+	padding-right: 20px;
+	min-width: 165px;
 }
 
 .LinkChecker_VirtualTable_Header_LinkText {
 	display: flex;
-	flex: 1 1 auto;
-	justify-content: flex-start;
-	align-items: center;
-	max-width: 150px;
-}
-
-.LinkChecker_VirtualTable_Column_LinkText {
-	display: flex;
-	flex: 1 1 auto;
 	justify-content: flex-start;
 	align-items: center;
 	max-width: 150px;
@@ -208,19 +175,9 @@
 
 .LinkChecker_VirtualTable_Header_Fill {
 	display: flex;
-	flex: 0 0 0;
-	justify-content: flex-end;
+	justify-content: flex-start;
 	align-items: center;
 	min-width: 80px;
-}
-
-.LinkChecker_VirtualTable_Column_Fill {
-	display: flex;
-	flex: 0 0 0;
-	justify-content: flex-end;
-	align-items: center;
-	min-width: 80px;
-	margin-right: 20px;
 }
 
 .LinkChecker_StartScan_Header {
@@ -229,5 +186,10 @@
 	flex-direction: row;
 	justify-content: space-between;
 	align-items: center;
-	padding: 10px;
+	padding: 20px;
+}
+
+.LinkChecker_Button_Text {
+	text-transform: uppercase;
+	font-weight: 700;
 }
