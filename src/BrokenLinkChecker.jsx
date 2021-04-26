@@ -45,6 +45,7 @@ export default class BrokenLinkChecker extends Component {
 		const routeChildrenProps = this.props.routeChildrenProps;
 		const siteStatus = routeChildrenProps.siteStatus;
 		const site = routeChildrenProps.site;
+		const siteRootUrl = `${routeChildrenProps.url}/`;
 		const localVersionNumber = site.localVersion;
 
 		if (localVersionNumber.includes('beta')) {
@@ -61,6 +62,7 @@ export default class BrokenLinkChecker extends Component {
 
 		this.updateSiteId(siteId);
 		this.updateSiteState(siteStatus);
+		this.updateSiteRootUrl(siteRootUrl);
 		this.addListeners();
 
 		this.isScanningProcessAlive()
