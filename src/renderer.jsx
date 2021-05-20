@@ -1,5 +1,7 @@
 import BrokenLinkChecker from './BrokenLinkChecker';
 import path from 'path';
+import { Provider } from 'react-redux';
+import { store } from './renderer/store/store';
 
 export default function (context) {
 	const { React, hooks } = context;
@@ -15,9 +17,11 @@ export default function (context) {
 
 	// Create the route/page of content that will be displayed when the menu option is clicked
 	hooks.addContent('brokenLinkChecker', ({ props, routeChildrenProps }) => (
-		<BrokenLinkChecker
-			{...props}
-			routeChildrenProps={routeChildrenProps}
-		/>
+		<Provider store={store}>
+			<BrokenLinkChecker
+				{...props}
+				routeChildrenProps={routeChildrenProps}
+			/>
+		</Provider>
 	));
 }
