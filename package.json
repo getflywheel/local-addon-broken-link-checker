@@ -42,6 +42,7 @@
 	},
 	"dependencies": {
 		"@getflywheel/local-components": "15.7.2",
+		"@reduxjs/toolkit": "^1.5.1",
 		"babel-eslint": "^10.0.1",
 		"broken-link-checker": "^0.7.8",
 		"classnames": "^2.2.6",
@@ -50,14 +51,17 @@
 		"prop-types": "^15.6.2",
 		"react": "^16.10.2",
 		"react-dom": "^16.10.2",
+		"react-redux": "^7.2.4",
 		"react-router-dom": "^4.3.1",
 		"shortid": "^2.2.15"
 	},
 	"bundledDependencies": [
+		"@getflywheel/local-components",
+		"@reduxjs/toolkit",
 		"classnames",
 		"dateformat",
-		"@getflywheel/local-components",
-		"prop-types"
+		"prop-types",
+		"react-redux"
 	],
 	"engines": {
 		"local-by-flywheel": "^5.9.9"
