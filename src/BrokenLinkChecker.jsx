@@ -1,10 +1,6 @@
 import React, { Component } from 'react';
 import { ipcRenderer } from 'electron';
 import ipcAsync from './ipcAsync';
-
-const { UrlChecker } = require('broken-link-checker');
-const constants = require('./constants');
-
 import {
 	ProgressBar,
 	Title,
@@ -12,10 +8,16 @@ import {
 	Text,
 	VirtualTable,
 	Button,
+	Spinner,
 } from '@getflywheel/local-components';
 import { resolve } from 'dns';
+import { useSelector } from 'react-redux';
+import { actions, store } from './renderer/store/store';
 
-export default class BrokenLinkChecker extends Component {
+const { UrlChecker } = require('broken-link-checker');
+const constants = require('./constants');
+
+class BrokenLinkCheckerBase extends Component {
 	constructor (props) {
 		super(props);
 
@@ -74,9 +76,8 @@ export default class BrokenLinkChecker extends Component {
 
 	addListeners () {
 		ipcRenderer.on('blc-async-message-from-process', (event, response) => {
-			//console.log({ event, response});
-
-			if (response[0]) {
+			// if this is the site that started the scan
+			if (this.state.siteId === this.props.scanSiteId && response[0]) {
 				switch (response[0]) {
 					case 'increment-number-posts-found':
 						// Needs to call incrementNumberPostsFound() back in the renderer
@@ -248,6 +249,11 @@ export default class BrokenLinkChecker extends Component {
 	});
 
 	reloadScanInProgress () {
+		// if this is the site that started the scan
+		if (this.state.siteId !== this.props.scanSiteId) {
+			return;
+		}
+
 		this.updateScanInProgress(true);
 
 		if (this.state.brokenLinks.length > 0) {
@@ -412,10 +418,12 @@ export default class BrokenLinkChecker extends Component {
 		}));
 	}
 
-	updateScanInProgress (boolean) {
+	updateScanInProgress (scanInProgress) {
 		this.setState((prevState) => ({
-			scanInProgress: boolean,
+			scanInProgress,
 		}));
+
+		this.updateScanSiteId(scanInProgress);
 	}
 
 	incrementNumberPostsFound () {
@@ -436,8 +444,17 @@ export default class BrokenLinkChecker extends Component {
 		}));
 	}
 
-	startScan = () => {
+	updateScanSiteId (isRunningScan) {
+		this.props.updateScanSiteId(isRunningScan ? this.state.siteId : null);
+	}
+
+	startScan = () => {// if this is the site that started the scan
+		if (!!this.props.scanSiteId && this.state.siteId !== this.props.scanSiteId) {
+			return;
+		}
+
 		ipcRenderer.send('analyticsV2:trackEvent', 'v2_pro_link_checker_run_start');
+		this.updateScanSiteId(true);
 
 		const routeChildrenProps = this.props.routeChildrenProps;
 		const siteDomain = routeChildrenProps.host;
@@ -490,6 +507,7 @@ export default class BrokenLinkChecker extends Component {
 			const routeChildrenProps = this.props.routeChildrenProps;
 			const siteStatus = routeChildrenProps.siteStatus;
 			this.updateSiteState(siteStatus);
+			this.updateScanInProgress(false);
 
 			ipcRenderer.send('analyticsV2:trackEvent', 'v2_pro_link_checker_run_failure');
 		});
@@ -537,17 +555,24 @@ export default class BrokenLinkChecker extends Component {
 			);
 		}
 
-		const renderStartScanButton = () => (
+		const renderStartScanButton = (isEnabled) => (
 			<Button
 				size='tiny'
 				privateOptions={{ color: 'green', form: 'fill' }}
 				onClick={this.state.scanInProgress ? {} : this.startScan}
-				disabled={this.state.siteStatus !== 'running'}
+				disabled={!isEnabled}
 			>
 				{buttonText}
 			</Button>
 		);
 
+		let tooltipContent = null;
+
+		if (this.props.scanSiteId) {
+			tooltipContent = <>Scan in progress. Please wait for it to finish.</>
+		} else if (this.state.siteStatus !== 'running') {
+			tooltipContent = <>Start the site to begin a scan</>;
+		}
 
 		return (
 			<div>
@@ -564,25 +589,19 @@ export default class BrokenLinkChecker extends Component {
 
 					<Text privateOptions={{ fontWeight: 'bold' }}>{messageLeftOfActionButtonText}</Text>
 					<div>
-						{this.state.siteStatus !== 'running'
+						{!!tooltipContent
 							? (
 								<div>
 									<Tooltip
-										content={
-											(
-												<div>
-													Start the site to begin a scan
-												</div>
-											)
-										}
+										content={tooltipContent}
 										position='left'
 										showDelay={300}
 									>
-										{renderStartScanButton()}
+										{renderStartScanButton(false)}
 									</Tooltip>
 								</div>
 							)
-							: renderStartScanButton()}
+							: renderStartScanButton(true)}
 					</div>
 				</div>
 				{this.renderProgressBarElements()}
@@ -841,3 +860,22 @@ export default class BrokenLinkChecker extends Component {
 		);
 	}
 }
+
+/**
+ * Create redux container/wrapper component so we can use hooks and pass data onto child component.
+ * @param props
+ */
+const BrokenLinkChecker = (props) => {
+	const { siteId } = useSelector((state) => state.scan);
+	const updateScanSiteId = (siteId) => store.dispatch(actions.updateSiteId(siteId));
+
+	return (
+		<BrokenLinkCheckerBase
+			scanSiteId={siteId}
+			updateScanSiteId={updateScanSiteId}
+			{...props}
+		/>
+	);
+};
+
+export default BrokenLinkChecker;
