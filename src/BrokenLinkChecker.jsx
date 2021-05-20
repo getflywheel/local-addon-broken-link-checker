@@ -543,8 +543,12 @@ class BrokenLinkCheckerBase extends Component {
 			return (
 				<div>
 					<div className="LinkChecker_StartScan_Header">
-						{this.state.scanInProgress && this.state.numberBrokenLinksFound !== null
-							&& <Title size="s">{<span>Broken Links: <strong>{this.state.numberBrokenLinksFound}</strong></span>}</Title>}
+						{this.state.scanInProgress && this.state.numberBrokenLinksFound !== null && (
+							<Title size="s">
+								<span>Broken Links: <strong>{this.state.numberBrokenLinksFound}</strong></span>
+								<Spinner style={{ display: 'inline' }} />
+							</Title>
+						)}
 						<Text privateOptions={{ fontWeight: 'bold' }}>{messageLeftOfActionButtonText}</Text>
 						<Button size='default' privateOptions={{ color: 'green', form: 'fill' }} onClick={this.cancelScan}>
 							{buttonText}
