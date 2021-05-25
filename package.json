@@ -58,10 +58,14 @@
 	"bundledDependencies": [
 		"@getflywheel/local-components",
 		"@reduxjs/toolkit",
+		"broken-link-checker",
 		"classnames",
 		"dateformat",
+		"lodash",
 		"prop-types",
-		"react-redux"
+		"react-redux",
+		"shortid",
+		"p-event"
 	],
 	"engines": {
 		"local-by-flywheel": "^5.9.9"
