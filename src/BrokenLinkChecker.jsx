@@ -69,15 +69,27 @@ class BrokenLinkCheckerBase extends Component {
 
 		this.isScanningProcessAlive()
 			.then(() => {
-				this.reloadScanInProgress();
+				// if this is the site that started the scan
+				if (this.state.siteId === this.props.scanSiteId) {
+					this.reloadScanInProgress();
+				}
 			})
-			.catch((err) => {});
+			.catch((err) => {
+				this.updateScanSiteId(false);
+			});
 	}
 
 	addListeners () {
 		ipcRenderer.on('blc-async-message-from-process', (event, response) => {
+			// if this is not the site that started the scan
+			// and if not one of a handful of event types that need to be processed regardless of which site started it
+			if (this.state.siteId !== this.props.scanSiteId && !['scan-cancelled-success', 'scan-finished', 'debug-data'].includes(response[0])
+			) {
+				return;
+			}
+
 			// if this is the site that started the scan
-			if (this.state.siteId === this.props.scanSiteId && response[0]) {
+			if (response[0]) {
 				switch (response[0]) {
 					case 'increment-number-posts-found':
 						// Needs to call incrementNumberPostsFound() back in the renderer
@@ -109,6 +121,7 @@ class BrokenLinkCheckerBase extends Component {
 						this.updateCurrentCheckingUri('');
 						break;
 					case 'scan-finished':
+						this.updateScanInProgress(false);
 						if (
 							this.state.brokenLinks === null ||
 							this.state.brokenLinks.length === 0
@@ -121,6 +134,7 @@ class BrokenLinkCheckerBase extends Component {
 							// console.log("Debug data: ");
 							// console.log(response[1]);
 						}
+					case 'error-encountered':
 					default:
 					//
 				}
@@ -239,21 +253,22 @@ class BrokenLinkCheckerBase extends Component {
 	}
 
 	isScanningProcessAlive = () => new Promise((resolve, reject) => {
-		ipcAsync('scanning-process-life-or-death').then((result) => {
-			if (result) {
-				resolve(result);
+		ipcAsync('scanning-process-life-or-death').then((isRunning) => {
+			if (isRunning) {
+				resolve(isRunning);
 			} else {
-				reject(result);
+				// clear out any scans that might have finished while this add-on's renderer wasn't loaded
+				this.updateScanSiteId(false);
+				reject(isRunning);
 			}
-		}).catch((err) => reject('isScanningProcessAlive Error: ' + err));
+		}).catch((err) => {
+			// clear out any scans that might have finished while this add-on's renderer wasn't loaded
+			this.updateScanSiteId(false);
+			reject('isScanningProcessAlive Error: ' + err);
+		});
 	});
 
 	reloadScanInProgress () {
-		// if this is the site that started the scan
-		if (this.state.siteId !== this.props.scanSiteId) {
-			return;
-		}
-
 		this.updateScanInProgress(true);
 
 		if (this.state.brokenLinks.length > 0) {
@@ -845,7 +860,6 @@ class BrokenLinkCheckerBase extends Component {
 
 		return (
 			<div className="brokenLinkCheckWrap">
-
 				{this.renderHeader()}
 				{this.state.brokenLinks && this.state.brokenLinks.length > 0 &&
 					<VirtualTable
