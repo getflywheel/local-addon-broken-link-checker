@@ -8,6 +8,7 @@
 	],
 	"bgColor": "#51bb7b",
 	"icon": "icon.svg",
+	"slug": "local-addon-broken-link-checker",
 	"description": "Find any broken links in your WordPress site!",
 	"renderer": "lib/renderer.js",
 	"main": "lib/main.js",
