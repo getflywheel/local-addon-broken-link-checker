@@ -6,8 +6,8 @@
 
 Clone the repository into the following directory depending on your platform:
 
--   macOS: `~/Library/Application Support/Local Beta/addons`
-
+- 	macOS: `~/Library/Application\ Support/Local/addons`
+- 	Windows: `\AppData\Local`
 ### Install Dependencies
 
 1. `yarn install`
@@ -21,7 +21,7 @@ Clone the repository into the following directory depending on your platform:
 
 1. Clone repo directly into the addons folder (paths described above)
 2. `yarn install`
-3. `npm run build`
+3. `yarn watch`
 4. Open Local and activate addon
 
 ## Development
