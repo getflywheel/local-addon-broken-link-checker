@@ -1,12 +1,12 @@
 {
 	"name": "@getflywheel/local-addon-broken-link-checker",
 	"productName": "Link Checker",
-	"version": "1.1.0",
+	"version": "1.1.1",
 	"author": "Coulter Peterson",
 	"keywords": [
 		"local-addon"
 	],
-	"bgColor": "#51bb7b",
+	"bgColor": "#01516e",
 	"icon": "icon.svg",
 	"slug": "local-addon-broken-link-checker",
 	"description": "Find any broken links in your WordPress site!",
