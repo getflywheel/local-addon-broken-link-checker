@@ -26,7 +26,7 @@
 	},
 	"devDependencies": {
 		"@getflywheel/eslint-config-local": "1.0.4",
-		"@getflywheel/local": "^6.0.0",
+		"@getflywheel/local": ">=5.10.5",
 		"@types/classnames": "^2.2.9",
 		"@types/dateformat": "^3.0.1",
 		"@types/node": "^12.12.26",
@@ -70,6 +70,6 @@
 		"fs-extra"
 	],
 	"engines": {
-		"local-by-flywheel": "^6.0.0"
+		"local-by-flywheel": ">=6.0.0"
 	}
 }
