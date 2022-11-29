@@ -7,7 +7,10 @@
 		"experimentalDecorators": true,
 		"jsx": "react",
 		"lib": ["es2017", "esnext.asynciterable", "dom"],
-		"typeRoots": [ "./node_modules/@types", "./node_modeules/@getflywheel/local" ],
+		"typeRoots": [
+			"./node_modules/@types",
+			"./node_modeules/@getflywheel/local"
+		],
 		"module": "commonjs",
 		"noImplicitReturns": true,
 		"noImplicitAny": false,
@@ -15,13 +18,10 @@
 		"resolveJsonModule": true,
 		"rootDir": "./src",
 		"sourceMap": true,
+		"skipLibCheck": true,
 		"strict": false,
 		"target": "es2015"
 	},
-	"exclude": [
-		"node_modules"
-	],
-	"include": [
-		"src"
-	]
+	"exclude": ["node_modules"],
+	"include": ["src"]
 }
