@@ -21,7 +21,7 @@ export default function (context) {
 	const { electron } = context;
 
 	electron.ipcMain.on("store-broken-links", (_event, siteId, brokenLinks) => {
-		LocalMain.SiteData.updateSite(siteId, {
+		siteData.updateSite(siteId, {
 			id: siteId,
 			brokenLinks,
 		} as Partial<ExtendedSite>);
@@ -30,7 +30,7 @@ export default function (context) {
 	electron.ipcMain.on(
 		"store-link-checker-data",
 		(_event, siteId, scanStatus) => {
-			LocalMain.SiteData.updateSite(siteId, {
+			siteData.updateSite(siteId, {
 				id: siteId,
 				scanStatus,
 			} as Partial<ExtendedSite>);
@@ -72,7 +72,7 @@ export default function (context) {
 }
 
 async function addBrokenLink(brokenLinkInfo) {
-	const site = LocalMain.SiteData.getSite(theSiteId);
+	const site = siteData.getSite(theSiteId);
 	const siteDataJson = site.toJSON() as ExtendedSite;
 	const brokenLinks = siteDataJson.brokenLinks;
 	brokenLinks.push({
@@ -85,7 +85,7 @@ async function addBrokenLink(brokenLinkInfo) {
 		wpPostId: brokenLinkInfo[5],
 	});
 
-	LocalMain.SiteData.updateSite(theSiteId, {
+	siteData.updateSite(theSiteId, {
 		id: theSiteId,
 		brokenLinks,
 	} as Partial<Local.SiteJSON>);
@@ -112,7 +112,7 @@ async function getTotalPosts(siteId, prefix) {
 }
 
 async function getTablePrefix(siteId) {
-	const site = LocalMain.SiteData.getSite(siteId);
+	const site = siteData.getSite(siteId);
 
 	const wpPrefixCall = await LocalMain.getServiceContainer()
 		.cradle.siteDatabase.getTablePrefix(site)
