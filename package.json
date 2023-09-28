@@ -42,7 +42,7 @@
 		"react-router-dom": "^4.3.1"
 	},
 	"dependencies": {
-		"@getflywheel/local-components": "^17.6.3",
+		"@getflywheel/local-components": "^17.7.2",
 		"@reduxjs/toolkit": "^1.5.1",
 		"babel-eslint": "^10.0.1",
 		"broken-link-checker": "^0.7.8",
