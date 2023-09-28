@@ -22,7 +22,8 @@
 	"license": "MIT",
 	"scripts": {
 		"build": "tsc",
-		"watch": "yarn run build --watch"
+		"watch": "yarn run build --watch",
+		"prepare": "yarn build"
 	},
 	"devDependencies": {
 		"@getflywheel/eslint-config-local": "1.0.4",
