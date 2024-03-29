@@ -27,7 +27,7 @@
 	},
 	"devDependencies": {
 		"@getflywheel/eslint-config-local": "1.0.4",
-		"@getflywheel/local": "^8.0.0",
+		"@getflywheel/local": "^9",
 		"@types/classnames": "^2.2.9",
 		"@types/dateformat": "^3.0.1",
 		"eslint": "^5.0.0",
@@ -41,7 +41,7 @@
 		"react-router-dom": "^4.3.1"
 	},
 	"dependencies": {
-		"@getflywheel/local-components": "^17.7.2",
+		"@getflywheel/local-components": "^17.8.0",
 		"@reduxjs/toolkit": "^1.5.1",
 		"babel-eslint": "^10.0.1",
 		"broken-link-checker": "^0.7.8",
