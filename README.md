@@ -1,3 +1,8 @@
+# ⚠ Archived ⚠
+
+This Local Addon is archived and no longer receives updates. See the [Link Checker Help Doc](https://localwp.com/help-docs/local-features/link-checker/) for details and alternatives for scanning a site for broken links.
+
+
 # Local Add-on Broken Link Checker
 
 A [Local](https://localwp.com/) add on for searching for broken links on your WordPress site. This repository hosts the source code; if you simply want to use the add-on, download the latest version of local from [the release page](https://localwp.com/releases/) and install the add-on within the app.
